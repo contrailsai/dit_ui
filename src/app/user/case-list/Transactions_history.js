@@ -127,7 +127,7 @@ const Transactions_history = ({ verifier }) => {
                                                 })}
                                             </span>
                                             <span>
-                                                {`${time.getDate()}/${time.getMonth()}/${time.getFullYear()}`}
+                                                {`${time.getDate()}/${time.getMonth()+1}/${time.getFullYear()}`}
                                             </span>
                                             <span>
                                                 {
