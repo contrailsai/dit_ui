@@ -1,5 +1,6 @@
 import { get_user_data } from '@/utils/data_fetch';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 import Result_container from "@/app/view/[id]/show_result";
 import Verifier_results_container from "@/app/view/[id]/verifier_show_results";
 import { get_result_for_id, verify_case } from "@/utils/data_fetch";
@@ -43,6 +44,7 @@ const page = async ({ params }) => {
             }
           </>
       }
+      <Footer/>
     </>
   );
 }
