@@ -9,6 +9,7 @@ import { useParams } from 'next/navigation';
 const Verifier_results_container = ({ res_data }) => {
 
     const { id } = useParams();
+    // console.log(res_data);
 
     /*
         sample model responses
@@ -86,6 +87,8 @@ const Verifier_results_container = ({ res_data }) => {
         }
     */
     const model_responses = JSON.parse(res_data["models_responses"]);
+    const upload_type = res_data["input_request"]["upload_type"];
+    // console.log(upload_type)
     const [verifier_metadata, set_verifier_metadata] = useState(
         res_data["verifier_metadata"] !== null ?
             res_data["verifier_metadata"]
@@ -178,44 +181,48 @@ const Verifier_results_container = ({ res_data }) => {
                 </div>
                 {/* MODEL CHOOSE OPTIONS HERE */}
                 <div className='py-2 flex w-full gap-20 border border-primary rounded-xl '>
+                    {/* ONLY SHOW FRAME IF ITS A VIDEO */}
+                    {
+                        upload_type !== 'audio' && (
+                            <>
+                                {/* FRAME MODELS */}
+                                < div className={`p-4 ${verifier_metadata["showFrameCheck"] ? "" : " opacity-70"}`}>
+                                    <div className=' flex items-center gap-3 px-4'>
+                                        <input
+                                            onChange={handleInputChange}
+                                            checked={verifier_metadata["showFrameCheck"]}
+                                            className=' size-4' type="checkbox" id="useframe" name="showFrameCheck"
+                                        />
+                                        <label htmlFor="useframe" className=' text-2xl'>Frame Models</label>
+                                    </div>
 
+                                    <div className=' flex flex-col pl-3 gap-2 py-2'>
+                                        {
+                                            model_responses["metadata"]["frame"]["models_info"].map((val, idx) => {
 
-                    {/* FRAME MODELS */}
-                    <div className={`p-4 ${verifier_metadata["showFrameCheck"] ? "" : " opacity-70"}`}>
-                        <div className=' flex items-center gap-3 px-4'>
-                            <input
-                                onChange={handleInputChange}
-                                checked={verifier_metadata["showFrameCheck"]}
-                                className=' size-4' type="checkbox" id="useframe" name="showFrameCheck"
-                            />
-                            <label htmlFor="useframe" className=' text-2xl'>Frame Models</label>
-                        </div>
-
-                        <div className=' flex flex-col pl-3 gap-2 py-2'>
-                            {
-                                model_responses["metadata"]["frame"]["models_info"].map((val, idx) => {
-
-                                    return (
-                                        <div key={idx} htmlFor={`FM${idx}`} className='bg-primary text-white px-4 py-2 rounded-xl'>
-                                            <div className=' flex items-center '>
-                                                <label className='text-lg font-semibold cursor-pointer pr-3' htmlFor={`FM${idx}`}>{val.model_name}</label>
-                                                <input
-                                                    onChange={handleInputChange}
-                                                    checked={verifier_metadata["FrameCheckModelUse"] === idx}
-                                                    disabled={!verifier_metadata["showFrameCheck"]}
-                                                    value={idx} type="radio" name='FrameCheckModelUse' id={`FM${idx}`}
-                                                />
-                                            </div>
-                                            <p className=' font-light'>
-                                                {val.model_desc}
-                                            </p>
-                                        </div>
-                                    )
-                                })
-                            }
-                        </div>
-                    </div>
-
+                                                return (
+                                                    <div key={idx} htmlFor={`FM${idx}`} className='bg-primary text-white px-4 py-2 rounded-xl'>
+                                                        <div className=' flex items-center '>
+                                                            <label className='text-lg font-semibold cursor-pointer pr-3' htmlFor={`FM${idx}`}>{val.model_name}</label>
+                                                            <input
+                                                                onChange={handleInputChange}
+                                                                checked={verifier_metadata["FrameCheckModelUse"] === idx}
+                                                                disabled={!verifier_metadata["showFrameCheck"]}
+                                                                value={idx} type="radio" name='FrameCheckModelUse' id={`FM${idx}`}
+                                                            />
+                                                        </div>
+                                                        <p className=' font-light'>
+                                                            {val.model_desc}
+                                                        </p>
+                                                    </div>
+                                                )
+                                            })
+                                        }
+                                    </div>
+                                </div>
+                            </>
+                        )
+                    }
                     {/* AUDIO MODELS */}
                     <div className={`p-4 ${verifier_metadata["showAudioCheck"] ? "" : " opacity-70"}`}>
                         <div className=' flex items-center gap-3 px-4'>
@@ -309,7 +316,7 @@ const Verifier_results_container = ({ res_data }) => {
                 </>)
             }
 
-        </div>
+        </div >
     </>);
 }
 //

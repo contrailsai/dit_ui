@@ -63,7 +63,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                             {
                                 label: "Probablility of tampering (-ve value deems suspicious)",
                                 data: response_data['audioAnalysis'].table_values,
-                                backgroundColor: response_data['audioAnalysis'].table_values.map((val, idx) => { return val >= 0 ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)" }),
+                                backgroundColor: response_data['audioAnalysis'].table_values.map((val, idx) => { return val >= -1.3 ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)" }),
                                 barPercentage: 1,
                                 borderRadius: 100,
                                 inflateAmount: 1,
@@ -86,8 +86,8 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                         ]
                     }
                     temp_chart_data["audioAnalysis"] = audio_chart_data
+                    setChartData(temp_chart_data);
                 }
-                setChartData(temp_chart_data);
             });
         }
 
@@ -98,7 +98,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
             }
         };
 
-    }, [waveformRef])
+    }, [waveformRef, response_data])
 
     const handlePlayPause = () => {
         if (wavesurferRef.current.isPlaying()) {
@@ -188,7 +188,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
         doc.text(`${wavesurferRef.current.getDuration().toFixed(1)} sec`, curr_x, curr_y);
 
         curr_x = mx;
-        curr_y += fontSize / 72 + 30/72;
+        curr_y += fontSize / 72 + 30 / 72;
 
         //AUDIO ANALYSIS START
         fontSize = 16;
@@ -286,50 +286,55 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                         {/* Verdict */}
                         <div className=' min-w-80 h-fit w-fit'>
                             {
-                                <>
-                                    {/* AUDIO OK */}
-                                    {
-                                        response_data["audioAnalysis"].result.toFixed(3) >= -1.3 &&
-                                        <span className='flex gap-1 items-center'>
-                                            <span className='font-medium bg-green-200 px-2 py-1 rounded-full w-fit'>No manipulation detected</span>
-                                            in<span className='font-medium'>Audio</span>
-                                        </span>
-                                    }
-                                    {/* AUDIO OK */}
-                                    {
-                                        response_data["audioAnalysis"].result.toFixed(3) < -1.3 &&
-                                        <span className='flex gap-1 items-center'>
-                                            <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
-                                            in<span className='font-medium'>Audio</span>
-                                        </span>
-                                    }
-                                </>
+                                response_data["audioAnalysis"] !== undefined && (
+                                    <>
+                                        {/* AUDIO OK */}
+                                        {
+                                            response_data["audioAnalysis"].result.toFixed(3) >= -1.3 &&
+                                            <span className='flex gap-1 items-center'>
+                                                <span className='font-medium bg-green-200 px-2 py-1 rounded-full w-fit'>No manipulation detected</span>
+                                                in<span className='font-medium'>Audio</span>
+                                            </span>
+                                        }
+                                        {/* AUDIO OK */}
+                                        {
+                                            response_data["audioAnalysis"].result.toFixed(3) < -1.3 &&
+                                            <span className='flex gap-1 items-center'>
+                                                <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
+                                                in<span className='font-medium'>Audio</span>
+                                            </span>
+                                        }
+                                    </>
+                                )
                             }
                         </div>
 
                         {/* RESULT */}
                         {
                             Object.keys(response_data).map((val, idx) => {
-                                const result = (response_data[val].result).toFixed(3);
-                                return (
-                                    <div key={idx} className={` bg-white flex flex-col justify-evenly h-full w-fit items-center gap-3 min-w-96 px-5 py-2 rounded-lg shadow ${(result) > -1.3 ? " shadow-green-700" : " shadow-red-700"}  `}>
-                                        <span className=' text-xl'>
-                                            {
-                                                val === "audioAnalysis" &&
-                                                (`Audio Check Result`)
-                                            }
-                                        </span>
-                                        <span className={` text-2xl px-6 py-2 rounded-full font-semibold ${(result) > -1.3 ? " bg-green-200  text-green-700" : " bg-red-200 text-red-700"}`}>
-                                            {result}
-                                        </span>
-                                        <span className=' text-xs'>
-                                            {
-                                                val === "audioAnalysis" &&
-                                                (` < -1.3 deems it suspicious of manipulation `)
-                                            }
-                                        </span>
-                                    </div>
-                                )
+                                let result;
+                                if (response_data[val] !== undefined) {
+                                    result = (response_data[val].result).toFixed(3);
+                                    return (
+                                        <div key={idx} className={` bg-white flex flex-col justify-evenly h-full w-fit items-center gap-3 min-w-96 px-5 py-2 rounded-lg shadow ${(result) > -1.3 ? " shadow-green-700" : " shadow-red-700"}  `}>
+                                            <span className=' text-xl'>
+                                                {
+                                                    val === "audioAnalysis" &&
+                                                    (`Audio Check Result`)
+                                                }
+                                            </span>
+                                            <span className={` text-2xl px-6 py-2 rounded-full font-semibold ${(result) > -1.3 ? " bg-green-200  text-green-700" : " bg-red-200 text-red-700"}`}>
+                                                {result}
+                                            </span>
+                                            <span className=' text-xs'>
+                                                {
+                                                    val === "audioAnalysis" &&
+                                                    (` < -1.3 deems it suspicious of manipulation `)
+                                                }
+                                            </span>
+                                        </div>
+                                    )
+                                }
                             })
                         }
 
