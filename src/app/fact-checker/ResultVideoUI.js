@@ -522,7 +522,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                                             {/* BOTH OK */}
                                             {
                                                 response_data["frameCheck"].result.toFixed(3) >= 0.7 && response_data["audioAnalysis"].result.toFixed(3) >= -1.3 &&
-                                                <span className='flex gap-1 items-center'>
+                                                <span className='flex gap-1 items-center text-xl '>
                                                     <span className='font-medium bg-green-200 px-2 py-1 rounded-full w-fit'>No manipulation detected</span>
                                                     in both
                                                     <span className='font-medium'>Video and Audio</span>
@@ -531,32 +531,36 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                                             {/* FRAME OK AUDIO BAD */}
                                             {
                                                 response_data["frameCheck"].result.toFixed(3) >= 0.7 && response_data["audioAnalysis"].result.toFixed(3) < -1.3 &&
-                                                <span className='flex gap-1 items-center'>
-
-                                                    <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
-                                                    in <span className='font-medium'>Audio</span>,
-                                                    <br />
-                                                    <span className='font-medium bg-green-200 px-2 py-1 rounded-full w-fit'>NO Manipulation detected</span>
-                                                    in <span className='font-medium'>Video</span>,
+                                                <span className='flex flex-wrap gap-3 justify-center items-center text-xl'>
+                                                    <span>
+                                                        <span className='font-medium bg-red-200 px-2 mx-2 py-1 rounded-full w-fit'>Manipulation detected</span>
+                                                        in <span className='font-medium'>Audio</span>,
+                                                    </span>
+                                                    <span>
+                                                        <span className='font-medium bg-green-200 px-2 mx-2 py-1 rounded-full w-fit'>NO Manipulation detected</span>
+                                                        in <span className='font-medium'>Video</span>
+                                                    </span>
                                                 </span>
                                             }
 
                                             {/* FRAME BAD AUDIO OK */}
                                             {
                                                 response_data["frameCheck"].result.toFixed(3) < 0.7 && response_data["audioAnalysis"].result.toFixed(3) >= -1.3 &&
-                                                <span className='flex gap-1 items-center'>
-
-                                                    <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
-                                                    in <span className='font-medium'>Video</span>,
-                                                    <br />
-                                                    <span className='font-medium bg-green-200 px-2 py-1 rounded-full w-fit'>NO Manipulation detected</span>
-                                                    in <span className='font-medium'>Audio</span>,
+                                                <span className='flex flex-wrap gap-3 justify-center items-center text-xl'>
+                                                    <span>
+                                                        <span className='font-medium bg-red-200 px-2 mx-2 py-1 rounded-full w-fit'>Manipulation detected</span>
+                                                        in <span className='font-medium'>Video</span>,
+                                                    </span>
+                                                    <span>
+                                                        <span className='font-medium bg-green-200 px-2 mx-2 py-1 rounded-full w-fit'>NO Manipulation detected</span>
+                                                        in <span className='font-medium'>Audio</span>
+                                                    </span>
                                                 </span>
                                             }
                                             {/* BOTH OK */}
                                             {
                                                 response_data["frameCheck"].result.toFixed(3) < 0.7 && response_data["audioAnalysis"].result.toFixed(3) < -1.3 &&
-                                                <span className='flex gap-1 items-center'>
+                                                <span className='flex gap-1 items-center text-xl'>
                                                     <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
                                                     in both
                                                     <span className='font-medium'>Video and Audio</span>

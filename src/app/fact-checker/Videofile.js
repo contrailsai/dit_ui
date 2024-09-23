@@ -9,6 +9,7 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { redirect } from "next/navigation";
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 // import generatePDF from 'react-to-pdf';
 
@@ -101,7 +102,7 @@ const VideoAnalysisForm = ({ user }) => {
 
                                 <div className=' flex flex-col items-center'>
                                     <p>
-                                        The results will be available in 1-2 days
+                                        The results will be available in 1-2 Hours
                                     </p>
 
                                     {/* BUTTONS FOR CASE LIST/ NEW ANALYSIS */}
@@ -132,26 +133,6 @@ const VideoAnalysisForm = ({ user }) => {
                             </div>
                         )
                     }
-
-                    {/* SHOW RESULT */}
-                    {/* {fileUrl && file_metadata.type.split("/")[0] === "video" &&
-                        <ResultsVideoUI
-                            response_data={response_data}
-                            fileUrl={fileUrl}
-                            file_metadata={file_metadata}
-                            analysisTypes={chosen_analysis}
-                            pdfRef={pdfRef}
-                            handle_newCheck={handle_newCheck}
-                        />
-                    }
-                    {fileUrl && file_metadata.type.split("/")[0] === "audio" &&
-                        <ResultsAudioUI
-                            response_data={response_data}
-                            fileUrl={fileUrl}
-                            file_metadata={file_metadata}
-                            handle_newCheck={handle_newCheck}
-                        />
-                    } */}
                 </div>
 
             }
@@ -182,13 +163,7 @@ const VideoAnalysisForm = ({ user }) => {
                 </>
             }
 
-            {/* FOOTER */}
-            <div className=' bg-white flex gap-3 py-2 justify-center items-center border-t border-primary '>
-                <Link href={'https://contrails.ai'} target='_blank' className='hover:underline'>
-                    Contrails AI
-                </Link>
-                ©2024
-            </div>
+            <Footer/>
         </div >
     );
 };

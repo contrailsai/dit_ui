@@ -291,16 +291,16 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                                         {/* AUDIO OK */}
                                         {
                                             response_data["audioAnalysis"].result.toFixed(3) >= -1.3 &&
-                                            <span className='flex gap-1 items-center'>
-                                                <span className='font-medium bg-green-200 px-2 py-1 rounded-full w-fit'>No manipulation detected</span>
+                                            <span className='flex gap-1 items-center text-xl'>
+                                                <span className='font-medium bg-green-200 px-2 mx-2 py-1 rounded-full w-fit'>No manipulation detected</span>
                                                 in<span className='font-medium'>Audio</span>
                                             </span>
                                         }
                                         {/* AUDIO OK */}
                                         {
                                             response_data["audioAnalysis"].result.toFixed(3) < -1.3 &&
-                                            <span className='flex gap-1 items-center'>
-                                                <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
+                                            <span className='flex gap-1 items-center text-xl'>
+                                                <span className='font-medium bg-red-200 px-2 mx-2 py-1 rounded-full w-fit'>Manipulation detected</span>
                                                 in<span className='font-medium'>Audio</span>
                                             </span>
                                         }

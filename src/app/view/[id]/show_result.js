@@ -76,7 +76,7 @@ const Result_container = ({ res_data }) => {
 
                 <ResultsAudioUI
                     response_data={{
-                        "audioAnalysis": model_responses["results"]["audio"][res_data["verifier_metadata"]["AudioCheckModelUse"]],
+                        "audioAnalysis": model_responses["results"]["audio"]["models_results"][res_data["verifier_metadata"]["AudioCheckModelUse"]],
                     }}
                     fileUrl={res_data["signedUrl"]}
                     file_metadata={res_data["file_metadata"]}
