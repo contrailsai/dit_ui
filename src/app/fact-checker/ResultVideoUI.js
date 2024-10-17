@@ -9,7 +9,7 @@ import { Outfit_normal_font } from './outfit-normal-font';
 import { logo_base64 } from './logo_base64';
 
 const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, handle_newCheck }) => {
-
+    // console.log(response_data)
     const text_val = {
         frameCheck: "Frame Check",
         audioAnalysis: "Audio Analysis"
@@ -38,7 +38,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
 
     //output results
     const [chartData, setChartData] = useState(null);
-    const [curr_analysis, set_curr_analysis] = useState(Object.keys(response_data)[0] );
+    const [curr_analysis, set_curr_analysis] = useState(Object.keys(response_data)[0]);
 
 
     const handleVideoLoadedMetadata = () => {
@@ -57,6 +57,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
         let temp_chart_data = {};
 
         if (response_data["frameCheck"]) {
+            const threshold = response_data['frameCheck'].threshold;
             const frame_chart_data = {
                 labels: response_data['frameCheck'].table_idx.map(
                     (val, idx) => {
@@ -67,28 +68,28 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                 datasets: [
 
                     {
-                        label: "Probablility of tampering (-ve value deems suspicious)",
+                        label: "Probablility of real",
                         data: response_data['frameCheck'].table_values.map((val, idx) => {
-                            return typeof (val) === "boolean" ? 0.7 : val
+                            return typeof (val) === "boolean" ? threshold : val
                         }),
                         backgroundColor: response_data['frameCheck'].table_values.map((val, idx) => {
                             if (typeof (val) === 'boolean')
                                 return "rgba(100,100,100,0.2)"
-                            return val >= 0.7 ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)"
+                            return val >= threshold ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)"
                         }),
                         // borderColor: response_data['frameCheck'].table_values.map((val, idx) => { return val >= 0 ? "rgba(0,255,0,0.3)" : "rgba(255,0,0,0.3)" }),
                         // borderWidth: 0.75,
                         barPercentage: 1,
                         borderRadius: 100,
                         inflateAmount: 1,
-                        base: 0.7
+                        base: threshold
                     },
                     {
                         type: 'line',
                         borderColor: "rgba(0,0,100, 0.3)",
                         pointRadius: 0,
                         fill: {
-                            target: { value: 0.7 },
+                            target: { value: threshold },
                             above: "rgba(0,255,0,0.3)",   // Area above the origin
                             below: "rgba(255,0,0,0.3)"    // below the origin
                         },
@@ -104,7 +105,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
             temp_chart_data["frameCheck"] = frame_chart_data;
         }
         if (response_data["audioAnalysis"]) {
-
+            const threshold = response_data['audioAnalysis'].threshold;
             const audio_chart_data = {
                 labels: response_data['audioAnalysis'].table_idx.map(
                     (val, idx) => {
@@ -114,22 +115,24 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                 ),
                 datasets: [
                     {
-                        label: "Probablility of tampering (-ve value deems suspicious)",
+                        label: "Probablility of real",
                         data: response_data['audioAnalysis'].table_values,
-                        backgroundColor: response_data['audioAnalysis'].table_values.map((val, idx) => { return val >= 0 ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)" }),
+                        backgroundColor: response_data['audioAnalysis'].table_values.map((val, idx) => { 
+                            return val >= threshold ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)" 
+                        }),
                         // borderColor: response_data['audioAnalysis'].table_values.map((val, idx) => { return val >= 0 ? "rgba(0,255,0,0.3)" : "rgba(255,0,0,0.3)" }),
                         // borderWidth: 0.5,
                         barPercentage: 1,
                         borderRadius: 100,
                         inflateAmount: 1,
-                        base: -1.3
+                        base: threshold
                     },
                     {
                         type: 'line',
                         borderColor: "rgba(0,0,100, 0.3)",
                         pointRadius: 0,
                         fill: {
-                            target: { value: -1.3 },
+                            target: { value: threshold },
                             above: "rgba(0,255,0,0.3)",   // Area above the origin
                             below: "rgba(255,0,0,0.3)"    // below the origin
                         },
@@ -146,30 +149,30 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
     };
 
     // console.log(bbox_idx)
-    useEffect(()=>{
-        
+    useEffect(() => {
+
         //RESET THE bboxes and total frames in case frame analysis was added again
         bboxes = response_data?.frameCheck?.bboxes || [];
         set_bbox_idx(0);
-        total_frames = response_data?.frameCheck?.table_idx.length || 0;    
+        total_frames = response_data?.frameCheck?.table_idx.length || 0;
 
         // console.log(duration, bboxes.length)
 
-        if(duration!==0 && bboxes.length!==0){
+        if (duration !== 0 && bboxes.length !== 0) {
             let new_idx = Math.floor(videoRef.current.currentTime * total_frames / duration)
             // console.log(new_idx);
             set_bbox_idx(new_idx >= total_frames ? total_frames - 1 : new_idx);
         }
-        
-        if(response_data.frameCheck){
+
+        if (response_data.frameCheck) {
             set_curr_analysis("frameCheck");
         }
-        else if(response_data.audioAnalysis){
+        else if (response_data.audioAnalysis) {
             set_curr_analysis("audioAnalysis");
         }
 
         // console.log("video durr", videoRef.current.duration  );
-        if( !isNaN( videoRef.current.duration ) ){
+        if (!isNaN(videoRef.current.duration)) {
             // create the charts depending on the analysis selected
             handleVideoLoadedMetadata();
         }
@@ -208,7 +211,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
         setCurrentTime(videoRef.current.currentTime);
         //bbox update
         //ensure it doesnt exceed total frames
-        if(bboxes.length!==0){
+        if (bboxes.length !== 0) {
             let new_idx = Math.floor(videoRef.current.currentTime * total_frames / duration)
             set_bbox_idx(new_idx >= total_frames ? total_frames - 1 : new_idx);
         }
@@ -519,53 +522,43 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                                     &&
                                     (
                                         <>
-                                            {/* BOTH OK */}
-                                            {
-                                                response_data["frameCheck"].result.toFixed(3) >= 0.7 && response_data["audioAnalysis"].result.toFixed(3) >= -1.3 &&
-                                                <span className='flex gap-1 items-center text-xl '>
-                                                    <span className='font-medium bg-green-200 px-2 py-1 rounded-full w-fit'>No manipulation detected</span>
-                                                    in both
-                                                    <span className='font-medium'>Video and Audio</span>
+                                            <span className='flex flex-col items-center '>
+                                                {
+                                                    response_data["frameCheck"].result.toFixed(3) >= response_data["frameCheck"].threshold ?
+                                                        (
+                                                            <span className='flex gap-1 items-center text-xl '>
+                                                                <span className='font-medium bg-green-200 px-3 py-1 rounded-full w-fit'>No manipulation detected</span>
+                                                                in <span className='font-medium'>Video</span>
+                                                            </span>
+                                                        )
+                                                        :
+                                                        (
+                                                            <span className='flex gap-1 items-center text-xl '>
+                                                                <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
+                                                                in <span className='font-medium'>Video</span>
+                                                            </span>
+                                                        )
+                                                }
+                                                <span className=' text-sm py-3'>
+                                                    and
                                                 </span>
-                                            }
-                                            {/* FRAME OK AUDIO BAD */}
-                                            {
-                                                response_data["frameCheck"].result.toFixed(3) >= 0.7 && response_data["audioAnalysis"].result.toFixed(3) < -1.3 &&
-                                                <span className='flex flex-wrap gap-3 justify-center items-center text-xl'>
-                                                    <span>
-                                                        <span className='font-medium bg-red-200 px-2 mx-2 py-1 rounded-full w-fit'>Manipulation detected</span>
-                                                        in <span className='font-medium'>Audio</span>,
-                                                    </span>
-                                                    <span>
-                                                        <span className='font-medium bg-green-200 px-2 mx-2 py-1 rounded-full w-fit'>NO Manipulation detected</span>
-                                                        in <span className='font-medium'>Video</span>
-                                                    </span>
-                                                </span>
-                                            }
-
-                                            {/* FRAME BAD AUDIO OK */}
-                                            {
-                                                response_data["frameCheck"].result.toFixed(3) < 0.7 && response_data["audioAnalysis"].result.toFixed(3) >= -1.3 &&
-                                                <span className='flex flex-wrap gap-3 justify-center items-center text-xl'>
-                                                    <span>
-                                                        <span className='font-medium bg-red-200 px-2 mx-2 py-1 rounded-full w-fit'>Manipulation detected</span>
-                                                        in <span className='font-medium'>Video</span>,
-                                                    </span>
-                                                    <span>
-                                                        <span className='font-medium bg-green-200 px-2 mx-2 py-1 rounded-full w-fit'>NO Manipulation detected</span>
-                                                        in <span className='font-medium'>Audio</span>
-                                                    </span>
-                                                </span>
-                                            }
-                                            {/* BOTH OK */}
-                                            {
-                                                response_data["frameCheck"].result.toFixed(3) < 0.7 && response_data["audioAnalysis"].result.toFixed(3) < -1.3 &&
-                                                <span className='flex gap-1 items-center text-xl'>
-                                                    <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
-                                                    in both
-                                                    <span className='font-medium'>Video and Audio</span>
-                                                </span>
-                                            }
+                                                {
+                                                    response_data["audioAnalysis"].result.toFixed(3) >= response_data["audioAnalysis"].threshold ?
+                                                        (
+                                                            <span className='flex gap-1 items-center text-xl '>
+                                                                <span className='font-medium bg-green-200 px-3 py-1 rounded-full w-fit'>No manipulation detected</span>
+                                                                in <span className='font-medium'>Audio</span>
+                                                            </span>
+                                                        )
+                                                        :
+                                                        (
+                                                            <span className='flex gap-1 items-center text-xl '>
+                                                                <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
+                                                                in <span className='font-medium'>Audio</span>
+                                                            </span>
+                                                        )
+                                                }
+                                            </span>
                                         </>
                                     )
                                 }
@@ -575,25 +568,22 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                                     &&
                                     (
                                         <>
-                                            {/* VIDEO OK */}
                                             {
-                                                response_data["frameCheck"].result.toFixed(3) >= 0.7 &&
-                                                <span className='flex gap-1 items-center'>
-                                                    <span className='font-medium bg-green-200 px-2 py-1 rounded-full w-fit'>No manipulation detected</span>
-                                                    in
-                                                    <span className='font-medium'>Video</span>
-                                                </span>
+                                                response_data["frameCheck"].result.toFixed(3) >= response_data["frameCheck"].threshold ?
+                                                    (
+                                                        <span className='flex gap-1 items-center text-xl '>
+                                                            <span className='font-medium bg-green-200 px-3 py-1 rounded-full w-fit'>No manipulation detected</span>
+                                                            in <span className='font-medium'>Video</span>
+                                                        </span>
+                                                    )
+                                                    :
+                                                    (
+                                                        <span className='flex gap-1 items-center text-xl '>
+                                                            <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
+                                                            in <span className='font-medium'>Video</span>
+                                                        </span>
+                                                    )
                                             }
-                                            {/* VIDEO BAD */}
-                                            {
-                                                response_data["frameCheck"].result.toFixed(3) < 0.7 &&
-                                                <span className='flex gap-1 items-center'>
-                                                    <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
-                                                    in
-                                                    <span className='font-medium'>Video</span>
-                                                </span>
-                                            }
-
                                         </>
                                     )
                                 }
@@ -603,67 +593,145 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                                     &&
                                     (
                                         <>
-                                            {/* AUDIO OK */}
                                             {
-                                                response_data["audioAnalysis"].result.toFixed(3) >= -1.3 &&
-                                                <span className='flex gap-1 items-center'>
-                                                    <span className='font-medium bg-green-200 px-2 py-1 rounded-full w-fit'>No manipulation detected</span>
-                                                    in<span className='font-medium'>Audio</span>
-                                                </span>
-                                            }
-                                            {/* AUDIO OK */}
-                                            {
-                                                response_data["audioAnalysis"].result.toFixed(3) < -1.3 &&
-                                                <span className='flex gap-1 items-center'>
-                                                    <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
-                                                    in<span className='font-medium'>Audio</span>
-                                                </span>
+                                                response_data["audioAnalysis"].result.toFixed(3) >= response_data["audioAnalysis"].threshold ?
+                                                    (
+                                                        <span className='flex gap-1 items-center text-xl '>
+                                                            <span className='font-medium bg-green-200 px-3 py-1 rounded-full w-fit'>No manipulation detected</span>
+                                                            in <span className='font-medium'>Audio</span>
+                                                        </span>
+                                                    )
+                                                    :
+                                                    (
+                                                        <span className='flex gap-1 items-center text-xl '>
+                                                            <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
+                                                            in <span className='font-medium'>Audio</span>
+                                                        </span>
+                                                    )
                                             }
                                         </>
                                     )
                                 }
                             </div>
-                            <div className=' flex flex-col items-center py-4 gap-4 '>
-                                {
-                                    // result of all analysis
-                                    Object.keys(response_data).map((val, idx) => {
-                                        if(response_data[val]==undefined)
-                                            return
-                                        const result = (response_data[val].result).toFixed(3);
-                                        let threshold = 0;
-                                        if (val === "frameCheck")
-                                            threshold = 0.7
-                                        else if (val === 'audioAnalysis')
-                                            threshold = -1.3
-                                        return (
-                                            <div key={idx} className={` bg-white flex flex-col w-fit items-center gap-3 min-w-96 px-5 py-2 rounded-lg shadow ${(result) > threshold ? " shadow-green-700" : " shadow-red-700"}  `}>
-                                                <span className=' text-xl'>
-                                                    {
-                                                        val === "frameCheck" &&
-                                                        (`Frame Check Result`)
-                                                    }
-                                                    {
-                                                        val === "audioAnalysis" &&
-                                                        (`Audio Check Result`)
-                                                    }
-                                                </span>
-                                                <span className={` text-2xl px-6 py-2 rounded-full font-semibold ${(result) > threshold ? " bg-green-200  text-green-700" : " bg-red-200 text-red-700"}`}>
-                                                    {result}
-                                                </span>
-                                                <span className=' text-xs'>
-                                                    {
-                                                        val === "frameCheck" &&
-                                                        (`< 0.7 deems it suspicious of forgery`)
-                                                    }
-                                                    {
-                                                        val === "audioAnalysis" &&
-                                                        (`< -1.3 deems it suspicious of forgery`)
-                                                    }
-                                                </span>
-                                            </div>
-                                        )
-                                    })
-                                }
+                            <div className="flex flex-col justify-between ">
+                                {/* REAL-FAKE INDICATOR */}
+                                <>
+                                    {/* <div className="relative  w-[340px] ml-5 mb-12 mt-4">
+                                    <input
+                                        type="range"
+                                        className={`result-slider ${prediction["prediction"] ? "green" : "red"} absolute w-[400px] outline-none transition-all duration-300 cursor-default`}
+                                        min="0"
+                                        max="100"
+                                        value={prediction["prediction"] ? prediction["percentage"] : 100 - prediction["percentage"]}
+                                    // Note: Use "disabled" instead of "disable"
+                                    />
+                                    <div className="absolute w-0.5 bg-blue-100/80 h-7 left-[200px] z-10 " >
+                                        <span className=' relative top-7  -left-1'>
+                                            0
+                                        </span>
+                                    </div>
+                                    <div className="absolute w-0.5 bg-blue-100/80 h-8 left-[100px] z-10" >
+                                    <span className=' relative top-7  -left-2'>
+                                    50
+                                    </span>
+                                    </div>
+                                    <div className="absolute w-0.5 bg-blue-100/80 h-8 left-[300px] z-10" >
+                                    <span className=' relative top-7  -left-2'>
+                                    50
+                                    </span>
+                                    </div>
+                                    <div className="absolute -top-6 text-sm left-3 text-red-700 font-semibold ">
+                                        Fake
+                                    </div>
+                                    <div className=" absolute text-sm -top-6 -right-12 text-green-700 font-semibold">
+                                        Real
+                                    </div>
+                                    <div
+                                        className="absolute z-50 bg-white text-black flex items-center justify-center rounded-full p-1 transform -translate-y-1/2 border-4"
+                                        style={{
+                                            left: `${prediction["prediction"] ? prediction["percentage"] : 100 - prediction["percentage"]}%`,
+                                            top: '12.5px',
+                                            width: '60px',
+                                            height: '60px',
+                                            borderColor: `${prediction["prediction"] ? 'green' : 'red'}`
+                                        }}
+                                    >
+                                        {prediction["percentage"]}
+                                    </div>
+                                </div>  */}
+
+                                </>
+                                {/* FRAME, AUDIO RESULTS BOXES */}
+                                <div className=' flex justify-evenly items-center py-4 w-full gap-4 '>
+                                    {
+                                        // result of all analysis
+                                        Object.keys(response_data).map((val, idx) => {
+                                            if (response_data[val] == undefined)
+                                                return
+
+                                            let pred = response_data[val].result > response_data[val].threshold;
+                                            let perc = (response_data[val].result * 100).toFixed(2);
+                                            return (
+                                                <div key={idx} className={` w-64 bg-white flex flex-col items-center gap-3 px-5 py-2 rounded-lg shadow ${pred ? " shadow-green-700" : " shadow-red-700"}  `}>
+                                                    <span className=' text-xl'>
+                                                        {
+                                                            val === "frameCheck" &&
+                                                            (
+                                                                <div className="flex flex-col gap-2">
+                                                                    <span className=''>
+                                                                        <span className=' pr-4'>
+                                                                            Frame Result:
+                                                                        </span>
+                                                                        <span className={` w-full text-center font-semibold ${pred ? " text-green-700" : "text-red-700"}`}>
+                                                                            {pred ? "Real" : "Fake"}
+                                                                        </span>
+                                                                    </span>
+                                                                </div>
+                                                            )
+                                                        }
+                                                        {
+                                                            val === "audioAnalysis" &&
+                                                            (
+
+                                                                <div className="flex flex-col gap-2">
+                                                                    <span className=''>
+                                                                        <span className=' pr-4'>
+                                                                            Audio Result:
+                                                                        </span>
+                                                                        <span className={` w-full text-center font-semibold ${pred ? " text-green-700" : "text-red-700"}`}>
+                                                                            {pred ? "Real" : "Fake"}
+                                                                        </span>
+                                                                    </span>
+                                                                </div>
+                                                            )
+                                                        }
+                                                    </span>
+                                                    <div className=' flex  items-center w-full gap-2'>
+                                                        <span>
+                                                            Score:
+                                                        </span>
+                                                        <span className={` mx-auto text-2xl px-3 py-1 rounded-full  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
+                                                            {perc} %
+                                                        </span>
+                                                    </div>
+                                                    <div className="relative left-0 top-0 h-3 my-3 ml-16 w-[236px] " >
+                                                        <input
+                                                            type="range"
+                                                            className={`result-seperate-slider absolute w-[168px] outline-none transition-all duration-300 cursor-default`}
+                                                            min="0"
+                                                            max="100"
+                                                            value={perc}
+                                                        />
+                                                    </div>
+                                                    <span className=' text-xs'>
+                                                        confidence on fake or real
+                                                    </span>
+
+                                                </div>
+                                            )
+                                        })
+                                    }
+                                </div>
                             </div>
 
                             {/* SIDE TABS + BUTTONS */}
@@ -772,7 +840,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
 
                             {
                                 videoRef !== null &&
-                                <div className={`${curr_analysis === "audioAnalysis"? "" : "hidden"}`} >
+                                <div className={`${curr_analysis === "audioAnalysis" ? "" : "hidden"}`} >
                                     <Waveform videoRef={videoRef} />
                                 </div>
                             }
