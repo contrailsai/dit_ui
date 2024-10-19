@@ -228,7 +228,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
         set_taking_ss(true);
         // Wait for the state update to be applied
         await new Promise(resolve => {
-            setTimeout(resolve, 200);
+            setTimeout(resolve, 500);
         });
 
         let temp_curr_analysis = curr_analysis;
@@ -242,43 +242,43 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
 
         doc.setFont("Outfit", "bold");
 
-        const my = 0.5;
+        const my = 0.6;
         const mx = 0.3;
 
         let curr_x = mx;
         let curr_y = my;
 
-        let fontSize = 16;
-        doc.setFontSize(16);
+        let fontSize = 18;
+        doc.setFontSize(fontSize);
 
         // SHOW LOGO AND NAME OF COMPANY
-        const logo_img_w = 16 / 72;
-        const logo_img_h = 16 / 72
+        const logo_img_w = 18 / 72;
+        const logo_img_h = 18 / 72
 
         doc.addImage(logo_base64, 'PNG', curr_x, curr_y - 16 / 72, logo_img_w, logo_img_h);
-        curr_x += 16 / 72 + 5 / 72;
+        curr_x += 16 / 72 + 7 / 72;
         doc.setTextColor(2, 83, 288);
         doc.text('Contrails AI', curr_x, curr_y - 2 / 72);
 
 
         curr_x = mx;
-        curr_y += fontSize / 72 + 10 / 72; //go down (1. for the above comapny name text, 2. for space b/t the 2 text)
+        curr_y += fontSize / 72 + 14 / 72; //go down (1. for the above comapny name text, 2. for space b/t the 2 text)
 
         // PRINT Heading (bold)
-        fontSize = 18;
+        fontSize = 24;
         doc.setFontSize(fontSize);
         doc.setTextColor(0, 0, 0);
         doc.text("Manipulation Detection Report", curr_x, curr_y);
-        curr_y += fontSize / 72 + 8 / 72;
+        curr_y += fontSize / 72 + 10 / 72;
 
-        // PRINT Audio Analysis
-        fontSize = 15;
+        // PRINT FILE DATA
+        fontSize = 18;
         doc.setFontSize(fontSize);
         doc.text("File Data", curr_x, curr_y);
 
         curr_y += fontSize / 72 + 6 / 72;
 
-        fontSize = 10;
+        fontSize = 12;
         doc.setFontSize(fontSize);
 
         // FILE NAME
@@ -309,18 +309,53 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
         doc.text(`${duration.toFixed(1)} sec`, curr_x, curr_y);
 
         curr_x = mx;
-        curr_y += 2 * fontSize / 72;
+        curr_y += (2 * fontSize / 72) + (12 / 72);
 
         // SHOW VIDEO PREVIEW, RESULT OF BOTH ANALYSIS AND VERDICT
-        const result_element = result_ref.current;
-        let result_canvas = await html2canvas(result_element);
-        const result_imgData = result_canvas.toDataURL('image/png');
-        const res_img_w = 550 / 72;
-        const res_img_h = (result_canvas.height * res_img_w) / result_canvas.width;
-        doc.addImage(result_imgData, 'PNG', curr_x, curr_y, res_img_w, res_img_h, '', 'FAST');
+        // const result_element = result_ref.current;
+        // let result_canvas = await html2canvas(result_element);
+        // const result_imgData = result_canvas.toDataURL('image/png');
+        // const res_img_w = 550 / 72;
+        // const res_img_h = (result_canvas.height * res_img_w) / result_canvas.width;
+        // doc.addImage(result_imgData, 'PNG', curr_x, curr_y, res_img_w, res_img_h, '', 'FAST');
+
+        // doc.setFillColor(2, 83, 288)
+        // doc.rect(curr_x, curr_y, 20*16/72, 20*9/72, 'F')
+        fontSize = 18;
+        doc.setFontSize(fontSize);
+        doc.setFont("Outfit", "bold");
+        doc.text("Result", curr_x, curr_y);
+        doc.setFont("Outfit", "normal");
+        curr_y += fontSize / 72 + 6 / 72;
+        fontSize = 12;
+
+        doc.setFontSize(14);
+        if (response_data["audioAnalysis"] && response_data["audioAnalysis"]["result"]<response_data["audioAnalysis"]["threshold"] ){
+            doc.text(`Manipulation detected in Audio`, curr_x, curr_y);
+        }
+        else{
+            doc.text(`No manipulation detected in Audio`, curr_x, curr_y);
+        }
+
+        doc.setFontSize(fontSize);
+        curr_y += fontSize / 72 + 4 / 72;
+        if( response_data["audioAnalysis"] && response_data["frameCheck"]){
+            doc.text('and', curr_x, curr_y);
+            curr_y += fontSize / 72 + 6 / 72;
+        }
+        
+        doc.setFontSize(14);
+        if( response_data["frameCheck"] && response_data["frameCheck"]["result"]<response_data["frameCheck"]["threshold"] ){
+            doc.text(`Manipulation detected in Video`, curr_x, curr_y);
+        }
+        else{
+            doc.text(`No manipulation detected in Video`, curr_x, curr_y);
+        }
+        doc.setFontSize(fontSize);
+        curr_y += fontSize / 72 ;
 
         curr_x = mx;
-        curr_y += res_img_h + 20 / 72; //gap of 20 px
+        curr_y += 20 / 72; //gap of 20 px
 
         doc.setDrawColor(150, 150, 150);
         doc.setLineWidth(1 / 72);
@@ -331,7 +366,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
         if (response_data["audioAnalysis"] !== undefined) {
 
             //AUDIO ANALYSIS START
-            fontSize = 16;
+            fontSize = 18;
             doc.setFontSize(fontSize);
             doc.text("Audio Analysis", curr_x, curr_y);
 
@@ -343,36 +378,51 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                 setTimeout(resolve, 100);
             });
 
-            fontSize = 12;
+            fontSize = 16;
             doc.setFontSize(fontSize);
 
-            const audio_result = (response_data["audioAnalysis"].result).toFixed(3);
+            const audio_result = (response_data["audioAnalysis"].result).toFixed(4);
+            const threshold = response_data["audioAnalysis"].threshold
 
-            if (audio_result >= -1.3) {
+            if (audio_result >= threshold) {
                 doc.text("The audio analysis detected no manipulation", curr_x, curr_y);
             }
             else {
                 doc.text("The audio analysis detected manipulation", curr_x, curr_y);
             }
-            curr_y += fontSize / 72 + 6 / 72;
+            curr_y += fontSize / 72 + 8 / 72;
 
-            doc.text("Overall Audio result: ", curr_x, curr_y);
+            fontSize = 14;
+            doc.setFontSize(fontSize);
 
-            curr_x += 110 / 72;
+            doc.text("Audio result: ", curr_x, curr_y);
+
+            curr_x += 90 / 72;
             doc.setFont("Outfit", "bold");
 
-            audio_result >= -1.3 ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${audio_result} `, curr_x, curr_y);
+            audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
+            doc.text(` ${audio_result >= threshold ? "Real": "Fake"} `, curr_x, curr_y);
+
+            doc.setTextColor(0, 0, 0);
+            doc.setFont("Outfit", "normal");
+            curr_x = mx;
+            curr_y += fontSize / 72 + 6 / 72;
+            doc.text("Result Score: ", curr_x, curr_y);
+            
+            curr_x += 90 / 72;
+            doc.setFont("Outfit", "bold");
+            audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
+            doc.text(` ${audio_result*100} %`, curr_x, curr_y);
 
             curr_x = mx;
-            curr_y += fontSize / 72 + 3 / 72;
+            curr_y += fontSize / 72 + 5 / 72;
 
             fontSize = 9;
             doc.setFontSize(fontSize);
             doc.setTextColor(0, 0, 0);
             doc.setFont("Outfit", "normal");
 
-            doc.text("result value less than -1.3 deems it suspicious of manipulation", curr_x, curr_y);
+            doc.text("Result value shows the probability of audio being real", curr_x, curr_y);
             curr_y += 2 * fontSize / 72;
 
             const audio_result_element = audio_graph_Ref.current;
@@ -383,7 +433,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
             doc.addImage(audio_result_imgData, 'PNG', curr_x, curr_y, aud_res_img_w, aud_res_img_h, '', 'FAST');
 
             curr_x = mx;
-            curr_y += aud_res_img_h + 20 / 72; //gap of 20 px
+            curr_y += aud_res_img_h + 30 / 72; //gap of 30 px
 
             doc.setDrawColor(150, 150, 150);
             doc.setLineWidth(1 / 72);
@@ -395,7 +445,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
         if (response_data["frameCheck"] !== undefined) {
 
             //FRAME ANALYSIS START
-            fontSize = 16;
+            fontSize = 18;
             doc.setFontSize(fontSize);
             doc.text("Frame Analysis", curr_x, curr_y);
 
@@ -407,36 +457,51 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                 setTimeout(resolve, 100);
             });
 
-            fontSize = 12;
+            fontSize = 16;
             doc.setFontSize(fontSize);
 
-            const frame_result = (response_data["frameCheck"].result).toFixed(3);
+            const frame_result = (response_data["frameCheck"].result).toFixed(4);
+            const threshold = response_data["frameCheck"].threshold;
 
-            if (frame_result >= 0.7) {
+            if (frame_result >= threshold) {
                 doc.text("The video frames analysis detected no manipulation", curr_x, curr_y);
             }
             else {
                 doc.text("The video frames analysis detected manipulation", curr_x, curr_y);
             }
-            curr_y += fontSize / 72 + 6 / 72;
+            curr_y += fontSize / 72 + 8 / 72;
 
-            doc.text("Overall Frame Result: ", curr_x, curr_y);
+            fontSize = 14;
+            doc.setFontSize(fontSize);
 
-            curr_x += 120 / 72;
+            doc.text("Frame result: ", curr_x, curr_y);
+
+            curr_x += 90 / 72;
             doc.setFont("Outfit", "bold");
 
-            frame_result >= -1.3 ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${frame_result} `, curr_x, curr_y);
+            frame_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
+            doc.text(` ${frame_result >= threshold ? "Real": "Fake"} `, curr_x, curr_y);
+
+            doc.setTextColor(0, 0, 0);
+            doc.setFont("Outfit", "normal");
+            curr_x = mx;
+            curr_y += fontSize / 72 + 6 / 72;
+            doc.text("Result Score: ", curr_x, curr_y);
+            
+            curr_x += 90 / 72;
+            doc.setFont("Outfit", "bold");
+            frame_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
+            doc.text(` ${frame_result*100} %`, curr_x, curr_y);
 
             curr_x = mx;
-            curr_y += fontSize / 72 + 3 / 72;
+            curr_y += fontSize / 72 + 5 / 72;
 
             fontSize = 9;
             doc.setFontSize(fontSize);
             doc.setTextColor(0, 0, 0);
             doc.setFont("Outfit", "normal");
 
-            doc.text("result value less than 0.7 deems it suspicious of manipulation", curr_x, curr_y);
+            doc.text("Result value shows the probability of video frames being real", curr_x, curr_y);
             curr_y += 2 * fontSize / 72;
 
             const frame_result_element = frame_graph_Ref.current;
@@ -447,7 +512,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
             doc.addImage(frame_result_imgData, 'PNG', curr_x, curr_y, frm_res_img_w, frm_res_img_h, '', 'FAST');
 
             curr_x = mx;
-            curr_y += frm_res_img_h + 20 / 72; //gap of 20 px
+            curr_y += frm_res_img_h + 30 / 72; //gap of 30 px
         }
 
         set_taking_ss(false);
@@ -773,7 +838,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                                             width: `${((bboxes[bbox_idx][0][2] - bboxes[bbox_idx][0][0]) / videoDimensions.width) * 100}%`,
                                             height: `${((bboxes[bbox_idx][0][3] - bboxes[bbox_idx][0][1]) / videoDimensions.height) * 100}%`,
                                         }}
-                                        className={` ${taking_ss ? 'hidden' : ''} z-10 absolute border-4 rounded ${response_data["frameCheck"]["table_values"][bbox_idx] >= 0.7 ? " border-green-500 " : "border-red-500"} transition-all duration-75 `}
+                                        className={` ${taking_ss ? 'hidden' : ''} z-10 absolute border-4 rounded ${response_data["frameCheck"]["table_values"][bbox_idx] >= response_data["frameCheck"]["threshold"] ? " border-green-500 " : "border-red-500"} transition-all duration-75 `}
                                     />
                                 )}
                                 <video
@@ -790,9 +855,9 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                             {
                                 curr_analysis === 'frameCheck' && bboxes.length > 0 && typeof (bboxes[bbox_idx]) !== "boolean" && (
 
-                                    <div className={` ${taking_ss ? 'hidden' : ''}  ${response_data["frameCheck"]["table_values"][bbox_idx] >= 0.7 ? "bg-green-300" : "bg-red-300"} rounded-lg py-1 px-5 `}>
+                                    <div className={` ${taking_ss ? 'hidden' : ''}  ${response_data["frameCheck"]["table_values"][bbox_idx] >= response_data["frameCheck"]["threshold"] ? "bg-green-300" : "bg-red-300"} rounded-lg py-1 px-5 `}>
                                         {
-                                            response_data["frameCheck"]["table_values"][bbox_idx] >= 0.7 ?
+                                            response_data["frameCheck"]["table_values"][bbox_idx] >= response_data["frameCheck"]["threshold"] ?
                                                 "Current frame seems ok"
                                                 :
                                                 "Current frame seems suspicious"

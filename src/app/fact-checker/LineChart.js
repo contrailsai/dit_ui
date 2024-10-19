@@ -27,6 +27,10 @@ function LineChart({ chartData }) {
     scales: {
       x: {
         position: 'top'
+      },
+      y: {
+        min: 0,
+        max: 1
       }
     },
     plugins: {

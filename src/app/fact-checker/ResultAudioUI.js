@@ -62,7 +62,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                         ),
                         datasets: [
                             {
-                                label: "Probablility of tampering (-ve value deems suspicious)",
+                                label: "Probablility of real",
                                 data: response_data['audioAnalysis'].table_values,
                                 backgroundColor: response_data['audioAnalysis'].table_values.map((val, idx) => { return val >= threshold ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)" }),
                                 barPercentage: 1,
@@ -122,43 +122,43 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
 
         doc.setFont("Outfit", "bold");
 
-        const my = 0.5;
+        const my = 0.6;
         const mx = 0.3;
 
         let curr_x = mx;
         let curr_y = my;
 
-        let fontSize = 16;
-        doc.setFontSize(16);
+        let fontSize = 18;
+        doc.setFontSize(fontSize);
 
         // SHOW LOGO AND NAME OF COMPANY
-        const logo_img_w = 16 / 72;
-        const logo_img_h = 16 / 72
+        const logo_img_w = 18 / 72;
+        const logo_img_h = 18 / 72
 
         doc.addImage(logo_base64, 'PNG', curr_x, curr_y - 16 / 72, logo_img_w, logo_img_h);
-        curr_x += 16 / 72 + 5 / 72;
+        curr_x += 16 / 72 + 7 / 72;
         doc.setTextColor(2, 83, 288);
         doc.text('Contrails AI', curr_x, curr_y - 2 / 72);
 
 
         curr_x = mx;
-        curr_y += fontSize / 72 + 10 / 72; //go down (1. for the above comapny name text, 2. for space b/t the 2 text)
+        curr_y += fontSize / 72 + 14 / 72; //go down (1. for the above comapny name text, 2. for space b/t the 2 text)
 
         // PRINT Heading (bold)
-        fontSize = 18;
+        fontSize = 24;
         doc.setFontSize(fontSize);
         doc.setTextColor(0, 0, 0);
         doc.text("Manipulation Detection Report", curr_x, curr_y);
-        curr_y += fontSize / 72 + 8 / 72;
+        curr_y += fontSize / 72 + 10 / 72;
 
         // PRINT FILE DATA
-        fontSize = 16;
+        fontSize = 18;
         doc.setFontSize(fontSize);
         doc.text("File Data", curr_x, curr_y);
 
         curr_y += fontSize / 72 + 6 / 72;
 
-        fontSize = 10;
+        fontSize = 12;
         doc.setFontSize(fontSize);
 
         // FILE NAME
@@ -189,46 +189,63 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
         doc.text(`${wavesurferRef.current.getDuration().toFixed(1)} sec`, curr_x, curr_y);
 
         curr_x = mx;
-        curr_y += fontSize / 72 + 30 / 72;
+        curr_y += (2 * fontSize / 72) + (12 / 72) + (30 / 72);
 
         //AUDIO ANALYSIS START
-        fontSize = 16;
-        doc.setFont("Outfit", "bold");
+        fontSize = 18;
         doc.setFontSize(fontSize);
+
+        doc.setFont("Outfit", "bold");
         doc.text("Audio Analysis", curr_x, curr_y);
 
         curr_y += fontSize / 72 + 6 / 72;
-        fontSize = 12;
-        doc.setFont("Outfit", "normal")
+
+        fontSize = 16;
         doc.setFontSize(fontSize);
+        doc.setFont("Outfit", "normal")
 
-        const audio_result = (response_data["audioAnalysis"].result).toFixed(3);
+        const audio_result = (response_data["audioAnalysis"].result).toFixed(4);
+        const threshold = response_data["audioAnalysis"].threshold
 
-        if (audio_result >= -1.3) {
+        if (audio_result >= threshold) {
             doc.text("The audio analysis detected no manipulation", curr_x, curr_y);
         }
         else {
             doc.text("The audio analysis detected manipulation", curr_x, curr_y);
         }
-        curr_y += fontSize / 72 + 6 / 72;
+        curr_y += fontSize / 72 + 8 / 72;
+        
+        fontSize = 14;
+        doc.setFontSize(fontSize);
 
-        doc.text("Overall Audio result: ", curr_x, curr_y);
+        doc.text("Audio result: ", curr_x, curr_y);
 
-        curr_x += 110 / 72;
+        curr_x += 90 / 72;
         doc.setFont("Outfit", "bold");
 
-        audio_result >= -1.3 ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-        doc.text(` ${audio_result} `, curr_x, curr_y);
+        audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
+        doc.text(` ${audio_result >= threshold ? "Real": "Fake"} `, curr_x, curr_y);
+
+        doc.setTextColor(0, 0, 0);
+        doc.setFont("Outfit", "normal");
+        curr_x = mx;
+        curr_y += fontSize / 72 + 6 / 72;
+        doc.text("Result Score: ", curr_x, curr_y);
+        
+        curr_x += 90 / 72;
+        doc.setFont("Outfit", "bold");
+        audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
+        doc.text(` ${(audio_result*100).toFixed(2)} %`, curr_x, curr_y);
 
         curr_x = mx;
-        curr_y += fontSize / 72 + 3 / 72;
+        curr_y += fontSize / 72 + 5 / 72;
 
         fontSize = 9;
         doc.setFontSize(fontSize);
         doc.setTextColor(0, 0, 0);
         doc.setFont("Outfit", "normal");
 
-        doc.text("result value less than -1.3 deems it suspicious of manipulation", curr_x, curr_y);
+        doc.text("Result value shows the probability of audio being real", curr_x, curr_y);
         curr_y += 2 * fontSize / 72;
 
         const audio_result_element = audio_graph_ref.current;
