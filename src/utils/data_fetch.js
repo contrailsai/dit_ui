@@ -1,11 +1,10 @@
 "use server"
 import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
-
+import { publishSNSMessage } from "./sns";
 import { s3Client } from "@/utils/s3";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-
 // get model response
 export const db_updates = async ({ new_token_amount, user_id }) => {
 
@@ -34,18 +33,18 @@ export const get_user_data = async () => {
     }
     const user_id = user.id;
     //FETCH TOKENS
-    
+
     const { data: [token_data], error } = await supabase
-    .from('Tokens')
-    .select('token_amount,verifier')
-    .eq('id', user_id);
-    
+        .from('Tokens')
+        .select('token_amount,verifier')
+        .eq('id', user_id);
+
     // data =  [ { token_amount: 500 } ]
     // console.log(token_data, error, user_id)
-    if (error || token_data===undefined ) {
-        
-        error!==null?console.error("ERROR IN GETTING USER'S TOKENS: ", error): console.error("error in getting user tokens: user not defined in tokens db");
-        return {error: "error in getting user tokens"}
+    if (error || token_data === undefined) {
+
+        error !== null ? console.error("ERROR IN GETTING USER'S TOKENS: ", error) : console.error("error in getting user tokens: user not defined in tokens db");
+        return { error: "error in getting user tokens" }
     }
 
     const user_data = { ...user.user_metadata, "id": user_id, tokens: token_data.token_amount, verifier: token_data.verifier }
@@ -65,8 +64,8 @@ export const user_logout = async () => {
     return redirect("/login");
 }
 
-export const get_user_transactions = async (verifier)=>{
-    
+export const get_user_transactions = async (verifier) => {
+
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -74,39 +73,48 @@ export const get_user_transactions = async (verifier)=>{
         return;
 
     let transactions_list = {}
-    if (verifier){
+    if (verifier) {
         //get data from db and return it 
         transactions_list = await supabase
-        .from('Transactions')
-        .select('id,created_at,input_request,file_metadata,status,prediction')
+            .from('Transactions')
+            .select('id,created_at,input_request,file_metadata,status,prediction,method')
     }
-    else{
+    else {
         //get data from db and return it 
         transactions_list = await supabase
-        .from('Transactions')
-        .select('id,created_at,input_request,file_metadata,status,prediction')
-        .eq('user_id', user.id) 
+            .from('Transactions')
+            .select('id,created_at,input_request,file_metadata,status,prediction,method')
+            .eq('user_id', user.id)
     }
 
 
-    if (transactions_list.error){
+    if (transactions_list.error) {
         console.error(transactions_list.error)
         return {
             "error": "error in getting user history"
         }
     }
     // SORT DATA BY DATE REVERSE ORDER
-    transactions_list.data.sort((x, y)=>{
+    transactions_list.data.sort((x, y) => {
         const timex = new Date(x.created_at).getTime()
         const timey = new Date(y.created_at).getTime()
-        return -(timex-timey)
+        return -(timex - timey)
     })
-    return transactions_list.data;
+
+    let t_list = transactions_list.data.filter((val, idx)=>{ 
+        if(!val.method)
+            return true
+        if (val.method=='verification')
+            return true
+        else
+            return false
+     })
+
+    return t_list; //transactions_list.data;
 }
 
+export const get_result_for_id = async (transaction_id) => {
 
-export const get_result_for_id = async (transaction_id)=>{
- 
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -114,27 +122,32 @@ export const get_result_for_id = async (transaction_id)=>{
         return;
 
     //get data from db and return it 
-    const {data, error} = await supabase
-    .from('Transactions')
-    .select('id,created_at,input_request,file_metadata,status,verifier_metadata,models_responses,media_key')
-    .eq('id', transaction_id) 
-    .single()
+    const { data, error } = await supabase
+        .from('Transactions')
+        .select('*')
+        .eq('id', transaction_id)
+        .single()
 
-    if (error){
+    if (error) {
         console.error(error)
         return {
             "error": "error in getting user history"
         }
     }
     //GET S3 media file here
+    // Add the signed URL to the data object
+    data.signedUrl = await get_signed_url(data.media_key);
+    return data;
+}
 
+export const get_signed_url = async (key) => {
     // Generate a signed URL for the media file in S3
     let signedUrl = null;
-    if (data.media_key) {
+    if (key) {
         try {
             const command = new GetObjectCommand({
                 Bucket: process.env.S3_BUCKET_NAME,
-                Key: data.media_key,
+                Key: key,
             });
 
             signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 }); // URL valid for 1 hour
@@ -142,29 +155,35 @@ export const get_result_for_id = async (transaction_id)=>{
             console.error('Error generating signed URL:', s3Error);
         }
     }
-
-    // Add the signed URL to the data object
-    data.signedUrl = signedUrl;
-    return data;
+    return signedUrl
 }
 
-export const verify_case = async (id, metadata) => {
-    const supabase = createClient();
+export const verify_case = async (id, metadata, user_id) => {
+
+    const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser();
-
     if (!user) return;
-
     // console.log('Transaction ID:', id);
-    
+
     const result = await supabase
         .from('Transactions')
-        .update({ 
+        .update({
             status: true,
             verifier_metadata: { ...metadata, verifier_id: user.id }
         })
         .match({ id });
 
-    // console.log('Update Result:', result);
+    // get client's email
+    const { data: {user: { email }}, error } = await supabase.auth.admin.getUserById(user_id)
+    console.log("sent email to user at: ", email);
+    let message = {
+        "notification_type": "client",
+        "client_email": email,  // Access email from data object
+        "status": "PROCESSING_COMPLETED",
+        "message": "Analysis done and Verified by a OSINT reviewer",
+        "data": metadata
+    }
+    await publishSNSMessage(message);
 
     if (result.error) {
         console.error('Update Error:', result.error);

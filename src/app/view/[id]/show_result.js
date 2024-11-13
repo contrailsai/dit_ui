@@ -1,7 +1,7 @@
 "use client"
 
-import ResultsVideoUI from '@/app/fact-checker/ResultVideoUI';
-import ResultsAudioUI from '@/app/fact-checker/ResultAudioUI';
+import ResultsVideoUI from '@/components/ResultVideoUI';
+import ResultsAudioUI from '@/components/ResultAudioUI';
 import { useState, useEffect } from 'react';
 
 const Result_container = ({ res_data }) => {

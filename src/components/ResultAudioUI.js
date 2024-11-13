@@ -374,7 +374,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                                             />
                                         </div>
                                         <span className=' text-xs'>
-                                            confidence on fake or real
+                                            confidence on real
                                         </span>
 
                                     </div>

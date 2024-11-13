@@ -6,7 +6,7 @@ import { db_updates } from "@/utils/data_fetch";
 import { FaPhotoVideo } from "react-icons/fa";
 import { PiWaveformBold } from "react-icons/pi";
 
-const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, setfileUrl, set_file_metadata, set_chosen_analysis }) => {
+const Form = ({ user_data, set_user_data, response_data, set_res_data, set_id }) => {
 
     // input (file) ref
     const fileInputRef = useRef(null);
@@ -114,13 +114,13 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                             size: humanFileSize(file.size),
                             type: file.type
                         },
-                        method: "verification"
+                        method: "direct"
                     }
                 ),
             });
             if (!res.ok) throw new Error('Failed to get signed URL');
 
-            const { signedUrl } = await res.json();
+            const { id, signedUrl } = await res.json();
 
             const res_s3 = await fetch(signedUrl, {
                 method: 'PUT',
@@ -128,10 +128,11 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                 headers: { 'Content-Type': file.type },
             });
             alert('File Uploaded')
-
+            return id
         } catch (error) {
             console.error('Error uploading file:', error);
             alert('Failed to upload file');
+            return ""
         }
     }
 
@@ -149,7 +150,8 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
             let res_data = {};
 
             // STORE MEDIA FILE IN S3
-            await upload_file_s3();
+            let supabase_id = await upload_file_s3();
+
             // NEXT STEP -------------> WAIT FOR RESPONSE
             res_data = { "uploaded": true }
 
@@ -181,7 +183,6 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                 console.log("ERROR FROM SERVER: ", res_data);
                 res_data = { message: "Server had an issue" };
                 set_res_data(res_data);
-                set_chosen_analysis(analysisTypes);
                 setLoading(false);
                 return;
             }
@@ -189,7 +190,6 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                 console.log("ERROR FROM SERVER: ", res_data);
                 res_data = { message: "Server had an issue" };
                 set_res_data(res_data);
-                set_chosen_analysis(analysisTypes);
                 setLoading(false);
                 return;
             }
@@ -199,7 +199,6 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
             if (db_update_res !== null) {
                 res_data = { message: db_update_res.error };
                 set_res_data(res_data);
-                set_chosen_analysis(analysisTypes);
                 setLoading(false);
                 return;
             }
@@ -207,23 +206,12 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
             // setup the data if no issue occured
             set_user_data({ ...user_data, tokens: new_token_amount });
 
-            set_file_metadata({
-                name: file.name,
-                size: humanFileSize(file.size),
-                type: file.type
-            });
             set_res_data(res_data);
-            set_chosen_analysis(analysisTypes);
+            set_id(supabase_id)
         }
         catch (error) {
             console.error("Error in sending data", error);
         }
-
-        // Create a URL for the uploaded video file
-        let new_fileUrl = URL.createObjectURL(file);
-        setfileUrl(new_fileUrl);
-
-        setLoading(false);
     };
 
     const handle_submit = (e) => {

@@ -41,13 +41,23 @@ const Navbar = ({user_data}) => {
 
                         {/* logout, profile buttons popup */}
                         <div className={`absolute z-30 group-hover:opacity-100 ${show_user_options ? "" : "h-0"} overflow-hidden top-12 right-10  w-40 rounded bg-slate-100 text-gray-600 shadow transition-all`}>
-                            <div className=' flex flex-col divide-gray-300 w-full p-2'>
+                            <div className=' flex flex-col divide-gray-300 w-full px-2 py-3 text-lg'>
+                                {
+                                    user_data.verifier 
+                                    &&
+                                    <Link href={"/media-analyzer"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
+                                        direct checker
+                                    </Link>
+                                }
+                                <Link href={"/fact-checker"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
+                                    fact-checker
+                                </Link>
                                 <Link href={"/user/case-list"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
                                     {user_data.verifier ? "verify Cases" :"Case List"}
                                 </Link>
-                                <Link href={"/user/profile"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
+                                {/* <Link href={"/user/profile"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
                                     Profile
-                                </Link>
+                                </Link> */}
                                 <div onClick={handle_logout} className='px-2 py-1 cursor-pointer hover:bg-slate-200 transition-all '>
                                     Logout
                                 </div>

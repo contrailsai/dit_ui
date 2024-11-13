@@ -64,7 +64,7 @@ const VideoAnalysisForm = ({ user }) => {
                     {
                         !fileUrl &&
                         <>
-                            <h2 className=" w-full text-3xl font-semibold px-5 pt-3 py-6">Manipulation Detection</h2>
+                            <h2 className=" w-full text-3xl font-semibold px-6 pt-3 py-6"> Manipulation Detection</h2>
                             <Form
                                 user_data={user_data}
                                 set_user_data={set_user_data}

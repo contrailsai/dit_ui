@@ -9,7 +9,6 @@ import { Outfit_normal_font } from './outfit-normal-font';
 import { logo_base64 } from './logo_base64';
 
 const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, handle_newCheck }) => {
-    // console.log(response_data)
     const text_val = {
         frameCheck: "Frame Check",
         audioAnalysis: "Audio Analysis"
@@ -789,7 +788,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                                                         />
                                                     </div>
                                                     <span className=' text-xs'>
-                                                        confidence on fake or real
+                                                        confidence on real
                                                     </span>
 
                                                 </div>

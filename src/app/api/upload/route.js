@@ -7,7 +7,7 @@ import { createClient } from "@/utils/supabase/server";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
 
 export async function POST(request) {
-  const { input_request, file_metadata, file_type } = await request.json();
+  const { input_request, file_metadata, method } = await request.json();
   // Check Supabase authentication
   const supabase = createClient();
   const { data: { user }, error } = await supabase.auth.getUser();
@@ -24,6 +24,7 @@ export async function POST(request) {
           user_id: user.id,
           input_request: input_request,
           file_metadata: file_metadata,
+          method: method
         },
       ])
       .select()
@@ -55,15 +56,16 @@ export async function POST(request) {
       QueueUrl: process.env.SQS_QUEUE_URL,
       MessageBody: JSON.stringify(
         {
-          transactionId: data.id,
+          task_id: data.id,
+          application: method==="verification"? "dit" : "admin_demo"
         }
       )
     });
 
     await sqsClient.send(sqsCommand);
+    const id = data.id
 
-
-    return NextResponse.json({ signedUrl });
+    return NextResponse.json({ id, signedUrl });
 
   } catch (error) {
     console.log(error);

@@ -1,7 +1,7 @@
 "use client"
 
-import ResultsVideoUI from '@/app/fact-checker/ResultVideoUI';
-import ResultsAudioUI from '@/app/fact-checker/ResultAudioUI';
+import ResultsVideoUI from '@/components/ResultVideoUI';
+import ResultsAudioUI from '@/components/ResultAudioUI';
 import { useState, useEffect } from 'react';
 import { verify_case } from '@/utils/data_fetch';
 import { useParams } from 'next/navigation';
@@ -155,7 +155,7 @@ const Verifier_results_container = ({ res_data }) => {
     }, [verifier_metadata["AudioCheckModelUse"], verifier_metadata["FrameCheckModelUse"], verifier_metadata["showAudioCheck"], verifier_metadata["showFrameCheck"],])
 
     const handle_submit = async () => {
-        const res_status = await verify_case(id, verifier_metadata);
+        const res_status = await verify_case(id, verifier_metadata, res_data["user_id"]);
         if (res_status === 0) {
             alert("Case Verified!");
         }
