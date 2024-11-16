@@ -4,12 +4,12 @@ import Image from 'next/image';
 import { useState, useRef } from 'react';
 import { user_logout } from '@/utils/data_fetch';
 
-
 const Navbar = ({user_data}) => {
     const [show_user_options, set_show_user_options] = useState(false);
 
     const handle_logout = () => {
         user_logout();
+        window.location.href = '/login';
     }
     return (
         <>

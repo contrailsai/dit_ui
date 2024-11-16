@@ -239,7 +239,6 @@ body {
 	border-right: 8px solid transparent;
 	border-bottom: 17px solid black;
 	position: relative;
-	border-radius: 100%;
 	top: 8px;
 }
 
@@ -247,14 +246,17 @@ body {
 .result-seperate-slider::-moz-range-thumb {
 	-webkit-appearance: none;
 	appearance: none;
-	width: 0;
-	height: 0;
-	cursor: pointer;
+	background-color: rgba(255, 255, 255, 0);
+	width: 0px;
+	height: 0px;
+	cursor: pointer; 
 	/* TRAINGLE  */
 	border-top: 0px solid transparent;
-	border-left: 7px solid transparent;
-	border-right: 7px solid transparent;
-	border-bottom: 20px solid black;
+	border-left: 8px solid transparent;
+	border-right: 8px solid transparent;
+	border-bottom: 17px solid black;
+	border-radius: 100%;
+	padding-top: 14px;
 }
 
 

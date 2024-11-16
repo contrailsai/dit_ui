@@ -6,7 +6,7 @@ import { db_updates } from "@/utils/data_fetch";
 import { FaPhotoVideo } from "react-icons/fa";
 import { PiWaveformBold } from "react-icons/pi";
 
-const Form = ({ user_data, set_user_data, response_data, set_res_data, set_id }) => {
+const Form = ({ user_data, set_user_data, set_res_data, set_id }) => {
 
     // input (file) ref
     const fileInputRef = useRef(null);
@@ -139,11 +139,6 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, set_id })
     const get_server_response = async () => {
         //Form Submittion
         try {
-            // const formData = new FormData();
-            // formData.append('file', file);
-            // formData.append('analysis_types', JSON.stringify(analysisTypes));
-            // formData.append('upload_type', JSON.stringify(uploadType));
-
             const user_id = user_data.id
             const new_token_amount = user_data.tokens - cost
 
@@ -153,46 +148,23 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, set_id })
             let supabase_id = await upload_file_s3();
 
             // NEXT STEP -------------> WAIT FOR RESPONSE
-            res_data = { "uploaded": true }
+            res_data = { "uploaded": true };
+            setLoading("processing media ")
 
-            // // REQUEST TO ML MODEL
-            // const IP = process.env.NEXT_PUBLIC_SERVER_IP;
-            // const token = session?.access_token;
-            // //send request to backend
-            // try {
-            //     //options for the request
-            //     const options = {
-            //         method: 'POST',
-            //         body: formData,
-            //         headers: {
-            //             'Authorization': `Bearer ${token}`
-            //         },
-            //     };
-            //     const response = await fetch(`${IP}/api/generate-result`, options);
-            //     res_data = await response.json();
-            // }
-            // catch (error) {
-            //     res_data = { message: "ML model is currently not available" }
+            // if (res_data.message !== undefined) {
+            //     console.log("ERROR FROM SERVER: ", res_data);
+            //     res_data = { message: "Server had an issue" };
             //     set_res_data(res_data);
-            //     set_chosen_analysis(analysisTypes);
             //     setLoading(false);
             //     return;
             // }
-
-            if (res_data.message !== undefined) {
-                console.log("ERROR FROM SERVER: ", res_data);
-                res_data = { message: "Server had an issue" };
-                set_res_data(res_data);
-                setLoading(false);
-                return;
-            }
-            if (res_data.detail !== undefined) {
-                console.log("ERROR FROM SERVER: ", res_data);
-                res_data = { message: "Server had an issue" };
-                set_res_data(res_data);
-                setLoading(false);
-                return;
-            }
+            // if (res_data.detail !== undefined) {
+            //     console.log("ERROR FROM SERVER: ", res_data);
+            //     res_data = { message: "Server had an issue" };
+            //     set_res_data(res_data);
+            //     setLoading(false);
+            //     return;
+            // }
 
             // UPDATE DB for TOKENS
             const db_update_res = await db_updates({ new_token_amount, user_id });
@@ -207,7 +179,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, set_id })
             set_user_data({ ...user_data, tokens: new_token_amount });
 
             set_res_data(res_data);
-            set_id(supabase_id)
+            set_id(supabase_id);
         }
         catch (error) {
             console.error("Error in sending data", error);
@@ -221,7 +193,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, set_id })
         else if (analysisTypes['frameCheck'] == false && analysisTypes["audioAnalysis"] == false)
             alert('please choose atleast one analysis')
         else {
-            setLoading(true);
+            setLoading("uploading file");
             get_server_response();
         }
     }
@@ -340,7 +312,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, set_id })
                             (
                                 <div className=" flex gap-4">
                                     <div className=" text-lg ">
-                                        Loading Result
+                                        {loading}
                                     </div>
                                     <div role="status">
                                         <svg aria-hidden="true" className="w-8 h-8 text-primary/60 animate-spin fill-primary" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -396,7 +368,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, set_id })
                 </div>
 
                 {/* checkboxes */}
-                <div className={` ${file ? "h-fit": "h-0"} h-fit rounded-xl p-4 border border-gray-200 transition-all duration-500  `}>
+                <div className={` ${file ? "h-fit" : "h-0"} h-fit rounded-xl p-4 border border-gray-200 transition-all duration-500  `}>
                     <label className="block text-gray-800 mb-2 text-xl font-semibold ">Select Analysis Types</label>
 
                     <div className="flex flex-row gap-4 items-center justify-evenly mt-5 ">
@@ -470,7 +442,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, set_id })
                                             <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
                                         </svg>
 
-                                        <div className='w-fit min-w-32 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
+                                        <div className='w-fit absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
                                             <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
                                                 Analyze audio in the file
                                             </div>

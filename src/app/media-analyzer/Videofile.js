@@ -55,7 +55,6 @@ const VideoAnalysisForm = ({ user }) => {
                         let formatted_result = get_formatted_result(JSON.parse(resp.models_responses), resp.input_request);
                         resp.result = formatted_result;
                         resp.got_result = true
-                        console.log(resp)
                         set_res_data(resp);
                         console.log(await supabase.removeChannel(channel));
                     }
@@ -70,8 +69,6 @@ const VideoAnalysisForm = ({ user }) => {
     }, [id])
 
     const handle_newCheck = () => {
-        URL.revokeObjectURL(fileUrl);
-        setfileUrl(null);
         set_res_data({ got_result: false });
     }
 
@@ -110,7 +107,6 @@ const VideoAnalysisForm = ({ user }) => {
                             <Form
                                 user_data={user_data}
                                 set_user_data={set_user_data}
-                                response_data={response_data}
                                 set_res_data={set_res_data}
                                 set_id={set_id}
                             />
@@ -171,7 +167,7 @@ const VideoAnalysisForm = ({ user }) => {
 
                     </div>
                 </>
-            }
+            }.
             <Footer />
         </div >
     );

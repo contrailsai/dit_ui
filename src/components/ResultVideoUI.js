@@ -406,7 +406,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
             doc.setFont("Outfit", "normal");
             curr_x = mx;
             curr_y += fontSize / 72 + 6 / 72;
-            doc.text("Result Score: ", curr_x, curr_y);
+            doc.text("Real Score: ", curr_x, curr_y);
             
             curr_x += 90 / 72;
             doc.setFont("Outfit", "bold");
@@ -421,7 +421,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
             doc.setTextColor(0, 0, 0);
             doc.setFont("Outfit", "normal");
 
-            doc.text("Result value shows the probability of audio being real", curr_x, curr_y);
+            doc.text("(confidence of audio being real)", curr_x, curr_y);
             curr_y += 2 * fontSize / 72;
 
             const audio_result_element = audio_graph_Ref.current;
@@ -485,7 +485,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
             doc.setFont("Outfit", "normal");
             curr_x = mx;
             curr_y += fontSize / 72 + 6 / 72;
-            doc.text("Result Score: ", curr_x, curr_y);
+            doc.text("Real Score: ", curr_x, curr_y);
             
             curr_x += 90 / 72;
             doc.setFont("Outfit", "bold");
@@ -500,7 +500,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
             doc.setTextColor(0, 0, 0);
             doc.setFont("Outfit", "normal");
 
-            doc.text("Result value shows the probability of video frames being real", curr_x, curr_y);
+            doc.text("(confidence of video frames being real)", curr_x, curr_y);
             curr_y += 2 * fontSize / 72;
 
             const frame_result_element = frame_graph_Ref.current;
