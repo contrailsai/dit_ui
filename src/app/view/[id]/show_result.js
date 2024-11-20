@@ -44,21 +44,14 @@ const Result_container = ({ res_data }) => {
     else
         results_data["results"]["frameCheck"] = undefined;
 
+    if(res_data["verifier_metadata"]["ShowCommentToUser"]){
+        res_data["file_metadata"]["verifier_comment"] = res_data["verifier_metadata"]["verifierComment"];
+    }
 
     // console.log(results_data);
 
     return (<>
         <div className=' pt-16 pb-10 px-12'>
-            {/* VERIFIER COMMENT */}
-            {
-                res_data["verifier_metadata"]["ShowCommentToUser"] &&
-                <div className=' mt-6 py-4 px-3 bg-primary/10 border-2 border-primary/20 rounded-xl'>
-                    <span className=' px-3 font-semibold'>
-                        Note:
-                    </span>
-                    {res_data["verifier_metadata"]["verifierComment"]}
-                </div>
-            }
 
             {
                 res_data["input_request"]["upload_type"] === "video" &&

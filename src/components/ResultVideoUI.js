@@ -116,8 +116,8 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                     {
                         label: "Probablility of real",
                         data: response_data['audioAnalysis'].table_values,
-                        backgroundColor: response_data['audioAnalysis'].table_values.map((val, idx) => { 
-                            return val >= threshold ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)" 
+                        backgroundColor: response_data['audioAnalysis'].table_values.map((val, idx) => {
+                            return val >= threshold ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)"
                         }),
                         // borderColor: response_data['audioAnalysis'].table_values.map((val, idx) => { return val >= 0 ? "rgba(0,255,0,0.3)" : "rgba(255,0,0,0.3)" }),
                         // borderWidth: 0.5,
@@ -308,7 +308,22 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
         doc.text(`${duration.toFixed(1)} sec`, curr_x, curr_y);
 
         curr_x = mx;
-        curr_y += (2 * fontSize / 72) + (12 / 72);
+        curr_y += (fontSize / 72) + (6 / 72);
+
+        if(file_metadata.verifier_comment){
+            //FILE DURATION
+            doc.setFont("Outfit", "bold");
+            doc.text("Expert's Comment: ", curr_x, curr_y);
+            curr_x += 120 / 72;
+            doc.setFont("Outfit", "normal")
+            doc.text(`${file_metadata.verifier_comment}`, curr_x, curr_y);
+            
+            curr_x = mx;
+            curr_y += (2 * fontSize / 72) + (12 / 72);
+        }
+        else{
+            curr_y += (fontSize / 72) + (6 / 72);
+        }
 
         // SHOW VIDEO PREVIEW, RESULT OF BOTH ANALYSIS AND VERDICT
         // const result_element = result_ref.current;
@@ -328,33 +343,34 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
         curr_y += fontSize / 72 + 6 / 72;
         fontSize = 12;
 
-        doc.setFontSize(14);
-        if (response_data["audioAnalysis"] && response_data["audioAnalysis"]["result"]<response_data["audioAnalysis"]["threshold"] ){
-            doc.text(`Manipulation detected in Audio`, curr_x, curr_y);
+        if (analysisTypes["audioAnalysis"]) {
+            doc.setFontSize(14);
+            if (response_data["audioAnalysis"] && response_data["audioAnalysis"]["result"] < response_data["audioAnalysis"]["threshold"]) {
+                doc.text(`Manipulation detected in Audio`, curr_x, curr_y);
+            }
+            else {
+                doc.text(`No manipulation detected in Audio`, curr_x, curr_y);
+            }
+            doc.setFontSize(fontSize);
+            curr_y += fontSize / 72 + 4 / 72;
         }
-        else{
-            doc.text(`No manipulation detected in Audio`, curr_x, curr_y);
-        }
-
-        doc.setFontSize(fontSize);
-        curr_y += fontSize / 72 + 4 / 72;
-        if( response_data["audioAnalysis"] && response_data["frameCheck"]){
+        if (analysisTypes["audioAnalysis"] && analysisTypes["frameCheck"] && response_data["audioAnalysis"] && response_data["frameCheck"]) {
             doc.text('and', curr_x, curr_y);
             curr_y += fontSize / 72 + 6 / 72;
         }
-        
-        doc.setFontSize(14);
-        if( response_data["frameCheck"] && response_data["frameCheck"]["result"]<response_data["frameCheck"]["threshold"] ){
-            doc.text(`Manipulation detected in Video`, curr_x, curr_y);
+        if (analysisTypes["frameCheck"]) {
+            doc.setFontSize(14);
+            if (response_data["frameCheck"] && response_data["frameCheck"]["result"] < response_data["frameCheck"]["threshold"]) {
+                doc.text(`Manipulation detected in Video`, curr_x, curr_y);
+            }
+            else {
+                doc.text(`No manipulation detected in Video`, curr_x, curr_y);
+            }
+            doc.setFontSize(fontSize);
+            curr_y += fontSize / 72;
+            curr_x = mx;
         }
-        else{
-            doc.text(`No manipulation detected in Video`, curr_x, curr_y);
-        }
-        doc.setFontSize(fontSize);
-        curr_y += fontSize / 72 ;
-
-        curr_x = mx;
-        curr_y += 20 / 72; //gap of 20 px
+        curr_y += 10 / 72; //gap of 20 px
 
         doc.setDrawColor(150, 150, 150);
         doc.setLineWidth(1 / 72);
@@ -400,18 +416,18 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
             doc.setFont("Outfit", "bold");
 
             audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${audio_result >= threshold ? "Real": "Fake"} `, curr_x, curr_y);
+            doc.text(` ${audio_result >= threshold ? "Real" : "Fake"} `, curr_x, curr_y);
 
             doc.setTextColor(0, 0, 0);
             doc.setFont("Outfit", "normal");
             curr_x = mx;
             curr_y += fontSize / 72 + 6 / 72;
             doc.text("Real Score: ", curr_x, curr_y);
-            
+
             curr_x += 90 / 72;
             doc.setFont("Outfit", "bold");
             audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${audio_result*100} %`, curr_x, curr_y);
+            doc.text(` ${audio_result * 100} %`, curr_x, curr_y);
 
             curr_x = mx;
             curr_y += fontSize / 72 + 5 / 72;
@@ -479,18 +495,18 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
             doc.setFont("Outfit", "bold");
 
             frame_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${frame_result >= threshold ? "Real": "Fake"} `, curr_x, curr_y);
+            doc.text(` ${frame_result >= threshold ? "Real" : "Fake"} `, curr_x, curr_y);
 
             doc.setTextColor(0, 0, 0);
             doc.setFont("Outfit", "normal");
             curr_x = mx;
             curr_y += fontSize / 72 + 6 / 72;
             doc.text("Real Score: ", curr_x, curr_y);
-            
+
             curr_x += 90 / 72;
             doc.setFont("Outfit", "bold");
             frame_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${frame_result*100} %`, curr_x, curr_y);
+            doc.text(` ${frame_result * 100} %`, curr_x, curr_y);
 
             curr_x = mx;
             curr_y += fontSize / 72 + 5 / 72;
@@ -936,7 +952,22 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                 </div>
 
 
-                <div className=' flex gap-5 pt-4 items-end '>
+                <div className=' flex gap-5 pt-4 items-start justify-between '>
+
+                    {/* VERIFIER COMMENT */}
+                    {
+                        file_metadata.verifier_comment &&
+                        (
+                            <div className=' bg-slate-100 py-4 px-5 border rounded-lg w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                                <span className=' text-xl'>
+                                    Expert's Note
+                                </span>
+                                <div className='flex flex-col break-words'>
+                                        {file_metadata.verifier_comment}
+                                </div>
+                            </div>
+                        )
+                    }
 
                     {/* VIDEO META DATA */}
                     <div className=' bg-slate-100 py-4 px-5 border rounded-lg w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>

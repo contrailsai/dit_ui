@@ -12,6 +12,9 @@ export default async function ProtectedPage() {
     if (!user) {
         return redirect("/login");
     }
+    if (!user.verifier){
+        return redirect("/fact-checker");
+    }
 
     return (
         <div>

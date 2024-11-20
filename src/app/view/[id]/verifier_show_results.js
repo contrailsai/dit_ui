@@ -147,12 +147,20 @@ const Verifier_results_container = ({ res_data }) => {
         else
             results_data["results"]["frameCheck"] = undefined;
 
+            
+        if(verifier_metadata["ShowCommentToUser"]){
+            res_data["file_metadata"]["verifier_comment"] = verifier_metadata["verifierComment"];
+        }
+        else{
+            res_data["file_metadata"]["verifier_comment"] = undefined;
+        }
+
         setdata_resultsUI(results_data);
 
         // console.log(res_data);
         // console.log(results_data);
 
-    }, [verifier_metadata["AudioCheckModelUse"], verifier_metadata["FrameCheckModelUse"], verifier_metadata["showAudioCheck"], verifier_metadata["showFrameCheck"],])
+    }, [verifier_metadata["ShowCommentToUser"], verifier_metadata["AudioCheckModelUse"], verifier_metadata["FrameCheckModelUse"], verifier_metadata["showAudioCheck"], verifier_metadata["showFrameCheck"],])
 
     const handle_submit = async () => {
         const res_status = await verify_case(id, verifier_metadata, res_data["user_id"]);
@@ -260,6 +268,26 @@ const Verifier_results_container = ({ res_data }) => {
 
                     </div>
 
+                    <div className=' min-w-48 p-4 my-2 ml-auto mr-4 bg-primary h-fit  text-white rounded-2xl'>
+                        <div className='text-lg mb-3'>
+                            User Input
+                        </div>
+
+                        <div className='flex justify-between mb-1'>
+                            <span className='text-gray-200 font-light'>Media File :</span>
+                            {res_data["input_request"]["upload_type"]}
+                        </div>
+
+                        <div className='flex justify-between mb-1'>
+                            <span className='text-gray-200 font-light'>Frame check :</span>
+                            {res_data["input_request"]["analysis_types"]["frameCheck"] ? "True" : "False"}
+                        </div>
+                        <div className='flex justify-between'>
+                            <span className='text-gray-200 font-light'>Audio check :</span>
+                            {res_data["input_request"]["analysis_types"]["audioAnalysis"] ? "True" : "False"}
+                        </div>
+
+                    </div>
                 </div>
             </div>
 

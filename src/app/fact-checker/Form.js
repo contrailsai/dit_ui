@@ -15,9 +15,6 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
     //loading for the response data 
     const [loading, setLoading] = useState(false);
 
-    //cost of the selected analysis
-    const [cost, setcost] = useState(0);
-
     // FORM DATA
     const [file, setfile] = useState(null);
     const [analysisTypes, setAnalysisTypes] = useState({
@@ -52,9 +49,18 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
     const handleFileChange = (event) => {
 
         const newfile = event.target.files[0];
-
+        // Check file size (50MB = 50 * 1024 * 1024 bytes)
         if (newfile === undefined) {
             setUploadType("")
+        }
+
+        const maxSize = 50 * 1024 * 1024;
+        if (newfile.size > maxSize) {
+            alert("File size exceeds 50MB. Please choose a smaller file.");
+            setUploadType("");
+            setfile(null);
+            set_tempFileUrl(null);
+            return;
         }
 
         else if (newfile.type.split("/")[0] === "video") {
@@ -65,16 +71,8 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
             // console.log("audio chosen")
             setUploadType("audio");
             let new_analysis = { ...analysisTypes };
-            let new_cost = 0;
 
             new_analysis["frameCheck"] = false
-
-            if (new_analysis["frameCheck"])
-                new_cost += 10
-            if (new_analysis["audioAnalysis"])
-                new_cost += 20
-
-            setcost(new_cost);
             setAnalysisTypes(new_analysis);
         }
         setfile(newfile);
@@ -84,15 +82,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
     const handleAnalysisTypeChange = (val) => {
 
         let new_analysis = { ...analysisTypes }
-        let new_cost = 0;
-
         new_analysis[val] = !new_analysis[val]
-
-        if (new_analysis["frameCheck"])
-            new_cost += 10
-        if (new_analysis["audioAnalysis"])
-            new_cost += 20
-        setcost(new_cost)
         setAnalysisTypes(new_analysis);
     };
 
@@ -144,7 +134,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
             // formData.append('upload_type', JSON.stringify(uploadType));
 
             const user_id = user_data.id
-            const new_token_amount = user_data.tokens - cost
+            const new_token_amount = user_data.tokens - 1
 
             let res_data = {};
 
@@ -241,6 +231,16 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
     const handleDrop = (event) => {
         event.preventDefault();
         const droppedFile = event.dataTransfer.files[0];
+
+        const maxSize = 50 * 1024 * 1024;
+        if (droppedFile && droppedFile.size > maxSize) {
+            alert("File size exceeds 50MB. Please choose a smaller file.");
+            setUploadType("");
+            setfile(null);
+            set_tempFileUrl(null);
+            return;
+        }
+
         if (droppedFile && (droppedFile.type.startsWith('video/') || droppedFile.type.startsWith('audio/'))) {
             setfile(droppedFile);
             set_tempFileUrl(URL.createObjectURL(droppedFile));
@@ -322,17 +322,10 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
 
                 {/* submit */}
                 <div className="w-full p-4 flex flex-col gap-4 justify-center items-center">
-                    <div>
-                        <span className=' text-lg font-medium px-3'>
-                            Total Analysis Cost:
-                        </span>
-                        {cost} Tokens
-                    </div>
-
                     {
-                        cost > user_data.tokens &&
+                        user_data.tokens === 0 &&
                         <div className=' text-sm text-red-700 text-center '>
-                            Insufficient tokens !! <br /> (contact for more tokens)
+                            Insufficient credits !! <br /> (contact for more credits)
                         </div>
                     }
 
@@ -340,7 +333,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                     <div className=' flex items-center gap-10'>
                         <button
                             // aria-disabled={loading || (cost>user_data.tokens)}
-                            disabled={(loading || (cost > user_data.tokens))}
+                            disabled={(loading || (user_data.tokens==0))}
                             type="submit"
                             className=" disabled:cursor-no-drop disabled:bg-primary/70 outline-none bg-primary hover:bg-primary/90 hover:shadow-md text-white font-semibold py-3 px-6 rounded-lg w-fit text-xl transition-all duration-300"
                         >
@@ -408,7 +401,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                 </div>
 
                 {/* checkboxes */}
-                <div className={` ${file ? "h-fit": "h-0"} h-fit rounded-xl p-4 border border-gray-200 transition-all duration-500  `}>
+                <div className={` ${file ? "h-fit" : "h-0"} h-fit rounded-xl p-4 border border-gray-200 transition-all duration-500  `}>
                     <label className="block text-gray-800 mb-2 text-xl font-semibold ">Select Analysis Types</label>
 
                     <div className="flex flex-row gap-4 items-center justify-evenly mt-5 ">
@@ -416,88 +409,71 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                         {/* FRAME ANALYSIS SELECT */}
                         <div
                             onClick={() => { handleAnalysisTypeChange("frameCheck") }}
-                            className={` shadow shadow-primary ${uploadType === 'audio' ? 'hidden' : ''} relative px-3 py-2  cursor-pointer rounded-lg w-full bg-white h-72 transition-all `}
+                            className={` flex flex-col justify-evenly items-center z-10 text-primary text-lg font-medium shadow shadow-primary ${uploadType === 'audio' ? 'hidden' : ''} relative px-3 py-2  cursor-pointer rounded-lg w-full bg-white h-72 transition-all `}
                         >
-                            <div className=" relative z-10 h-full text-primary text-lg font-medium cursor-pointer flex flex-col justify-evenly items-center">
+                            <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
+                                {/* SELECT BUTTON */}
+                                <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full'>
+                                    {
+                                        analysisTypes["frameCheck"] &&
+                                        (
+                                            <div className='h-4 w-4 bg-primary shadow-md shadow-white rounded-full m-1' />
+                                        )
+                                    }
+                                </div>
 
-                                <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
-                                    {/* SELECT BUTTON */}
-                                    <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full'>
-                                        {
-                                            analysisTypes["frameCheck"] &&
-                                            (
-                                                <div className='h-4 w-4 bg-primary shadow-md shadow-white rounded-full m-1' />
-                                            )
-                                        }
-                                    </div>
+                                {/* TEXT AND (i) */}
+                                Video Frame Check
+                                <span className=' relative group text-xs ' >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-6">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                    </svg>
 
-                                    {/* TEXT AND (i) */}
-                                    Video Frame Check
-                                    <span className=' relative group text-xs ' >
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-6">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                                        </svg>
-
-                                        <div className='w-fit min-w-32 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
-                                            <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
-                                                Analyze frames in the video
-                                            </div>
+                                    <div className='w-fit min-w-32 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
+                                        <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
+                                            Analyze frames in the video
                                         </div>
-                                    </span>
-                                </div>
+                                    </div>
+                                </span>
+                            </div>
 
-                                <div className={` ${analysisTypes["frameCheck"] ? " text-primary" : " text-primary/40"} select-none transition-all `}>
-                                    <FaPhotoVideo className=' h-40 w-40' />
-                                </div>
-
-                                <div>
-                                    10 Tokens
-                                </div>
-
+                            <div className={` ${analysisTypes["frameCheck"] ? " text-primary" : " text-primary/40"} select-none transition-all `}>
+                                <FaPhotoVideo className=' h-40 w-40' />
                             </div>
                         </div>
 
                         {/* AUDIO ANALYSIS SELECT */}
                         <div
                             onClick={() => { handleAnalysisTypeChange("audioAnalysis") }}
-                            className={` shadow shadow-primary relative px-3 py-2  cursor-pointer rounded-lg w-full bg-white h-72 transition-all `}
+                            className={` flex flex-col justify-evenly items-center text-primary text-lg font-medium cursor-pointer shadow shadow-primary relative  px-3 py-2  rounded-lg w-full bg-white h-72 transition-all `}
                         >
+                            <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
+                                {/* SELECT BUTTON */}
+                                <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full'>
+                                    {
+                                        analysisTypes["audioAnalysis"] &&
+                                        (
+                                            <div className='h-4 w-4 bg-primary shadow-md shadow-white rounded-full m-1' />
+                                        )
+                                    }
+                                </div>
+                                {/* TEXT AND (i) */}
+                                Audio Spoof Check
+                                <span className=' relative group text-xs ' >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-6">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                    </svg>
 
-                            <div className=" relative h-full text-primary text-lg font-medium cursor-pointer flex flex-col justify-evenly items-center">
-
-                                <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
-                                    {/* SELECT BUTTON */}
-                                    <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full'>
-                                        {
-                                            analysisTypes["audioAnalysis"] &&
-                                            (
-                                                <div className='h-4 w-4 bg-primary shadow-md shadow-white rounded-full m-1' />
-                                            )
-                                        }
-                                    </div>
-                                    {/* TEXT AND (i) */}
-                                    Audio Spoof Check
-                                    <span className=' relative group text-xs ' >
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-6">
-                                            <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                                        </svg>
-
-                                        <div className='w-fit min-w-32 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
-                                            <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
-                                                Analyze audio in the file
-                                            </div>
+                                    <div className='w-fit min-w-32 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
+                                        <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
+                                            Analyze audio in the file
                                         </div>
-                                    </span>
-                                </div>
+                                    </div>
+                                </span>
+                            </div>
 
-                                <div className={` ${analysisTypes["audioAnalysis"] ? " text-primary" : " text-primary/40"} select-none transition-all `}>
-                                    <PiWaveformBold className=' h-40 w-40' />
-                                </div>
-
-                                <div>
-                                    20 Tokens
-                                </div>
-
+                            <div className={` ${analysisTypes["audioAnalysis"] ? " text-primary" : " text-primary/40"} select-none transition-all `}>
+                                <PiWaveformBold className=' h-40 w-40' />
                             </div>
                         </div>
 

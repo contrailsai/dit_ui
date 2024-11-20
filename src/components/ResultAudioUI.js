@@ -214,7 +214,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
             doc.text("The audio analysis detected manipulation", curr_x, curr_y);
         }
         curr_y += fontSize / 72 + 8 / 72;
-        
+
         fontSize = 14;
         doc.setFontSize(fontSize);
 
@@ -224,18 +224,18 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
         doc.setFont("Outfit", "bold");
 
         audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-        doc.text(` ${audio_result >= threshold ? "Real": "Fake"} `, curr_x, curr_y);
+        doc.text(` ${audio_result >= threshold ? "Real" : "Fake"} `, curr_x, curr_y);
 
         doc.setTextColor(0, 0, 0);
         doc.setFont("Outfit", "normal");
         curr_x = mx;
         curr_y += fontSize / 72 + 6 / 72;
         doc.text("Real Score: ", curr_x, curr_y);
-        
+
         curr_x += 90 / 72;
         doc.setFont("Outfit", "bold");
         audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-        doc.text(` ${(audio_result*100).toFixed(2)} %`, curr_x, curr_y);
+        doc.text(` ${(audio_result * 100).toFixed(2)} %`, curr_x, curr_y);
 
         curr_x = mx;
         curr_y += fontSize / 72 + 5 / 72;
@@ -439,6 +439,20 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                         </div>
                     </div>
                 </div>
+                {/* VERIFIER COMMENT */}
+                {
+                    file_metadata.verifier_comment &&
+                    (
+                        <div className=' bg-slate-100 py-4 px-5 border rounded-lg w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                            <span className=' text-xl'>
+                                Expert's Note
+                            </span>
+                            <div className='flex flex-col break-words'>
+                                {file_metadata.verifier_comment}
+                            </div>
+                        </div>
+                    )
+                }
             </>
         )
     }

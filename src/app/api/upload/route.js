@@ -5,6 +5,7 @@ import { s3Client } from "@/utils/s3";
 import { sqsClient } from '@/utils/sqs';
 import { createClient } from "@/utils/supabase/server";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
+import { publishSNSMessage } from '@/utils/sns';
 
 export async function POST(request) {
   const { input_request, file_metadata, method } = await request.json();
@@ -57,13 +58,24 @@ export async function POST(request) {
       MessageBody: JSON.stringify(
         {
           task_id: data.id,
-          application: method==="verification"? "dit" : "admin_demo"
+          application: method === "verification" ? "dit" : "admin_demo"
         }
       )
     });
 
     await sqsClient.send(sqsCommand);
     const id = data.id
+
+    if (method === "verification"){
+      //SEND EMAIL TO START ANALYSIS
+      let message = {
+        "notification_type": "dev",
+        "status": "PROCESSING_AWAITED",
+        "message": "New analysis request pending ",
+        "data": {}
+      }
+      await publishSNSMessage(message);
+    }
 
     return NextResponse.json({ id, signedUrl });
 
