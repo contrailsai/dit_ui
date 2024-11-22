@@ -183,7 +183,7 @@ export const verify_case = async (id, metadata, user_id) => {
         "message": "Analysis done and Verified by a OSINT reviewer",
         "data": metadata
     }
-    await publishSNSMessage(message);
+    await publishSNSMessage(message, 'email');
 
     if (result.error) {
         console.error('Update Error:', result.error);

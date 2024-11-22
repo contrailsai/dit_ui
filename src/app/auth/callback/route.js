@@ -22,7 +22,7 @@ export async function GET(request) {
       try {
         const { error: insertError } = await supabase
           .from('Tokens') // Ensure the table name is correct
-          .insert([{ id: userId, token_amount: 500 }]);
+          .insert([{ id: userId, token_amount: 50 }]);
 
         //ALREADY EXIST
         if (insertError.code === '23505') {

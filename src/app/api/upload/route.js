@@ -64,18 +64,16 @@ export async function POST(request) {
     });
 
     await sqsClient.send(sqsCommand);
+
     const id = data.id
 
-    if (method === "verification"){
-      //SEND EMAIL TO START ANALYSIS
-      let message = {
-        "notification_type": "dev",
-        "status": "PROCESSING_AWAITED",
-        "message": "New analysis request pending ",
-        "data": {}
-      }
-      await publishSNSMessage(message);
+    //SEND EMAIL TO START ANALYSIS
+    let message = {
+      "message": "Starting Instance ",
+      "data": {}
     }
+    await publishSNSMessage(message, 'instance');
+    
 
     return NextResponse.json({ id, signedUrl });
 

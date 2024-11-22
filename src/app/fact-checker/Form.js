@@ -5,6 +5,9 @@ import { db_updates } from "@/utils/data_fetch";
 
 import { FaPhotoVideo } from "react-icons/fa";
 import { PiWaveformBold } from "react-icons/pi";
+import { MdOutlineImageSearch } from "react-icons/md";
+import { PiImageDuotone } from "react-icons/pi";
+import { TbPhotoSearch } from "react-icons/tb";
 
 const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, setfileUrl, set_file_metadata, set_chosen_analysis }) => {
 
@@ -19,7 +22,8 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
     const [file, setfile] = useState(null);
     const [analysisTypes, setAnalysisTypes] = useState({
         frameCheck: false,
-        audioAnalysis: false
+        audioAnalysis: false,
+        aigcCheck: false
     });
     const [uploadType, setUploadType] = useState("");
 
@@ -45,6 +49,33 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
         return bytes.toFixed(dp) + ' ' + units[u];
     }
 
+    const validate_analysis = (media_type)=>{
+        //''' confirm selected analysis are correct to use '''
+        console.log(media_type);
+        
+        let new_analysis = { ...analysisTypes };
+
+        if (media_type.split("/")[0] === "video") {
+            setUploadType("video");
+            //ensure unrequired are set false
+            new_analysis["aigcCheck"] = false;
+        }
+        else if (media_type.split("/")[0] === "audio") {
+            setUploadType("audio");
+            //ensure unrequired are set false
+            new_analysis["frameCheck"] = false;
+            new_analysis["aigcCheck"] = false;
+            setAnalysisTypes(new_analysis);
+        }
+        else if (media_type.split("/")[0] === "image"){
+            setUploadType("image");
+            //ensure unrequired are set false
+            new_analysis["frameCheck"] = false;
+            new_analysis["audioAnalysis"] = false;
+        }
+        setAnalysisTypes(new_analysis);
+    }
+
     // FORM RELATED FUNCTIONS
     const handleFileChange = (event) => {
 
@@ -53,7 +84,6 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
         if (newfile === undefined) {
             setUploadType("")
         }
-
         const maxSize = 50 * 1024 * 1024;
         if (newfile.size > maxSize) {
             alert("File size exceeds 50MB. Please choose a smaller file.");
@@ -62,19 +92,8 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
             set_tempFileUrl(null);
             return;
         }
-
-        else if (newfile.type.split("/")[0] === "video") {
-            // console.log("video chosen")
-            setUploadType("video");
-        }
-        else if (newfile.type.split("/")[0] === "audio") {
-            // console.log("audio chosen")
-            setUploadType("audio");
-            let new_analysis = { ...analysisTypes };
-
-            new_analysis["frameCheck"] = false
-            setAnalysisTypes(new_analysis);
-        }
+        
+        validate_analysis(newfile.type);
         setfile(newfile);
         set_tempFileUrl(URL.createObjectURL(newfile));
     };
@@ -133,15 +152,15 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
             // formData.append('analysis_types', JSON.stringify(analysisTypes));
             // formData.append('upload_type', JSON.stringify(uploadType));
 
-            const user_id = user_data.id
-            const new_token_amount = user_data.tokens - 1
+            const user_id = user_data.id;
+            const new_token_amount = user_data.tokens - 1;
 
             let res_data = {};
 
             // STORE MEDIA FILE IN S3
             await upload_file_s3();
             // NEXT STEP -------------> WAIT FOR RESPONSE
-            res_data = { "uploaded": true }
+            res_data = { "uploaded": true };
 
             // // REQUEST TO ML MODEL
             // const IP = process.env.NEXT_PUBLIC_SERVER_IP;
@@ -220,7 +239,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
         e.preventDefault();
         if (file === null)
             alert("File not uploaded");
-        else if (analysisTypes['frameCheck'] == false && analysisTypes["audioAnalysis"] == false)
+        else if (analysisTypes['frameCheck'] === false && analysisTypes["audioAnalysis"] === false && analysisTypes['aigcCheck'] === false)
             alert('please choose atleast one analysis')
         else {
             setLoading(true);
@@ -241,12 +260,13 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
             return;
         }
 
-        if (droppedFile && (droppedFile.type.startsWith('video/') || droppedFile.type.startsWith('audio/'))) {
+        if (droppedFile && (droppedFile.type.startsWith('video/') || droppedFile.type.startsWith('audio/') || droppedFile.type.startsWith('image/'))) {
             setfile(droppedFile);
             set_tempFileUrl(URL.createObjectURL(droppedFile));
+            validate_analysis(droppedFile.type)
             console.log(droppedFile);
         } else {
-            alert('Please select a valid audio/video file.');
+            alert('Please select a valid video/audio/image file.');
         }
     };
 
@@ -263,12 +283,12 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
 
 
     return (
-        <form onSubmit={handle_submit} className=" flex justify-center gap-6 px-5 rounded-xl h-full transition-all">
+        <form onSubmit={handle_submit} className=" flex justify-center gap-6 px-5  h-full transition-all">
             {/* SUBMIT + DROP/SHOW FILE */}
             <div className=' w-3/5 flex flex-col justify-start gap-4'>
 
                 {/* choose upload file */}
-                <div className={` p-5 h-fit w-full flex flex-col justify-center rounded-lg border border-gray-200 transition-all duration-500 `}>
+                <div className={` p-5 h-fit w-full flex flex-col justify-center rounded-xl border border-gray-200 transition-all duration-500 `}>
 
                     {
                         !file && <label className="block text-gray-800 mb-2 text-xl font-semibold ">Upload File</label>
@@ -282,7 +302,17 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                                 {file.type.startsWith('video/') ? (
                                     <video className=' w-full max-h-[70vh] ' controls src={tempfileUrl}></video>
                                 ) : (
-                                    <audio className='w-full border border-gray-300 rounded-full' controls src={tempfileUrl}></audio>
+                                    file.type.startsWith('audio/') ?
+                                    (
+                                        <audio className='w-full border border-gray-300 rounded-full' controls src={tempfileUrl}></audio>
+                                    ) : (
+                                        file.type.startsWith('image/') ?
+                                        (
+                                            <Image src={tempfileUrl} height={0} width={625} alt='uploaded_image' />
+                                        ) : (
+                                            <div className=' text-xl bg-red-300 px-20 py-3 rounded-xl '>INVALID FILE UPLOADED</div>
+                                        )
+                                    )
                                 )}
                             </div>
                         </div>
@@ -301,7 +331,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                                 </svg>
                                 <p>Drag and drop a file here, or click to select a file</p>
 
-                                <p className="text-gray-500 text-sm">Max file size: 100MB</p>
+                                <p className="text-gray-500 text-sm">Max file size: 50MB</p>
                             </div>
                         </>
                     )}
@@ -311,7 +341,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                         type="file"
                         id="videoFile"
                         name="videoFile"
-                        accept={`video/*, audio/*`}
+                        accept={`video/*, audio/*, image/*`}
                         onChange={handleFileChange}
                         // required
                         // className="w-fit py-2 text-gray-700 rounded mx-auto"
@@ -333,7 +363,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                     <div className=' flex items-center gap-10'>
                         <button
                             // aria-disabled={loading || (cost>user_data.tokens)}
-                            disabled={(loading || (user_data.tokens==0))}
+                            disabled={(loading || (user_data.tokens == 0))}
                             type="submit"
                             className=" disabled:cursor-no-drop disabled:bg-primary/70 outline-none bg-primary hover:bg-primary/90 hover:shadow-md text-white font-semibold py-3 px-6 rounded-lg w-fit text-xl transition-all duration-300"
                         >
@@ -401,15 +431,14 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                 </div>
 
                 {/* checkboxes */}
-                <div className={` ${file ? "h-fit" : "h-0"} h-fit rounded-xl p-4 border border-gray-200 transition-all duration-500  `}>
-                    <label className="block text-gray-800 mb-2 text-xl font-semibold ">Select Analysis Types</label>
+                <div className={` ${file ? "h-fit" : "h-0"} h-fit rounded-xl p-4 border border-gray-200 transition-all duration-500 flex flex-col gap-4 `}>
+                    <label className="block text-gray-800 text-xl font-semibold ">Select Analysis Types</label>
 
-                    <div className="flex flex-row gap-4 items-center justify-evenly mt-5 ">
-
+                    <div className={` ${uploadType === 'image'? "hidden" : ""} flex flex-row gap-4 items-center justify-evenly `}>
                         {/* FRAME ANALYSIS SELECT */}
                         <div
                             onClick={() => { handleAnalysisTypeChange("frameCheck") }}
-                            className={` flex flex-col justify-evenly items-center z-10 text-primary text-lg font-medium shadow shadow-primary ${uploadType === 'audio' ? 'hidden' : ''} relative px-3 py-2  cursor-pointer rounded-lg w-full bg-white h-72 transition-all `}
+                            className={` flex flex-col justify-evenly items-center z-10 text-primary text-lg font-medium shadow shadow-primary ${uploadType === 'audio' ? 'hidden' : ''} relative px-3 py-2 cursor-pointer rounded-lg w-full bg-white h-64 transition-all `}
                         >
                             <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
                                 {/* SELECT BUTTON */}
@@ -445,7 +474,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                         {/* AUDIO ANALYSIS SELECT */}
                         <div
                             onClick={() => { handleAnalysisTypeChange("audioAnalysis") }}
-                            className={` flex flex-col justify-evenly items-center text-primary text-lg font-medium cursor-pointer shadow shadow-primary relative  px-3 py-2  rounded-lg w-full bg-white h-72 transition-all `}
+                            className={` flex flex-col justify-evenly items-center text-primary text-lg font-medium cursor-pointer shadow shadow-primary relative  px-3 py-2  rounded-lg w-full bg-white h-64 transition-all `}
                         >
                             <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
                                 {/* SELECT BUTTON */}
@@ -464,7 +493,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                                         <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
                                     </svg>
 
-                                    <div className='w-fit min-w-32 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
+                                    <div className='w-fit min-w-20 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
                                         <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
                                             Analyze audio in the file
                                         </div>
@@ -476,7 +505,49 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                                 <PiWaveformBold className=' h-40 w-40' />
                             </div>
                         </div>
+                    </div>
 
+                    {/* IMAGE ANALYSIS SELECT */}
+                    <div
+                        className={` ${uploadType === "audio" || uploadType === 'video' ? "hidden" : ""} flex z-10 text-primary text-xl text-center font-medium shadow shadow-primary relative px-3 py-2 cursor-pointer rounded-lg bg-white transition-all `}
+                        onClick={() => { handleAnalysisTypeChange("aigcCheck") }}
+                    >
+                        {/* TEXT, IMAGE AND (i) */}
+                        <div className='flex flex-col w-full py-6 gap-6'>
+                            {/* BUTTON */}
+                            <div className=' w-full'>
+                                {/* SELECT BUTTON */}
+                                <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full w-fit '>
+                                    {
+                                        analysisTypes["aigcCheck"] &&
+                                        (
+                                            <div className='h-4 w-4 bg-primary shadow-md shadow-white rounded-full relative top-1 left-1' />
+                                        )
+                                    }
+                                </div>
+                            </div>
+                            <div className=' flex gap-3'>
+                                Image Check
+                                {/* INFO */}
+                                <span className=' relative group text-xs ' >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-6">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                    </svg>
+
+                                    <div className=' min-w-24 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
+                                        <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
+                                            Analyze a image for forgery
+                                        </div>
+                                    </div>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className={` ${analysisTypes["aigcCheck"] ? " text-primary" : " text-primary/40"} w-full select-none transition-all `}>
+                            <MdOutlineImageSearch className=' h-40 w-40' />
+                            {/* <PiImageDuotone  className=' h-40 w-40' /> */}
+                            {/* <TbPhotoSearch className=' h-40 w-40' /> */}
+                        </div>
                     </div>
                 </div>
 

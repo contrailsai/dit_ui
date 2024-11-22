@@ -9,10 +9,10 @@ const snsClient = new SNSClient({
     },
 });
 
-export async function publishSNSMessage(message) {
+export async function publishSNSMessage(message, type) {
     try {
         const publishCommand = new PublishCommand({
-            TopicArn: process.env.SNS_TOPIC_ARN,
+            TopicArn: type==='email'? process.env.SNS_EMAIL_TOPIC_ARN : process.env.SNS_INSTANCE_TOPIC_ARN,
             Message: JSON.stringify(message),
         });
 
