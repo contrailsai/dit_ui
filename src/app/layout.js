@@ -20,7 +20,11 @@ export default function RootLayout({ children }) {
         <link rel="icon" href="/logo.svg" />
       </head>
 
-      <body className={outfit.className}>{children}</body>
+      <body className={outfit.className}>
+        <div className="min-w-[1080px] ">
+          {children}
+        </div>
+      </body>
     </html>
   );
 }

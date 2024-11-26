@@ -447,7 +447,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                             <span className=' text-xl'>
                                 Expert&apos;s Note
                             </span>
-                            <div className='flex flex-col break-words'>
+                            <div className='flex flex-col break-words whitespace-pre-wrap'>
                                 {file_metadata.verifier_comment}
                             </div>
                         </div>

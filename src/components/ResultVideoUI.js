@@ -962,7 +962,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                                 <span className=' text-xl'>
                                     Expert&apos;s Note
                                 </span>
-                                <div className='flex flex-col break-words'>
+                                <div className='flex flex-col break-words whitespace-pre-wrap'>
                                         {file_metadata.verifier_comment}
                                 </div>
                             </div>
