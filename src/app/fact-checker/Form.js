@@ -452,7 +452,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                                 </div>
 
                                 {/* TEXT AND (i) */}
-                                Video Frame Check
+                                Video Deepfake
                                 <span className=' relative group text-xs ' >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-6">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
@@ -487,7 +487,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                                     }
                                 </div>
                                 {/* TEXT AND (i) */}
-                                Audio Spoof Check
+                                Audio Spoof
                                 <span className=' relative group text-xs ' >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-6">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
@@ -527,7 +527,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                                 </div>
                             </div>
                             <div className=' flex gap-3'>
-                                Image Check
+                                Image AIGC
                                 {/* INFO */}
                                 <span className=' relative group text-xs ' >
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-6">

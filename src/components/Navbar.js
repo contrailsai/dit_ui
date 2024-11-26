@@ -40,20 +40,20 @@ const Navbar = ({user_data}) => {
                         }
 
                         {/* logout, profile buttons popup */}
-                        <div className={`absolute z-30 group-hover:opacity-100 ${show_user_options ? "" : "h-0"} overflow-hidden top-12 right-10  w-40 rounded bg-slate-100 text-gray-600 shadow transition-all`}>
-                            <div className=' flex flex-col divide-gray-300 w-full px-2 py-3 text-lg'>
+                        <div className={`absolute z-30 group-hover:opacity-100 ${show_user_options ? "max-h-60" : "max-h-0"} overflow-hidden top-12 right-10  w-40 rounded bg-slate-100 text-gray-600 shadow transition-all`}>
+                            <div className=' flex flex-col divide-gray-300 w-full px-2 py-3 text-lg '>
                                 {
                                     user_data.verifier 
                                     &&
                                     <Link href={"/media-analyzer"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
-                                        direct checker
+                                        Direct Checker
                                     </Link>
                                 }
                                 <Link href={"/fact-checker"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
-                                    fact-checker
+                                    Fact Checker
                                 </Link>
                                 <Link href={"/user/case-list"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
-                                    {user_data.verifier ? "verify Cases" :"Case List"}
+                                    {user_data.verifier ? "Verify Cases" :"Case List"}
                                 </Link>
                                 {/* <Link href={"/user/profile"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
                                     Profile

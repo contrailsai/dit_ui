@@ -268,7 +268,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
             <>
                 {/* TITLE */}
                 <div className=' flex w-full justify-between items-end'>
-                    <h2 className="text-3xl font-semibold px-5 pt-3 py-6">Manipulation Detection</h2>
+                    <h2 className="text-3xl font-semibold px-5 pt-3 py-6">Deepfake Investigator</h2>
                     {
                         fileUrl &&
                         <div className=' flex gap-7 items-center mr-1 '>
