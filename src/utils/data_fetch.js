@@ -180,8 +180,9 @@ export const verify_case = async (id, metadata, user_id) => {
         "notification_type": "client",
         "client_email": email,  // Access email from data object
         "status": "PROCESSING_COMPLETED",
-        "message": "Analysis done and Verified by a OSINT reviewer",
-        "data": metadata
+        "data": {
+            "id": id,
+        }
     }
     await publishSNSMessage(message, 'email');
 
