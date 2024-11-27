@@ -19,7 +19,7 @@ export default async function Login({ searchParams }) {
 
         try {
             await supabase.auth.updateUser({ password: password })
-            return redirect("/fact-checker");
+            return redirect("/");
         }
         catch (error) {
             console.log(error);

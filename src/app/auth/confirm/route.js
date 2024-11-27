@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 // The client you created from the Server-Side Auth instructions
 import { createClient } from '@/utils/supabase/server'
+import { redirect } from 'next/navigation'
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url)
@@ -8,7 +9,7 @@ export async function GET(request) {
   const type = searchParams.get('type')
   const next = searchParams.get('next') ?? '/'
   const redirectTo = request.nextUrl.clone()
-  redirectTo.pathname = next
+  // redirectTo.pathname = next
 
   if (token_hash && type) {
     const supabase = createClient()
@@ -18,11 +19,8 @@ export async function GET(request) {
       token_hash,
     })
     if (!error) {
-      return NextResponse.redirect(redirectTo)
+      redirect("/auth/update-password");
     }
   }
-
-  // return the user to an error page with some instructions
-  redirectTo.pathname = '/login?message=Could not authenticate user'
-  return NextResponse.redirect(redirectTo)
+  return redirect("/login?message=Could not authenticate user");
 }

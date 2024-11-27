@@ -80,9 +80,7 @@ export default async function Login({ searchParams }) {
     const supabase = createClient();
     const origin = headers().get("origin");
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/auth/update-password`,
-    })
+    const { error } = await supabase.auth.resetPasswordForEmail(email)
 
     if (error) {
       console.log(error);
