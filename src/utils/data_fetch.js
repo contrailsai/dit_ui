@@ -178,7 +178,8 @@ export const verify_case = async (id, metadata, user_id) => {
     console.log("sent email to user at: ", email);
     let message = {
         "notification_type": "client",
-        "client_email": email,  // Access email from data object
+        "client_id": user_id,
+        "client_email": email, 
         "status": "PROCESSING_COMPLETED",
         "data": {
             "id": id,
