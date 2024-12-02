@@ -22,5 +22,8 @@ export async function GET(request) {
       redirect("/auth/update-password");
     }
   }
-  return redirect("/login?message=Could not authenticate user");
+  const requestUrl = new URL(request.url);
+  const origin = requestUrl.origin;
+  return NextResponse.redirect(`${origin}/login?message=Could not authenticate user`);
+  
 }
