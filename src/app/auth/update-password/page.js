@@ -9,22 +9,8 @@ export default async function Login({ searchParams }) {
     const supabase = createClient();
 
     const { data: { user } } = await supabase.auth.getUser();
-
     if (!user) {
         return redirect("/login");
-    }
-
-    const update_password = async (password) => {
-        "use server";
-
-        try {
-            await supabase.auth.updateUser({ password: password })
-            return redirect("/");
-        }
-        catch (error) {
-            console.log(error);
-            return redirect("/login?message=Could not update user");
-        }
     }
 
     return (
@@ -33,7 +19,6 @@ export default async function Login({ searchParams }) {
 
                 <ResetPasswordBlock
                     user={user}
-                    update_password={update_password}
                     eventInfo={searchParams}
                 />
 

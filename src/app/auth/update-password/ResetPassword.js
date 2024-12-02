@@ -1,8 +1,9 @@
 'use client'
 import Image from "next/image";
+import { createClient } from "@/utils/supabase/client";
 import { useState } from "react";
 
-const ResetPasswordBlock = ({user, update_password, eventInfo }) => {
+const ResetPasswordBlock = ({user, eventInfo }) => {
 
     const [email, setEmail] = useState(user.email);
     const [password, setPassword] = useState('');
@@ -14,10 +15,19 @@ const ResetPasswordBlock = ({user, update_password, eventInfo }) => {
     const handle_password_update = async (e) => {
         e.preventDefault();
         setloading(true);
+        const supabase = createClient();
 
-        await update_password();
-
-        setloading(false);
+        try {
+            await supabase.auth.updateUser({ password: password })
+        }
+        catch (error) {
+            console.log(error);
+            window.location.href = "/login?message=Could not update user";
+        }
+        finally{
+            setloading(false);
+            window.location.href = "/";
+        }
     }
 
     return (
@@ -63,6 +73,7 @@ const ResetPasswordBlock = ({user, update_password, eventInfo }) => {
                         name='password'
                         type="password"
                         required
+                        minLength={8}
                         value={password}
                         className='border-2 bg-gray-50 focus:bg-white outline-none pt-5 pb-1 px-2 min-w-96 rounded-lg'
                         onChange={(e) => setPassword(e.target.value)}
