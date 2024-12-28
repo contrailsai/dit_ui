@@ -1,6 +1,7 @@
 import { Outfit } from "next/font/google";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/react"
 
 const outfit = Outfit({ subsets: ["latin"] });
 
@@ -21,9 +22,11 @@ export default function RootLayout({ children }) {
       </head>
 
       <body className={outfit.className}>
+        <Analytics />
         <div className="min-w-[1080px] ">
           {children}
         </div>
+        <SpeedInsights />
       </body>
     </html>
   );

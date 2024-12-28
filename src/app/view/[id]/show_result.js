@@ -1,13 +1,14 @@
 "use client"
 
-import ResultsVideoUI from '@/components/ResultVideoUI';
+import ResultsVideoUI from '@/components/ResultVideoUI_v1';
 import ResultsAudioUI from '@/components/ResultAudioUI';
 import ResultsImageUI from '@/components/ResultImageUI';
-import { useState, useEffect } from 'react';
+import Result_UI from '@/components/result_ui_v2';
+// import { useState, useEffect } from 'react';
 
 const Result_container = ({ res_data }) => {
     // console.log(res_data);
-    const model_responses = JSON.parse(res_data["models_responses"]);
+    const model_responses = typeof (res_data["model_resposnes"]) === "string" ? JSON.parse(res_data["models_responses"]) : res_data["models_responses"];
     const upload_type = res_data["input_request"]["upload_type"];
 
     const handle_newCheck = () => {
@@ -17,7 +18,7 @@ const Result_container = ({ res_data }) => {
     }
 
     let results_data = {
-        "results": { },
+        "results": {},
         "analysis_types": {
             "frameCheck": false,
             "audioAnalysis": false,
@@ -25,7 +26,7 @@ const Result_container = ({ res_data }) => {
         }
     };
     const verifier_metadata = res_data["verifier_metadata"];
-    if(upload_type === 'image'){
+    if (upload_type === 'image') {
         //IMAGE
         if (verifier_metadata["showAigcCheck"]) {
             results_data["analysis_types"]["aigcCheck"] = true;
@@ -36,21 +37,21 @@ const Result_container = ({ res_data }) => {
         else
             results_data["results"]["aigcCheck"] = undefined;
     }
-    else{
+    else {
         // AUDIO
         if (verifier_metadata["showAudioCheck"]) {
             results_data["analysis_types"]["audioAnalysis"] = true;
-    
+
             if (verifier_metadata["AudioCheckModelUse"] !== null)
                 results_data["results"]["audioAnalysis"] = model_responses["results"]["audio"]["models_results"][verifier_metadata["AudioCheckModelUse"]];
         }
         else
             results_data["results"]["audioAnalysis"] = undefined;
-    
+
         // FRAME
         if (verifier_metadata["showFrameCheck"]) {
             results_data["analysis_types"]["frameCheck"] = true;
-    
+
             if (verifier_metadata["FrameCheckModelUse"] !== null)
                 results_data["results"]["frameCheck"] = model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]];
         }
@@ -58,7 +59,7 @@ const Result_container = ({ res_data }) => {
             results_data["results"]["frameCheck"] = undefined;
     }
 
-    if(res_data["verifier_metadata"]["ShowCommentToUser"]){
+    if (res_data["verifier_metadata"]["ShowCommentToUser"]) {
         res_data["file_metadata"]["verifier_comment"] = res_data["verifier_metadata"]["verifierComment"];
     }
 
@@ -69,14 +70,26 @@ const Result_container = ({ res_data }) => {
 
             {
                 upload_type === "video" &&
-
-                <ResultsVideoUI
-                    response_data={results_data["results"]}
-                    fileUrl={res_data["signedUrl"]}
-                    file_metadata={res_data["file_metadata"]}
-                    analysisTypes={results_data["analysis_types"]}
-                    handle_newCheck={handle_newCheck}
-                />
+                (
+                    Number(model_responses["version"].split(".")[0]) >= 2 ?
+                        <>
+                            {/* //NEW RESULT HERE */}
+                            <Result_UI
+                                results={results_data["results"]}
+                                analysisTypes={results_data["analysis_types"]}
+                                file_metadata={res_data["file_metadata"]}
+                                fileUrl={res_data["signedUrl"]}
+                            />
+                        </>
+                        :
+                        <ResultsVideoUI
+                            response_data={results_data["results"]}
+                            fileUrl={res_data["signedUrl"]}
+                            file_metadata={res_data["file_metadata"]}
+                            analysisTypes={results_data["analysis_types"]}
+                            handle_newCheck={handle_newCheck}
+                        />
+                )
             }
             {
                 upload_type === "audio" &&
@@ -100,7 +113,7 @@ const Result_container = ({ res_data }) => {
                     handle_newCheck={handle_newCheck}
                 />
             }
-            
+
 
         </div>
     </>);

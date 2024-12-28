@@ -10,7 +10,7 @@ import { get_result_for_id } from '@/utils/data_fetch';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Form from './Form';
-import ResultsVideoUI from "@/components/ResultVideoUI";
+import ResultsVideoUI from "@/components/ResultVideoUI_v1";
 import ResultsAudioUI from "@/components/ResultAudioUI";
 
 const VideoAnalysisForm = ({ user }) => {

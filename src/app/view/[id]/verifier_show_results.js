@@ -1,14 +1,14 @@
 "use client"
 
-import ResultsVideoUI from '@/components/ResultVideoUI';
+import ResultsVideoUI from '@/components/ResultVideoUI_v1';
 import ResultsAudioUI from '@/components/ResultAudioUI';
 import ResultImageUI from '@/components/ResultImageUI';
+import Result_UI from '@/components/result_ui_v2';
 import { useState, useEffect } from 'react';
 import { verify_case } from '@/utils/data_fetch';
 import { useParams } from 'next/navigation';
 
-const Verifier_results_container = ({ res_data }) => {
-
+const Verifier_results_container = ({ client_email, res_data }) => {
     const { id } = useParams();
     // console.log(res_data);
 
@@ -87,9 +87,10 @@ const Verifier_results_container = ({ res_data }) => {
             }
         }
     */
-    const model_responses = JSON.parse(res_data["models_responses"]);
+
+    const model_responses = typeof (res_data["models_responses"]) === "string" ? JSON.parse(res_data["models_responses"]) : res_data["models_responses"];
     const upload_type = res_data["input_request"]["upload_type"];
-    
+
     const [verifier_metadata, set_verifier_metadata] = useState(
         res_data["verifier_metadata"] !== null ?
             res_data["verifier_metadata"]
@@ -119,6 +120,7 @@ const Verifier_results_container = ({ res_data }) => {
             [name]: type === 'checkbox' ? checked : type === 'radio' ? parseInt(value) : value
         }));
     }
+
     useEffect(() => {
         // console.log(model_responses)
 
@@ -324,27 +326,63 @@ const Verifier_results_container = ({ res_data }) => {
                         )
                     }
 
-                    <div className=' min-w-48 p-4 my-2 ml-auto mr-4 bg-primary h-fit  text-white rounded-2xl'>
-                        <div className='text-lg mb-3'>
-                            User Input
+
+                    <div className=' flex flex-col divide-primary divide-y min-w-48 pb-4 my-4 ml-auto mr-4 border border-primary rounded-xl overflow-hidden'>
+                        <div className=' w-fit h-fit px-4 py-3 rounded-lg flex gap-4'>
+                            <span className=' font-semibold'>
+                                User email: 
+                            </span>
+                            {client_email}
                         </div>
 
-                        <div className='flex justify-between'>
-                            <span className='text-gray-200 font-light'>Media File :</span>
-                            {res_data["input_request"]["upload_type"]}
-                        </div>
+                        <div className=' pt-2'>
+                            <div className='text-lg mb-3 px-4'>
+                                User Input
+                            </div>
 
-                        <div className='flex justify-between'>
-                            <span className='text-gray-200 font-light'>Frame check :</span>
-                            {res_data["input_request"]["analysis_types"]["frameCheck"] ? "True" : "False"}
-                        </div>
-                        <div className='flex justify-between'>
-                            <span className='text-gray-200 font-light'>Audio check :</span>
-                            {res_data["input_request"]["analysis_types"]["audioAnalysis"] ? "True" : "False"}
-                        </div>
-                        <div className='flex justify-between'>
-                            <span className='text-gray-200 font-light'>Aigc check :</span>
-                            {res_data["input_request"]["analysis_types"]["aigcCheck"] ? "True" : "False"}
+                            <div className='flex justify-between hover:bg-primary/10 px-4'>
+                                <span className=' font-light'>Media File :</span>
+                                <div className=' flex gap-3'>
+                                    {res_data["input_request"]["upload_type"] === "video" &&
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                        </svg>
+                                    }
+                                    {res_data["input_request"]["upload_type"] === "audio" &&
+                                        <>
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" className="size-6">
+                                                <rect x="10" y="40" width="10" height="20" rx="5" fill="black" />
+                                                <rect x="25" y="30" width="10" height="40" rx="5" fill="black" />
+                                                <rect x="40" y="20" width="10" height="60" rx="5" fill="black" />
+                                                <rect x="55" y="30" width="10" height="40" rx="5" fill="black" />
+                                                <rect x="70" y="25" width="10" height="50" rx="5" fill="black" />
+                                                <rect x="85" y="40" width="10" height="20" rx="5" fill="black" />
+                                            </svg>
+                                        </>
+                                    }
+                                    {/* IMAGE */}
+                                    {res_data["input_request"]["upload_type"] === "image" &&
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                                        </svg>
+                                    }
+
+                                    {res_data["input_request"]["upload_type"]}
+                                </div>
+                            </div>
+
+                            <div className='flex justify-between hover:bg-primary/10 px-4'>
+                                <span className=' font-light'>Frame check :</span>
+                                {res_data["input_request"]["analysis_types"]["frameCheck"] ? "True" : "False"}
+                            </div>
+                            <div className='flex justify-between hover:bg-primary/10 px-4'>
+                                <span className=' font-light'>Audio check :</span>
+                                {res_data["input_request"]["analysis_types"]["audioAnalysis"] ? "True" : "False"}
+                            </div>
+                            <div className='flex justify-between hover:bg-primary/10 px-4'>
+                                <span className=' font-light'>Aigc check :</span>
+                                {res_data["input_request"]["analysis_types"]["aigcCheck"] ? "True" : "False"}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -381,14 +419,26 @@ const Verifier_results_container = ({ res_data }) => {
                 (<>
                     {
                         upload_type === "video" &&
-
-                        <ResultsVideoUI
-                            response_data={data_resultsUI["results"]}
-                            fileUrl={res_data["signedUrl"]}
-                            file_metadata={res_data["file_metadata"]}
-                            analysisTypes={data_resultsUI["analysis_types"]}
-                            handle_newCheck={handle_newCheck}
-                        />
+                        (
+                            model_responses["version"] && Number(model_responses["version"].split(".")[0]) >= 2 ?
+                                <>
+                                    {/* //NEW RESULT HERE */}
+                                    <Result_UI
+                                        results={data_resultsUI["results"]}
+                                        analysisTypes={data_resultsUI["analysis_types"]}
+                                        file_metadata={res_data["file_metadata"]}
+                                        fileUrl={res_data["signedUrl"]}
+                                    />
+                                </>
+                                :
+                                <ResultsVideoUI
+                                    response_data={data_resultsUI["results"]}
+                                    fileUrl={res_data["signedUrl"]}
+                                    file_metadata={res_data["file_metadata"]}
+                                    analysisTypes={data_resultsUI["analysis_types"]}
+                                    handle_newCheck={handle_newCheck}
+                                />
+                        )
                     }
                     {
                         upload_type === "audio" &&
@@ -402,7 +452,7 @@ const Verifier_results_container = ({ res_data }) => {
                     }
                     {
                         upload_type === "image" &&
-                        <ResultImageUI 
+                        <ResultImageUI
                             response_data={data_resultsUI["results"]}
                             fileUrl={res_data["signedUrl"]}
                             file_metadata={res_data["file_metadata"]}

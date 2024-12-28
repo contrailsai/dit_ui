@@ -801,6 +801,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                                                             min="0"
                                                             max="100"
                                                             value={perc}
+                                                            readOnly
                                                         />
                                                     </div>
                                                     <span className=' text-xs'>
@@ -920,7 +921,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
 
                             {
                                 videoRef !== null &&
-                                <div className={`${curr_analysis === "audioAnalysis" ? "" : "hidden"}`} >
+                                <div className={`${curr_analysis === "audioAnalysis" ? "" : "hidden"} pl-10 pr-3`} >
                                     <Waveform videoRef={videoRef} />
                                 </div>
                             }

@@ -47,24 +47,24 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
 
                 let last_frame = {};
                 if (response_data["audioAnalysis"] !== undefined)
-                    last_frame["audioAnalysis"] = Math.max(...response_data['audioAnalysis'].table_idx);
+                    last_frame["audioAnalysis"] = Math.max(...response_data['audioAnalysis']["table_data"].map((val) => val["index"]));
 
                 let temp_chart_data = {};
 
                 if (response_data["audioAnalysis"]) {
                     const threshold = response_data["audioAnalysis"].threshold;
                     const audio_chart_data = {
-                        labels: response_data['audioAnalysis'].table_idx.map(
+                        labels: response_data['audioAnalysis']["table_data"].map(
                             (val, idx) => {
-                                const time = audio_duration * (val / last_frame["audioAnalysis"]);
+                                const time = audio_duration * (val["index"] / last_frame["audioAnalysis"]);
                                 return formatTime(time);
                             }
                         ),
                         datasets: [
                             {
                                 label: "Probablility of real",
-                                data: response_data['audioAnalysis'].table_values,
-                                backgroundColor: response_data['audioAnalysis'].table_values.map((val, idx) => { return val >= threshold ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)" }),
+                                data: response_data['audioAnalysis']["table_data"].map((val) => val["prediction"]),
+                                backgroundColor: response_data['audioAnalysis']["table_data"].map((val, idx) => { return val["prediction"] >= threshold ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)" }),
                                 barPercentage: 1,
                                 borderRadius: 100,
                                 inflateAmount: 1,
@@ -80,7 +80,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                                     below: "rgba(255,0,0,0.3)"    // below the origin
                                 },
                                 lineTension: 0.4,
-                                data: response_data['audioAnalysis'].table_values,
+                                data: response_data['audioAnalysis']["table_data"].map((val) => val["prediction"]),
                                 borderWidth: 1,
 
                             },

@@ -3,13 +3,13 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Result_container from "@/app/view/[id]/show_result";
 import Verifier_results_container from "@/app/view/[id]/verifier_show_results";
-import { get_result_for_id, verify_case } from "@/utils/data_fetch";
+import { get_result_for_id, verify_case, get_user_email_by_id } from "@/utils/data_fetch";
 import { redirect } from 'next/navigation';
 
 const page = async ({ params }) => {
   const user_data = await get_user_data();
   const case_result_data = await get_result_for_id(params.id);
-  // const case_result_data = {}
+  const client_email = await get_user_email_by_id(case_result_data.user_id)
 
   if (!user_data) {
     return redirect("/login");
@@ -23,7 +23,10 @@ const page = async ({ params }) => {
         user_data.verifier ?
 
           // VERIFIER BASED 
-          <Verifier_results_container res_data={case_result_data} />
+          <Verifier_results_container 
+            client_email={client_email} 
+            res_data={case_result_data} 
+          />
           :
           <>
             {/* NORMAL USER */}

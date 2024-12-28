@@ -54,7 +54,7 @@ export async function POST(request) {
 
     // SEND THE SQS MESSAGE WITH THE TRANSACTION ID 
     const sqsCommand = new SendMessageCommand({
-      QueueUrl: process.env.SQS_QUEUE_URL,
+      QueueUrl: process.env.NEXT_PUBLIC_ENVIRONMENT === "production" ? process.env.SQS_QUEUE_URL : process.env.DEV_SQS_QUEUE_URL,
       MessageBody: JSON.stringify(
         {
           task_id: data.id,
@@ -72,7 +72,10 @@ export async function POST(request) {
       "message": "Starting Instance ",
       "data": {}
     }
-    await publishSNSMessage(message, 'instance');
+    if(process.env.NEXT_PUBLIC_ENVIRONMENT == "production"){
+      console.log("Sending SNS message to start instance")
+      await publishSNSMessage(message, 'instance');
+    }
     
 
     return NextResponse.json({ id, signedUrl });

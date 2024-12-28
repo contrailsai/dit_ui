@@ -13,7 +13,7 @@ const Waveform = ({ videoRef }) => {
                 waveColor: '#4f88c8',
                 progressColor: '#0253E4',
                 height: "auto",
-                "barWidth": 2,
+                "barWidth": 3,
                 "barGap": 1,
                 "barRadius": 100,
                 "barHeight": 2,
@@ -30,7 +30,7 @@ const Waveform = ({ videoRef }) => {
     }, [videoRef]);
 
     return (
-        <div ref={waveformRef} className=' w-full pl-10 pr-4 h-16 bg-white rounded-md' />
+        <div ref={waveformRef} className=' w-full h-16 bg-white rounded-md' />
     );
 };
 

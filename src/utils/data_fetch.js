@@ -101,14 +101,14 @@ export const get_user_transactions = async (verifier) => {
         return -(timex - timey)
     })
 
-    let t_list = transactions_list.data.filter((val, idx)=>{ 
-        if(!val.method)
+    let t_list = transactions_list.data.filter((val, idx) => {
+        if (!val.method)
             return true
-        if (val.method=='verification')
+        if (val.method == 'verification')
             return true
         else
             return false
-     })
+    })
 
     return t_list; //transactions_list.data;
 }
@@ -158,6 +158,14 @@ export const get_signed_url = async (key) => {
     return signedUrl
 }
 
+export const get_user_email_by_id = async (id) => {
+
+    const supabase = createClient()
+    const { data: { user: { email } }, error } = await supabase.auth.admin.getUserById(id)
+
+    return email
+}
+
 export const verify_case = async (id, metadata, user_id) => {
 
     const supabase = createClient()
@@ -174,18 +182,23 @@ export const verify_case = async (id, metadata, user_id) => {
         .match({ id });
 
     // get client's email
-    const { data: {user: { email }}, error } = await supabase.auth.admin.getUserById(user_id)
-    console.log("sent email to user at: ", email);
-    let message = {
-        "notification_type": "client",
-        "client_id": user_id,
-        "client_email": email, 
-        "status": "PROCESSING_COMPLETED",
-        "data": {
-            "id": id,
+    let email = await get_user_email_by_id(user_id)
+    // const { data: {user: { email }}, error } = await supabase.auth.admin.getUserById(user_id)
+    
+    if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+
+        console.log("sent email to user at: ", email);
+        let message = {
+            "notification_type": "client",
+            "client_id": user_id,
+            "client_email": email,
+            "status": "PROCESSING_COMPLETED",
+            "data": {
+                "id": id,
+            }
         }
+        await publishSNSMessage(message, 'email');
     }
-    await publishSNSMessage(message, 'email');
 
     if (result.error) {
         console.error('Update Error:', result.error);
