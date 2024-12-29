@@ -71,7 +71,7 @@ const Result_container = ({ res_data }) => {
             {
                 upload_type === "video" &&
                 (
-                    Number(model_responses["version"].split(".")[0]) >= 2 ?
+                    model_responses["version"] && Number(model_responses["version"].split(".")[0]) >= 2 ?
                         <>
                             {/* //NEW RESULT HERE */}
                             <Result_UI
