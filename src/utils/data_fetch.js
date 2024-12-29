@@ -183,11 +183,9 @@ export const verify_case = async (id, metadata, user_id) => {
 
     // get client's email
     let email = await get_user_email_by_id(user_id)
-    // const { data: {user: { email }}, error } = await supabase.auth.admin.getUserById(user_id)
     
-    if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'development') {
+    if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'production') {
 
-        console.log("sent email to user at: ", email);
         let message = {
             "notification_type": "client",
             "client_id": user_id,
@@ -198,6 +196,7 @@ export const verify_case = async (id, metadata, user_id) => {
             }
         }
         await publishSNSMessage(message, 'email');
+        console.log("sent email to user at: ", email);
     }
 
     if (result.error) {

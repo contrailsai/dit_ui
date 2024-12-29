@@ -14,7 +14,7 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
 
     const [loading, setloading] = useState(false);
 
-    useEffect(()=>{
+    useEffect(() => {
         set_show_message(eventInfo?.message);
     }, [eventInfo])
 
@@ -44,9 +44,9 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
         else if (curr_shown === 'forgot') {
             //FORGOT PASSWORD
             try {
-                await forgot_password({email});
+                await forgot_password({ email });
             }
-            catch (error){
+            catch (error) {
                 console.error(error);
             }
         }
@@ -55,7 +55,7 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
 
     return (
         <>
-            <div className=' shadow-md shadow-primary bg-white mt-10 flex flex-col items-stretch w-fit py-10 px-10 rounded-xl text-gray-800 '>
+            <div className=' shadow-md shadow-primary bg-white mt-10 flex flex-col items-stretch w-fit py-10 px-10 rounded-3xl text-gray-800 '>
 
                 {/* LOGO */}
                 <div className=' text-primary w-full text-xl font-bold pb-7 flex justify-start items-center gap-3'>
@@ -81,7 +81,7 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
                         {/* OTHER PROVIDERS */}
                         < button
                             onClick={(e) => { e.preventDefault(); handleGoogleSignIn() }}
-                            className=' mt-5 flex items-center gap-2 border px-4 py-3 min-w-80 border-gray-300 rounded-lg hover:bg-gray-50 transition-all'
+                            className=' mt-5 flex items-center gap-2 border px-4 py-3 min-w-80 border-gray-300 rounded-3xl hover:bg-gray-50 transition-all'
                         >
 
                             <span>
@@ -108,46 +108,50 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
 
                 {/* FORM */}
                 <form onSubmit={handle_pass_signin} className=' flex flex-col gap-2'>
-                    <label className=' flex gap-1 h-0 relative z-10 font-medium text-xs top-3 left-2 ' htmlFor="password">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-4">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
-                        </svg>
-                        Email
-                    </label>
-                    <input
-                        name='email'
-                        type="email"
-                        required
-                        value={email}
-                        className='border-2 bg-gray-50 focus:bg-white outline-none pt-5 pb-1 px-2 min-w-96 rounded-lg'
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                    {
-                        curr_shown !== 'forgot' &&
-                        <>
-                            <label className=' flex gap-1 h-0 relative z-10 font-medium text-xs top-3 left-2 ' htmlFor="password">
+                    <div className="flex flex-col gap-6">
+                        <div className="relative">
+                            <label className=' flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-white ' htmlFor="email">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-4">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75" />
                                 </svg>
-                                Password
+                                Email
                             </label>
                             <input
-                                name='password'
-                                type="password"
+                                name='email'
+                                type="email"
                                 required
-                                value={password}
-                                className='border-2 bg-gray-50 focus:bg-white outline-none pt-5 pb-1 px-2 min-w-96 rounded-lg'
-                                onChange={(e) => setPassword(e.target.value)}
+                                value={email}
+                                className='border-2 bg-gray-50 focus:bg-white outline-none py-3 pl-6 pr-2 min-w-96 rounded-3xl w-full'
+                                onChange={(e) => setEmail(e.target.value)}
                             />
-                        </>
-                    }
+                        </div>
+                        {
+                            curr_shown !== 'forgot' &&
+                            <div className="relative">
+                                <label className=' flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-white ' htmlFor="password">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-4">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                                    </svg>
+                                    Password
+                                </label>
+                                <input
+                                    name='password'
+                                    type="password"
+                                    required
+                                    value={password}
+                                    className='border-2 bg-gray-50 focus:bg-white outline-none py-3 pl-6 pr-2 min-w-96 rounded-3xl w-full'
+                                    onChange={(e) => setPassword(e.target.value)}
+                                />
+                            </div>
+                        }
+                    </div>
                     {
                         (curr_shown === 'login') &&
                         <div onClick={() => { set_curr_shown('forgot') }} className=" w-full text-sm text-end text-primary cursor-pointer">
                             Forgot password?
                         </div>
                     }
-                    <button type="submit" className=' mt-3 outline-none flex gap-3 items-center justify-center p-3 font-medium bg-primary hover:bg-primary/90 text-white rounded-lg transition-all'>
+                    <button type="submit" className=' mt-3 outline-none flex gap-3 items-center justify-center p-3 font-medium bg-primary hover:bg-primary/90 text-white rounded-3xl transition-all'>
                         <div>
                             {curr_shown === 'signup' ? 'Create Account' : curr_shown === 'login' ? 'Log In' : 'Submit'}
                         </div>
@@ -187,12 +191,13 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
 
             </div >
 
-            <div className={` absolute bottom-10 right-10 bg-primary text-white shadow-md min-h-20 w-72 rounded px-3 pt-2 pb-4 flex justify-between  ${show_message ? "" : "hidden"} `} >
+            {/* MESSAGE NOTIFICATION */}
+            <div className={` absolute bottom-10 right-10 bg-primary text-white shadow-md min-h-20 w-72 rounded-3xl px-3 pt-6 pb-4 flex justify-between  ${show_message ? "" : "hidden"} `} >
 
-                <div className="w-full pt-3">
+                <div className="w-full pt-3 pl-2 break-words">
                     {eventInfo.message}
                 </div>
-                <svg onClick={() => { set_show_message(false) }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-8 cursor-pointer">
+                <svg onClick={() => { set_show_message(false) }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className=" absolute right-2 top-2 size-8 cursor-pointer">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                 </svg>
             </div>

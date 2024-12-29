@@ -52,33 +52,7 @@ export async function POST(request) {
     if (updated_res.error)
       throw updated_res.error;
 
-    // SEND THE SQS MESSAGE WITH THE TRANSACTION ID 
-    const sqsCommand = new SendMessageCommand({
-      QueueUrl: process.env.NEXT_PUBLIC_ENVIRONMENT === "production" ? process.env.SQS_QUEUE_URL : process.env.DEV_SQS_QUEUE_URL,
-      MessageBody: JSON.stringify(
-        {
-          task_id: data.id,
-          application: method === "verification" ? "dit" : "admin_demo"
-        }
-      )
-    });
-
-    await sqsClient.send(sqsCommand);
-
-    const id = data.id
-
-    //SEND EMAIL TO START ANALYSIS
-    let message = {
-      "message": "Starting Instance ",
-      "data": {}
-    }
-    if(process.env.NEXT_PUBLIC_ENVIRONMENT == "production"){
-      console.log("Sending SNS message to start instance")
-      await publishSNSMessage(message, 'instance');
-    }
-    
-
-    return NextResponse.json({ id, signedUrl });
+    return NextResponse.json({ id: data.id, signedUrl });
 
   } catch (error) {
     console.log(error);

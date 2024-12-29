@@ -1,21 +1,18 @@
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
-import { createClient } from '@/utils/supabase/client';
 import { db_updates } from "@/utils/data_fetch";
 
 import { FaPhotoVideo } from "react-icons/fa";
 import { PiWaveformBold } from "react-icons/pi";
 import { MdOutlineImageSearch } from "react-icons/md";
-import { PiImageDuotone } from "react-icons/pi";
-import { TbPhotoSearch } from "react-icons/tb";
+// import { PiImageDuotone } from "react-icons/pi";
+// import { TbPhotoSearch } from "react-icons/tb";
 
-const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, setfileUrl, set_file_metadata, set_chosen_analysis }) => {
+const Form = ({ user_data, set_user_data, set_res_data }) => {
 
-    // input (file) ref
     const fileInputRef = useRef(null);
 
     const [tempfileUrl, set_tempFileUrl] = useState(null);
-    //loading for the response data 
     const [loading, setLoading] = useState(false);
 
     // FORM DATA
@@ -49,10 +46,10 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
         return bytes.toFixed(dp) + ' ' + units[u];
     }
 
-    const validate_analysis = (media_type)=>{
-        //''' confirm selected analysis are correct to use '''
+    //''' confirm selected analysis are correct to use '''
+    const validate_analysis = (media_type) => {
         console.log(media_type);
-        
+
         let new_analysis = { ...analysisTypes };
 
         if (media_type.split("/")[0] === "video") {
@@ -67,7 +64,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
             new_analysis["aigcCheck"] = false;
             setAnalysisTypes(new_analysis);
         }
-        else if (media_type.split("/")[0] === "image"){
+        else if (media_type.split("/")[0] === "image") {
             setUploadType("image");
             //ensure unrequired are set false
             new_analysis["frameCheck"] = false;
@@ -76,38 +73,16 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
         setAnalysisTypes(new_analysis);
     }
 
-    // FORM RELATED FUNCTIONS
-    const handleFileChange = (event) => {
-
-        const newfile = event.target.files[0];
-        // Check file size (50MB = 50 * 1024 * 1024 bytes)
-        if (newfile === undefined) {
-            setUploadType("")
-        }
-        const maxSize = 50 * 1024 * 1024;
-        if (newfile.size > maxSize) {
-            alert("File size exceeds 50MB. Please choose a smaller file.");
-            setUploadType("");
-            setfile(null);
-            set_tempFileUrl(null);
-            return;
-        }
-        
-        validate_analysis(newfile.type);
-        setfile(newfile);
-        set_tempFileUrl(URL.createObjectURL(newfile));
-    };
-
     const handleAnalysisTypeChange = (val) => {
-
         let new_analysis = { ...analysisTypes }
         new_analysis[val] = !new_analysis[val]
         setAnalysisTypes(new_analysis);
     };
 
-    // -------------------->>SUBMIT and GET RESULT
+    // -------------------->>SUBMIT RESULT FUNCTIONS
 
     const upload_file_s3 = async () => {
+
         try {
             const res = await fetch('/api/upload', {
                 method: 'POST',
@@ -129,14 +104,29 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
             });
             if (!res.ok) throw new Error('Failed to get signed URL');
 
-            const { signedUrl } = await res.json();
+            const { id, signedUrl } = await res.json();
 
             const res_s3 = await fetch(signedUrl, {
                 method: 'PUT',
                 body: file,
                 headers: { 'Content-Type': file.type },
             });
-            alert('File Uploaded')
+            if (!res_s3.ok) throw new Error('Failed to upload file to S3');
+
+
+            const res_set_to_queue = await fetch('/api/send-message', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(
+                    {
+                        task_id: id,
+                        method: "verification"
+                    }
+                ),
+            });
+            if (!res_set_to_queue.ok) throw new Error('Failed to send message to queue');
+
+            alert('File Uploaded');
 
         } catch (error) {
             console.error('Error uploading file:', error);
@@ -147,91 +137,32 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
     const get_server_response = async () => {
         //Form Submittion
         try {
-            // const formData = new FormData();
-            // formData.append('file', file);
-            // formData.append('analysis_types', JSON.stringify(analysisTypes));
-            // formData.append('upload_type', JSON.stringify(uploadType));
-
             const user_id = user_data.id;
             const new_token_amount = user_data.tokens - 1;
 
-            let res_data = {};
-
-            // STORE MEDIA FILE IN S3
+            // 1. create a db element
+            // 2. upload file to s3
+            // 3. send message to queue
             await upload_file_s3();
-            // NEXT STEP -------------> WAIT FOR RESPONSE
-            res_data = { "uploaded": true };
 
-            // // REQUEST TO ML MODEL
-            // const IP = process.env.NEXT_PUBLIC_SERVER_IP;
-            // const token = session?.access_token;
-            // //send request to backend
-            // try {
-            //     //options for the request
-            //     const options = {
-            //         method: 'POST',
-            //         body: formData,
-            //         headers: {
-            //             'Authorization': `Bearer ${token}`
-            //         },
-            //     };
-            //     const response = await fetch(`${IP}/api/generate-result`, options);
-            //     res_data = await response.json();
-            // }
-            // catch (error) {
-            //     res_data = { message: "ML model is currently not available" }
-            //     set_res_data(res_data);
-            //     set_chosen_analysis(analysisTypes);
-            //     setLoading(false);
-            //     return;
-            // }
+            let res_data = { "uploaded": true };
 
-            if (res_data.message !== undefined) {
-                console.log("ERROR FROM SERVER: ", res_data);
-                res_data = { message: "Server had an issue" };
-                set_res_data(res_data);
-                set_chosen_analysis(analysisTypes);
-                setLoading(false);
-                return;
-            }
-            if (res_data.detail !== undefined) {
-                console.log("ERROR FROM SERVER: ", res_data);
-                res_data = { message: "Server had an issue" };
-                set_res_data(res_data);
-                set_chosen_analysis(analysisTypes);
-                setLoading(false);
-                return;
-            }
-
-            // UPDATE DB for TOKENS
+            // update db with new token amount
             const db_update_res = await db_updates({ new_token_amount, user_id });
             if (db_update_res !== null) {
                 res_data = { message: db_update_res.error };
                 set_res_data(res_data);
-                set_chosen_analysis(analysisTypes);
                 setLoading(false);
                 return;
             }
 
             // setup the data if no issue occured
             set_user_data({ ...user_data, tokens: new_token_amount });
-
-            set_file_metadata({
-                name: file.name,
-                size: humanFileSize(file.size),
-                type: file.type
-            });
             set_res_data(res_data);
-            set_chosen_analysis(analysisTypes);
         }
         catch (error) {
             console.error("Error in sending data", error);
         }
-
-        // Create a URL for the uploaded video file
-        let new_fileUrl = URL.createObjectURL(file);
-        setfileUrl(new_fileUrl);
-
         setLoading(false);
     };
 
@@ -246,6 +177,27 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
             get_server_response();
         }
     }
+
+    // Form functions (upload file, drop file, change file remove file)
+    const handleFileChange = (event) => {
+        const newfile = event.target.files[0];
+        if (newfile === undefined) {
+            setUploadType("")
+        }
+        // Check file size (50MB = 50 * 1024 * 1024 bytes)
+        const maxSize = 50 * 1024 * 1024;
+        if (newfile.size > maxSize) {
+            alert("File size exceeds 50MB. Please choose a smaller file.");
+            setUploadType("");
+            setfile(null);
+            set_tempFileUrl(null);
+            return;
+        }
+
+        validate_analysis(newfile.type);
+        setfile(newfile);
+        set_tempFileUrl(URL.createObjectURL(newfile));
+    };
 
     const handleDrop = (event) => {
         event.preventDefault();
@@ -281,21 +233,21 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
         fileInputRef.current.value = '';
     };
 
-
     return (
-        <form onSubmit={handle_submit} className=" flex justify-center gap-6 px-5  h-full transition-all">
+        <form onSubmit={handle_submit} className=" flex justify-center gap-6 px-5 h-full transition-all">
+
             {/* SUBMIT + DROP/SHOW FILE */}
             <div className=' w-3/5 flex flex-col justify-start gap-4'>
 
                 {/* choose upload file */}
-                <div className={` p-5 h-fit w-full flex flex-col justify-center rounded-xl border border-gray-200 transition-all duration-500 `}>
+                <div className={` p-5 h-fit w-full flex flex-col justify-center rounded-3xl border border-gray-200 transition-all duration-500 `}>
 
                     {
-                        !file && <label className="block text-gray-800 mb-2 text-xl font-semibold ">Upload File</label>
+                        !file && <label className="block text-gray-800 mb-2 pl-4 text-xl font-semibold ">Upload File</label>
                     }
 
                     {file ? (
-                        <div className={` relative w-full `}>
+                        <div className={` relative w-full rounded-2xl overflow-hidden`}>
                             {/* VIDEO/AUDIO PREVIEW + file basic data */}
 
                             <div className=' w-full flex justify-center'>
@@ -303,16 +255,16 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                                     <video className=' w-full max-h-[70vh] ' controls src={tempfileUrl}></video>
                                 ) : (
                                     file.type.startsWith('audio/') ?
-                                    (
-                                        <audio className='w-full border border-gray-300 rounded-full' controls src={tempfileUrl}></audio>
-                                    ) : (
-                                        file.type.startsWith('image/') ?
                                         (
-                                            <Image src={tempfileUrl} height={0} width={625} alt='uploaded_image' />
+                                            <audio className='w-full border border-gray-300 rounded-full' controls src={tempfileUrl}></audio>
                                         ) : (
-                                            <div className=' text-xl bg-red-300 px-20 py-3 rounded-xl '>INVALID FILE UPLOADED</div>
+                                            file.type.startsWith('image/') ?
+                                                (
+                                                    <Image src={tempfileUrl} height={0} width={625} alt='uploaded_image' />
+                                                ) : (
+                                                    <div className=' text-xl bg-red-300 px-20 py-3 rounded-xl '>INVALID FILE UPLOADED</div>
+                                                )
                                         )
-                                    )
                                 )}
                             </div>
                         </div>
@@ -320,7 +272,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                         <>
                             {/* Drop FILE */}
                             <div
-                                className=" flex flex-col justify-center items-center gap-3 w-full h-full min-h-[40vh] cursor-pointer border-2 border-slate-300 border-dashed rounded-md p-8 bg-slate-100 "
+                                className=" flex flex-col justify-center items-center gap-3 w-full h-full min-h-[40vh] cursor-pointer border-2 border-slate-300 border-dashed rounded-2xl p-8 bg-slate-100 "
 
                                 onDrop={handleDrop}
                                 onDragOver={handleDragOver}
@@ -365,7 +317,7 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                             // aria-disabled={loading || (cost>user_data.tokens)}
                             disabled={(loading || (user_data.tokens == 0))}
                             type="submit"
-                            className=" disabled:cursor-no-drop disabled:bg-primary/70 outline-none bg-primary hover:bg-primary/90 hover:shadow-md text-white font-semibold py-3 px-6 rounded-lg w-fit text-xl transition-all duration-300"
+                            className=" disabled:cursor-no-drop disabled:bg-primary/70 outline-none bg-primary hover:bg-primary/90 hover:shadow-md text-white font-semibold py-3 px-12 rounded-3xl w-fit text-xl transition-all duration-300"
                         >
                             Submit
                         </button>
@@ -390,33 +342,34 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                     </div>
                 </div>
             </div>
+
             {/* UPLOAD DETAILS + CHECKBOXES */}
-            <div className=' w-2/5 flex flex-col justify-start'>
+            <div className=' w-2/5 flex flex-col justify-start '>
 
                 {/* SHOW FILES DETAILS WHEN WE HAVE FILES */}
                 <div className={` ${file ? "h-50 mb-4" : "h-0"} overflow-hidden transition-all`}>
-                    <div className=' border rounded-lg px-5 py-4'>
+                    <div className=' border rounded-3xl px-5 py-4'>
 
-                        <label className="block text-gray-800 mb-2 text-xl font-semibold ">Uploaded File</label>
+                        <label className="block text-gray-800 mb-2 pl-4 text-xl font-semibold ">Uploaded File</label>
 
                         {
                             file &&
-                            <div className=' flex flex-col gap-3 items-center justify-between py-1'>
+                            <div className=' flex flex-col gap-3 items-center justify-between py-1 overflow-hidden'>
                                 {/* FILE BASIC DATA */}
                                 <div className='flex  flex-col gap-3'>
                                     <div className='flex gap-1'>
-                                        <span className=' min-w-24 font-medium'>File Name:</span>
+                                        <span className=' min-w-24 text-base font-medium'>File Name:</span>
                                         <span className=' break-all '>
                                             {file.name}
                                         </span>
                                     </div>
                                     <div className='flex gap-1'>
-                                        <span className=' min-w-24 font-medium'>File Size:</span>
+                                        <span className=' min-w-24 text-base font-medium'>File Size:</span>
                                         {humanFileSize(file.size)}
                                     </div>
                                 </div>
-                                <button onClick={removeFile} className=' relative group flex gap-3 bg-red-100 hover:bg-red-300 px-4 py-2 rounded-full transition-all duration-300'>
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
+                                <button onClick={removeFile} className=' relative group flex gap-3 bg-red-200 hover:bg-red-300 px-4 py-2 rounded-full transition-all duration-300'>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-6">
                                         <path strokeLinecap="round" strokeLinejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
                                     </svg>
 
@@ -431,127 +384,134 @@ const Form = ({ user_data, set_user_data, response_data, set_res_data, fileUrl, 
                 </div>
 
                 {/* checkboxes */}
-                <div className={` ${file ? "h-fit" : "h-0"} h-fit rounded-xl p-4 border border-gray-200 transition-all duration-500 flex flex-col gap-4 `}>
-                    <label className="block text-gray-800 text-xl font-semibold ">Select Analysis Types</label>
+                <div className={` ${file ? "h-fit" : "h-0"} h-fit rounded-3xl p-5 border border-gray-200 transition-all duration-500 flex flex-col `}>
+                    <label className=" block text-gray-800 mb-2 pl-4 text-xl font-semibold   ">Select Analysis Types</label>
 
-                    <div className={` ${uploadType === 'image'? "hidden" : ""} flex flex-row gap-4 items-center justify-evenly `}>
-                        {/* FRAME ANALYSIS SELECT */}
+                    <div className='flex flex-col gap-4 items-center justify-evenly'>
+                        {/* VIDEO, AUDIO */}
+                        <div className={` ${uploadType === 'image' ? "hidden" : ""} w-full flex flex-row gap-4 items-center justify-evenly `}>
+                            {/* FRAME ANALYSIS SELECT */}
+                            <div
+                                onClick={() => { handleAnalysisTypeChange("frameCheck") }}
+                                className={` flex flex-col justify-evenly items-center z-10 text-primary text-lg font-medium shadow shadow-primary ${uploadType === 'audio' ? 'hidden' : ''} relative px-3 py-2 cursor-pointer rounded-2xl w-full bg-white h-64 transition-all `}
+                            >
+                                <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
+                                    {/* SELECT BUTTON */}
+                                    <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full'>
+                                        {
+                                            analysisTypes["frameCheck"] &&
+                                            (
+                                                <div className='h-4 w-4 bg-primary shadow-md shadow-white rounded-full m-1' />
+                                            )
+                                        }
+                                    </div>
+
+                                    {/* TEXT AND (i) */}
+                                    <span className='font-semibold'>
+                                    Video Deepfake
+                                    </span>
+                                    <span className=' relative group text-xs ' >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-6">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                        </svg>
+
+                                        <div className='w-fit min-w-32 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
+                                            <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
+                                                Analyze frames in the video
+                                            </div>
+                                        </div>
+                                    </span>
+                                </div>
+
+                                <div className={` ${analysisTypes["frameCheck"] ? " text-primary" : " text-primary/40"} select-none transition-all `}>
+                                    <FaPhotoVideo className=' h-40 w-40' />
+                                </div>
+                            </div>
+
+                            {/* AUDIO ANALYSIS SELECT */}
+                            <div
+                                onClick={() => { handleAnalysisTypeChange("audioAnalysis") }}
+                                className={` flex flex-col justify-evenly items-center text-primary text-lg font-medium cursor-pointer shadow shadow-primary relative  px-3 py-2  rounded-2xl w-full bg-white h-64 transition-all `}
+                            >
+                                <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
+                                    {/* SELECT BUTTON */}
+                                    <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full'>
+                                        {
+                                            analysisTypes["audioAnalysis"] &&
+                                            (
+                                                <div className='h-4 w-4 bg-primary shadow-md shadow-white rounded-full m-1' />
+                                            )
+                                        }
+                                    </div>
+                                    {/* TEXT AND (i) */}
+                                    <span className='font-semibold'>
+                                        Audio Spoof
+                                    </span>
+                                    <span className=' relative group text-xs ' >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-6">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                        </svg>
+
+                                        <div className='w-fit min-w-20 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
+                                            <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
+                                                Analyze audio in the file
+                                            </div>
+                                        </div>
+                                    </span>
+                                </div>
+
+                                <div className={` ${analysisTypes["audioAnalysis"] ? " text-primary" : " text-primary/40"} select-none transition-all `}>
+                                    <PiWaveformBold className=' h-40 w-40' />
+                                </div>
+                            </div>
+                        </div>
+                        {/* IMAGE ANALYSIS SELECT */}
                         <div
-                            onClick={() => { handleAnalysisTypeChange("frameCheck") }}
-                            className={` flex flex-col justify-evenly items-center z-10 text-primary text-lg font-medium shadow shadow-primary ${uploadType === 'audio' ? 'hidden' : ''} relative px-3 py-2 cursor-pointer rounded-lg w-full bg-white h-64 transition-all `}
+                            className={` w-full ${uploadType === "audio" || uploadType === 'video' ? "hidden" : ""} flex z-10 text-primary text-xl text-center font-medium shadow shadow-primary relative px-3 py-2 cursor-pointer rounded-2xl bg-white transition-all `}
+                            onClick={() => { handleAnalysisTypeChange("aigcCheck") }}
                         >
-                            <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
-                                {/* SELECT BUTTON */}
-                                <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full'>
-                                    {
-                                        analysisTypes["frameCheck"] &&
-                                        (
-                                            <div className='h-4 w-4 bg-primary shadow-md shadow-white rounded-full m-1' />
-                                        )
-                                    }
-                                </div>
-
-                                {/* TEXT AND (i) */}
-                                Video Deepfake
-                                <span className=' relative group text-xs ' >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-6">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                                    </svg>
-
-                                    <div className='w-fit min-w-32 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
-                                        <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
-                                            Analyze frames in the video
-                                        </div>
+                            {/* TEXT, IMAGE AND (i) */}
+                            <div className='flex flex-col w-full py-6 gap-6'>
+                                {/* BUTTON */}
+                                <div className=' w-full'>
+                                    {/* SELECT BUTTON */}
+                                    <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full w-fit '>
+                                        {
+                                            analysisTypes["aigcCheck"] &&
+                                            (
+                                                <div className='h-4 w-4 bg-primary shadow-md shadow-white rounded-full relative top-1 left-1' />
+                                            )
+                                        }
                                     </div>
-                                </span>
-                            </div>
-
-                            <div className={` ${analysisTypes["frameCheck"] ? " text-primary" : " text-primary/40"} select-none transition-all `}>
-                                <FaPhotoVideo className=' h-40 w-40' />
-                            </div>
-                        </div>
-
-                        {/* AUDIO ANALYSIS SELECT */}
-                        <div
-                            onClick={() => { handleAnalysisTypeChange("audioAnalysis") }}
-                            className={` flex flex-col justify-evenly items-center text-primary text-lg font-medium cursor-pointer shadow shadow-primary relative  px-3 py-2  rounded-lg w-full bg-white h-64 transition-all `}
-                        >
-                            <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
-                                {/* SELECT BUTTON */}
-                                <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full'>
-                                    {
-                                        analysisTypes["audioAnalysis"] &&
-                                        (
-                                            <div className='h-4 w-4 bg-primary shadow-md shadow-white rounded-full m-1' />
-                                        )
-                                    }
                                 </div>
-                                {/* TEXT AND (i) */}
-                                Audio Spoof
-                                <span className=' relative group text-xs ' >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-6">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                                    </svg>
+                                <div className=' flex gap-3'>
+                                    <span className=' font-semibold'>
+                                        Image AIGC
+                                    </span>
+                                    {/* INFO */}
+                                    <span className=' relative group text-xs ' >
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-6">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+                                        </svg>
 
-                                    <div className='w-fit min-w-20 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
-                                        <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
-                                            Analyze audio in the file
+                                        <div className=' min-w-24 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
+                                            <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
+                                                Analyze a image for forgery
+                                            </div>
                                         </div>
-                                    </div>
-                                </span>
-                            </div>
-
-                            <div className={` ${analysisTypes["audioAnalysis"] ? " text-primary" : " text-primary/40"} select-none transition-all `}>
-                                <PiWaveformBold className=' h-40 w-40' />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* IMAGE ANALYSIS SELECT */}
-                    <div
-                        className={` ${uploadType === "audio" || uploadType === 'video' ? "hidden" : ""} flex z-10 text-primary text-xl text-center font-medium shadow shadow-primary relative px-3 py-2 cursor-pointer rounded-lg bg-white transition-all `}
-                        onClick={() => { handleAnalysisTypeChange("aigcCheck") }}
-                    >
-                        {/* TEXT, IMAGE AND (i) */}
-                        <div className='flex flex-col w-full py-6 gap-6'>
-                            {/* BUTTON */}
-                            <div className=' w-full'>
-                                {/* SELECT BUTTON */}
-                                <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full w-fit '>
-                                    {
-                                        analysisTypes["aigcCheck"] &&
-                                        (
-                                            <div className='h-4 w-4 bg-primary shadow-md shadow-white rounded-full relative top-1 left-1' />
-                                        )
-                                    }
+                                    </span>
                                 </div>
                             </div>
-                            <div className=' flex gap-3'>
-                                Image AIGC
-                                {/* INFO */}
-                                <span className=' relative group text-xs ' >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-6">
-                                        <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
-                                    </svg>
 
-                                    <div className=' min-w-24 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
-                                        <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
-                                            Analyze a image for forgery
-                                        </div>
-                                    </div>
-                                </span>
+                            <div className={` ${analysisTypes["aigcCheck"] ? " text-primary" : " text-primary/40"} w-full select-none transition-all `}>
+                                <MdOutlineImageSearch className=' h-40 w-40' />
                             </div>
-                        </div>
-
-                        <div className={` ${analysisTypes["aigcCheck"] ? " text-primary" : " text-primary/40"} w-full select-none transition-all `}>
-                            <MdOutlineImageSearch className=' h-40 w-40' />
-                            {/* <PiImageDuotone  className=' h-40 w-40' /> */}
-                            {/* <TbPhotoSearch className=' h-40 w-40' /> */}
                         </div>
                     </div>
                 </div>
 
             </div>
+
         </form>
     )
 }

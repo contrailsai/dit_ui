@@ -240,7 +240,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                                                     }
 
                                                     return (
-                                                        <div key={idx} className={` w-64 bg-white flex flex-col items-center gap-3 px-5 py-2 rounded-lg shadow ${pred ? " shadow-green-700" : " shadow-red-700"}  `}>
+                                                        <div key={idx} className={` w-64 bg-white flex flex-col items-center gap-3 px-5 py-2 rounded-3xl shadow ${pred ? " shadow-green-700" : " shadow-red-700"}  `}>
                                                             <span className=' text-xl'>
                                                                 {
                                                                     val === "frameCheck" &&

@@ -189,7 +189,7 @@ const Verifier_results_container = ({ client_email, res_data }) => {
 
             {
                 res_data["status"] &&
-                <div className=' py-4 px-3 bg-primary/10 border-primary/20 border-2 rounded-xl '>
+                <div className=' py-4 px-5 bg-primary/10 border-primary/20 border-2 rounded-3xl '>
                     <span className=' font-semibold pr-3 text-lg '>
                         Note:
                     </span>
@@ -203,7 +203,7 @@ const Verifier_results_container = ({ client_email, res_data }) => {
                     Verifier Settings
                 </div>
                 {/* MODEL CHOOSE OPTIONS HERE */}
-                <div className='py-2 flex w-full gap-20 border border-primary rounded-xl '>
+                <div className='py-2 flex w-full gap-20 border border-primary rounded-3xl '>
                     {/* FRAME MODELS*/}
                     {
                         upload_type !== 'image' && upload_type !== 'audio' && (
@@ -224,7 +224,7 @@ const Verifier_results_container = ({ client_email, res_data }) => {
                                             model_responses["metadata"]["frame"]["models_info"].map((val, idx) => {
 
                                                 return (
-                                                    <div key={idx} htmlFor={`FM${idx}`} className='bg-primary text-white px-4 py-2 rounded-xl'>
+                                                    <div key={idx} htmlFor={`FM${idx}`} className='bg-primary text-white px-5 py-2 rounded-3xl'>
                                                         <div className=' flex items-center '>
                                                             <label className='text-lg font-semibold cursor-pointer pr-3' htmlFor={`FM${idx}`}>{val.model_name}</label>
                                                             <input
@@ -265,7 +265,7 @@ const Verifier_results_container = ({ client_email, res_data }) => {
                                         model_responses["metadata"]["audio"]["models_info"].map((val, idx) => {
 
                                             return (
-                                                <div key={idx} htmlFor={`AM${idx}`} className='bg-primary text-white px-4 py-2 rounded-xl'>
+                                                <div key={idx} htmlFor={`AM${idx}`} className='bg-primary text-white px-5 py-2 rounded-3xl'>
                                                     <div className=' flex items-center '>
                                                         <label className='text-lg font-semibold cursor-pointer pr-3' htmlFor={`AM${idx}`}>{val.model_name}</label>
                                                         <input
@@ -304,7 +304,7 @@ const Verifier_results_container = ({ client_email, res_data }) => {
                                         model_responses["metadata"]["image"]["models_info"].map((val, idx) => {
 
                                             return (
-                                                <div key={idx} htmlFor={`IM${idx}`} className='bg-primary text-white px-4 py-2 rounded-xl'>
+                                                <div key={idx} htmlFor={`IM${idx}`} className='bg-primary text-white px-5 py-2 rounded-3xl'>
                                                     <div className=' flex items-center '>
                                                         <label className='text-lg font-semibold cursor-pointer pr-3' htmlFor={`IM${idx}`}>{val.model_name}</label>
                                                         <input
@@ -327,7 +327,7 @@ const Verifier_results_container = ({ client_email, res_data }) => {
                     }
 
 
-                    <div className=' flex flex-col divide-primary divide-y min-w-48 pb-4 my-4 ml-auto mr-4 border border-primary rounded-xl overflow-hidden'>
+                    <div className=' flex flex-col divide-primary divide-y min-w-48 pb-4 my-4 ml-auto mr-4 border border-primary rounded-2xl overflow-hidden'>
                         <div className=' w-fit h-fit px-4 py-3 rounded-lg flex gap-4'>
                             <span className=' font-semibold'>
                                 User email: 
@@ -343,11 +343,13 @@ const Verifier_results_container = ({ client_email, res_data }) => {
                             <div className='flex justify-between hover:bg-primary/10 px-4'>
                                 <span className=' font-light'>Media File :</span>
                                 <div className=' flex gap-3'>
+                                    {/* VIDEO */}
                                     {res_data["input_request"]["upload_type"] === "video" &&
                                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
                                             <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
                                         </svg>
                                     }
+                                    {/* AUDIO */}
                                     {res_data["input_request"]["upload_type"] === "audio" &&
                                         <>
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" className="size-6">
@@ -389,20 +391,21 @@ const Verifier_results_container = ({ client_email, res_data }) => {
             </div>
 
             {/* COMMENTS AND SUBMISSION */}
-            <div className=' px-4 py-4'>
-                <label className=' px-2 ' htmlFor="verifier-comment">Verifier Comments</label>
+            <div className=' px-4 py-4 relative'>
+                <label className=' px-2 font-medium absolute top-1 left-10 bg-white ' htmlFor="verifier-comment">Verifier Comments</label>
                 <textarea
                     onChange={handleInputChange}
                     value={verifier_metadata["verifierComment"]} id="verifier-comment"
                     name="verifierComment"
-                    className=' py-2 px-3 rounded-xl border border-primary/80 outline-1 outline-primary w-full'
+                    rows={5}
+                    className=' py-5 px-5 rounded-3xl border border-primary/80 outline-1 outline-primary w-full'
                 />
                 <div className=' flex items-center gap-3 py-4'>
                     <label htmlFor="show-comment-to-user">Show Comment to user </label>
                     <input
                         onChange={handleInputChange}
                         checked={verifier_metadata["ShowCommentToUser"]}
-                        className=' size-4' type="checkbox" id="show-comment-to-user"
+                        className=' size-5 ' type="checkbox" id="show-comment-to-user"
                         name="ShowCommentToUser"
                     />
                 </div>

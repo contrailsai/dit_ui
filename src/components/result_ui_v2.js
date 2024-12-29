@@ -24,14 +24,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     let frame_charts = null;
     let audio_chart = null;
     let fps = results["frameCheck"] ? results["frameCheck"]["video_fps"] : 25;
-    // const [result_values, set_result_values] = useState(null);
-    // const [bboxes_data, set_bboxes_data] = useState(null);
-
-    // const [results["frameCheck"], set_results["frameCheck"]] = useState(results["frameCheck"]);
-
-    // const [frame_charts, setframecharts] = useState(null);
-    // const [audio_chart, setaudiocharts] = useState(null);
-    // const [taking_ss, set_taking_ss] = useState(null);
+    
     useEffect(() => {
         set_curr_model(analysisTypes["frameCheck"] ? "frameCheck" : analysisTypes["audioAnalysis"] ? "audioAnalysis" : "");
     }, [analysisTypes])
