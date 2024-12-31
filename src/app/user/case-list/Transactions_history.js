@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 
 import { get_user_transactions } from "@/utils/data_fetch"
 import Link from 'next/link';
+import { PlusCircle, PendingWatch, DoneBadgeCircle, GotoLinkOut, Video, Audio, Image } from '@/components/SVGs';
 
 const Transactions_history = ({ verifier }) => {
 
@@ -29,9 +30,7 @@ const Transactions_history = ({ verifier }) => {
                 {/* NEW ANALYSIS */}
                 <Link href={'/fact-checker'} className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 rounded-3xl shadow-primary shadow'>
                     New Analysis
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                    </svg>
+                    <PlusCircle strokeWidth={1.5} className={'size-6'} />
                 </Link>
             </div>
 
@@ -110,41 +109,31 @@ const Transactions_history = ({ verifier }) => {
                                                     {/* VIDEO */}
                                                     {
                                                         upload_type === "video" &&
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
-                                                        </svg>
+                                                        <Video className='size-6' strokeWidth={1.5} />
                                                     }
                                                     {/* AUDIO */}
                                                     {
                                                         upload_type === "audio" &&
-                                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" stroke="currentColor" className="size-6">
-                                                            <rect x="10" y="40" width="10" height="20" rx="5" fill="black" />
-                                                            <rect x="25" y="30" width="10" height="40" rx="5" fill="black" />
-                                                            <rect x="40" y="20" width="10" height="60" rx="5" fill="black" />
-                                                            <rect x="55" y="30" width="10" height="40" rx="5" fill="black" />
-                                                            <rect x="70" y="25" width="10" height="50" rx="5" fill="black" />
-                                                            <rect x="85" y="40" width="10" height="20" rx="5" fill="black" />
-                                                        </svg>
+                                                        <Audio className='size-6' strokeWidth={1.5} />
                                                     }
                                                     {/* IMAGE */}
                                                     {
                                                         upload_type === "image" &&
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-                                                        </svg>
+                                                        <Image className='size-6' strokeWidth={1.5} />
                                                     }
                                                     {upload_type}
                                                 </span>
                                                 {/* STATUS */}
                                                 <span className=' min-w-28 flex items-center gap-2 '>
                                                     {val.status ? (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-6 text-emerald-600 bg-green-200 rounded-full">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
-                                                        </svg>
+                                                        <div className='text-emerald-600 bg-green-200 rounded-full'>
+                                                            <DoneBadgeCircle className='size-6' strokeWidth={2} />
+
+                                                        </div>
                                                     ) : (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="size-6 text-yellow-600 bg-yellow-200 rounded-full">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                                        </svg>
+                                                        <div className=' text-yellow-600 bg-yellow-200 rounded-full'>
+                                                            <PendingWatch className='size-6' strokeWidth={2} />
+                                                        </div>
                                                     )}
                                                     {(val.status) ? "Done" : "Pending"}
                                                 </span>
@@ -172,9 +161,7 @@ const Transactions_history = ({ verifier }) => {
                                                             (
                                                                 <Link className='underline flex items-center gap-1 ' href={'/view/' + val.id} >
                                                                     link
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-4">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                                                                    </svg>
+                                                                    <GotoLinkOut className='size-4' strokeWidth={1} />
                                                                 </Link>
                                                             ) :
                                                             "---"

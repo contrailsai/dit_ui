@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from "react";
+import { Play, Pause } from "./SVGs";
 
 export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_results }) => {
 
@@ -373,40 +374,15 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                         }
                     </div>
                 </div>
-                // )
-                // :
-                // //SKELETON
-                // (
-                //     <>
-                //         <div className=" w-full flex justify-evenly py-5 gap-2">
-                //             <div className="flex flex-col justify-between">
-                //                 <div className="flex flex-col gap-3 items-center ">
-                //                     <div className="rounded skeleton-h h-8 w-72" />
-                //                     <div className="rounded skeleton-h h-4 w-36" />
-                //                     <div className="rounded skeleton-h h-8 w-72" />
-                //                 </div>
-                //                 <div className="gap-5 h-full flex items-center">
-                //                     <div className="rounded skeleton-h h-40 w-72" />
-                //                     <div className="rounded skeleton-h h-40 w-72" />
-                //                 </div>
-                //             </div>
-                //             <div className="rounded h-[400px] w-[720px] skeleton-h" />
-                //         </div>
-                //     </>
-                // )
             }
             {/* PLAYBACK BOARD / RECTANGLE */}
             <div className=" z-10 flex w-full gap-14 mb-1 py-5 px-5 bg-primary text-white rounded-3xl items-center">
                 {/* PLAY BUTTON */}
                 <div onClick={handlePlayToggle} className="cursor-pointer border-2 rounded-full p-2 ">
                     {isPaused ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="white" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-8">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.347a1.125 1.125 0 0 1 0 1.972l-11.54 6.347a1.125 1.125 0 0 1-1.667-.986V5.653Z" />
-                        </svg>
+                        <Play className="size-8" strokeWidth={1.5} />
                     ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-8">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25v13.5m-7.5-13.5v13.5" />
-                        </svg>
+                        <Pause className="size-8" strokeWidth={1.5} />
                     )}
                 </div>
                 {/* DURATION/PROGRESS */}

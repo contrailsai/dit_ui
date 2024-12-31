@@ -8,6 +8,7 @@ import html2canvas from 'html2canvas';
 import { Outfit_bold_font } from './outfit-bold-font';
 import { Outfit_normal_font } from './outfit-normal-font';
 import { logo_base64 } from './logo_base64';
+import { DownloadFile, PersonCircle, PlusCircle, RightArrow } from "./SVGs";
 
 export default function Result_UI({ results, analysisTypes, file_metadata, fileUrl }) {
 
@@ -24,7 +25,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     let frame_charts = null;
     let audio_chart = null;
     let fps = results["frameCheck"] ? results["frameCheck"]["video_fps"] : 25;
-    
+
     useEffect(() => {
         set_curr_model(analysisTypes["frameCheck"] ? "frameCheck" : analysisTypes["audioAnalysis"] ? "audioAnalysis" : "");
     }, [analysisTypes])
@@ -543,9 +544,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                         {/* NEW ANALYSIS */}
                         <div onClick={handle_newCheck} className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow'>
                             New Analysis
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                            </svg>
+                            <PlusCircle className="size-6" strokeWidth={1.5} />
                         </div>
 
                         {/* PDF EXPORT */}
@@ -554,9 +553,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                             className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow '
                         >
                             Export Report
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                            </svg>
+                            <DownloadFile className="size-6" strokeWidth={1.5} />
                         </div>
                     </div>
                 }
@@ -584,7 +581,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
                             return (
                                 <div key={idx} onClick={() => { set_curr_model(analysisType) }} className={` transition-all cursor-pointer flex justify-center border-2 border-primary ${curr_model === analysisType ? "bg-primary text-white" : "bg-white text-primary"} h-20 w-36 px-2 py-4 rounded-3xl`}>
-                                    {analysisType}
+                                    {analysisType==="frameCheck" ? "Frame Check" : analysisType==="Audio Analysis"? "Audio Check" : "Image Check"}
                                 </div>
                             )
                         })
@@ -617,9 +614,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                     >
                                                         {/* ARROW */}
                                                         <div className={` absolute top-5  h-5 w-5 ${toggle_open === idx ? " rotate-90 group-hover:rotate-[70deg]" : " group-hover:rotate-[20deg]"}  transition-all`}>
-                                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-6">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                                                            </svg>
+                                                            <RightArrow strokeWidth={1} className=" size-6" />
                                                         </div>
 
                                                         <div className={` flex flex-col justify-between items-center min-w-[169px]  h-full ${toggle_open === idx ? "py-5" : ""} transition-all`}>
@@ -628,9 +623,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                             <div className={` flex ${toggle_open === idx ? "flex-col" : "flex-row"} justify-center items-center w-full gap-2 `}>
 
                                                                 <div className="rounded-full overflow-hidden flex">
-                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1} stroke="currentColor" className="size-14">
-                                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                                                                    </svg>
+                                                                    <PersonCircle className="size-14" strokeWidth={1} />
                                                                 </div>
                                                                 <div className="text-sm ">
                                                                     person - {label}
