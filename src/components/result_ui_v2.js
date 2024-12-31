@@ -581,7 +581,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
                             return (
                                 <div key={idx} onClick={() => { set_curr_model(analysisType) }} className={` transition-all cursor-pointer flex justify-center border-2 border-primary ${curr_model === analysisType ? "bg-primary text-white" : "bg-white text-primary"} h-20 w-36 px-2 py-4 rounded-3xl`}>
-                                    {analysisType==="frameCheck" ? "Frame Check" : analysisType==="Audio Analysis"? "Audio Check" : "Image Check"}
+                                    {analysisType==="frameCheck" ? "Frame Check" : analysisType==="AudioAnalysis"? "Audio Check" : "Image Check"}
                                 </div>
                             )
                         })
