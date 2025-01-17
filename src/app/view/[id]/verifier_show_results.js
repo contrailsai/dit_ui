@@ -4,12 +4,13 @@ import ResultsVideoUI from '@/components/ResultVideoUI_v1';
 import ResultsAudioUI from '@/components/ResultAudioUI';
 import ResultImageUI from '@/components/ResultImageUI';
 import Result_UI from '@/components/result_ui_v2';
+import Assets_Upload from '@/components/Assets_Upload';
 import { useState, useEffect } from 'react';
 import { verify_case } from '@/utils/data_fetch';
 import { useParams } from 'next/navigation';
 import { Video, Audio, Image } from '@/components/SVGs';
 
-const Verifier_results_container = ({ client_email, res_data }) => {
+const Verifier_results_container = ({ client_email, res_data, saved_assets }) => {
     const { id } = useParams();
     // console.log(res_data);
 
@@ -107,6 +108,8 @@ const Verifier_results_container = ({ client_email, res_data }) => {
             }
     );
     const [data_resultsUI, setdata_resultsUI] = useState(null);
+    //ASSETS UPLOADED BY VERIFIER
+    const [assets_uploaded, set_assets_uploaded] = useState([]);
 
     const handle_newCheck = () => {
         if (typeof window !== 'undefined') {
@@ -179,6 +182,51 @@ const Verifier_results_container = ({ client_email, res_data }) => {
     }, [verifier_metadata["ShowCommentToUser"], verifier_metadata["AigcCheckModelUse"], verifier_metadata["AudioCheckModelUse"], verifier_metadata["FrameCheckModelUse"], verifier_metadata["showAigcCheck"], verifier_metadata["showAudioCheck"], verifier_metadata["showFrameCheck"],])
 
     const handle_submit = async () => {
+
+        if( assets_uploaded.length !== 0){
+            // creating, uploading assets
+            try {
+                // create supabase reference elements for assets
+                const res = await fetch('/api/create-assets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(
+                        {
+                            uploaded_assets: assets_uploaded.map((asset)=>{
+                                return {
+                                    "name": asset.name,
+                                    "type": asset.type,
+                                }
+                            }),
+                            T_id: id
+                        }
+                    ),
+                });
+                if (!res.ok) throw new Error('Failed to get signed URL');
+                const assets_response = await res.json();
+                // uploading files to their s3 urls
+                for(let asset of Object.keys(assets_response)){
+                    const signedUrl = assets_response[asset]["signedUrl"];
+    
+                    //find the corresponding asset from uploaded files
+                    const required_asset = assets_uploaded.find((obj) => obj.name === assets_response[asset].name && obj.type === assets_response[asset].type);
+                    const res_s3 = await fetch(signedUrl, {
+                        method: 'PUT',
+                        body: required_asset["file"],
+                        headers: { 'Content-Type': required_asset["type"] },
+                    });
+                    if (!res_s3.ok) throw new Error('Failed to upload file to S3');
+                    console.log("uploaded a file with id", asset)
+                }
+            }
+            catch (error) {
+                console.error('Error uploading file:', error);
+                alert('Failed to upload file');
+            }
+        }
+        
+        // assets corresponding to the transaction are ready 
+        // verifiying remaining report
         const res_status = await verify_case(id, verifier_metadata, res_data["user_id"]);
         if (res_status === 0) {
             alert("Case Verified!");
@@ -379,32 +427,41 @@ const Verifier_results_container = ({ client_email, res_data }) => {
             </div>
 
             {/* COMMENTS AND SUBMISSION */}
-            <div className=' px-4 py-4 relative'>
-                <label className=' px-2 font-medium absolute top-1 left-10 bg-white ' htmlFor="verifier-comment">Verifier Comments</label>
-                <textarea
-                    onChange={handleInputChange}
-                    value={verifier_metadata["verifierComment"]} id="verifier-comment"
-                    name="verifierComment"
-                    rows={5}
-                    className=' py-5 px-5 rounded-3xl border border-primary/80 outline-1 outline-primary w-full'
-                />
-                <div className=' flex items-center gap-3 py-4'>
-                    <label htmlFor="show-comment-to-user">Show Comment to user </label>
-                    <input
+            <div className=' px-4 py-4 gap-3 relative flex'>
+                <div className='w-full min-w-[450px]'>
+                    <label className=' px-2 font-medium absolute top-1 left-10 bg-white ' htmlFor="verifier-comment">Verifier Comments</label>
+                    <textarea
                         onChange={handleInputChange}
-                        checked={verifier_metadata["ShowCommentToUser"]}
-                        className=' size-5 ' type="checkbox" id="show-comment-to-user"
-                        name="ShowCommentToUser"
+                        value={verifier_metadata["verifierComment"]} id="verifier-comment"
+                        name="verifierComment"
+                        rows={5}
+                        className=' py-5 px-5 rounded-3xl border border-primary/80 outline-1 outline-primary w-full caret-primary'
                     />
-                </div>
+                    <div className=' flex items-center gap-3 py-4'>
+                        <label htmlFor="show-comment-to-user">Show Comment to user </label>
+                        <input
+                            onChange={handleInputChange}
+                            checked={verifier_metadata["ShowCommentToUser"]}
+                            className=' size-5 ' type="checkbox" id="show-comment-to-user"
+                            name="ShowCommentToUser"
+                        />
+                    </div>
 
-                <div>
-                    <div onClick={() => { handle_submit(); }} className=' cursor-pointer bg-primary px-6 rounded-full text-white py-2 w-fit hover:scale-x-105 transition-all'>
-                        Submit verification
+                    <div>
+                        <div onClick={() => { handle_submit(); }} className=' cursor-pointer bg-primary px-6 rounded-full text-white py-2 w-fit hover:scale-x-105 transition-all'>
+                            Submit verification
+                        </div>
                     </div>
                 </div>
+
+                {/* ADD ASSETS TO SHOW HERE */}
+                <div className='w-full'>
+                    <Assets_Upload SavedAssets={saved_assets} CurrAssets={assets_uploaded} SetCurrAssets={set_assets_uploaded} />
+                </div>
+
             </div>
 
+            {/* PAGE PREVIEW */}
             {
                 data_resultsUI !== null &&
                 (<>

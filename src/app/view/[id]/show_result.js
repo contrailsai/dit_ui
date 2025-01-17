@@ -4,10 +4,10 @@ import ResultsVideoUI from '@/components/ResultVideoUI_v1';
 import ResultsAudioUI from '@/components/ResultAudioUI';
 import ResultsImageUI from '@/components/ResultImageUI';
 import Result_UI from '@/components/result_ui_v2';
+import Assets_Show from '@/components/Assets_show'
 // import { useState, useEffect } from 'react';
 
-const Result_container = ({ res_data }) => {
-    // console.log(res_data);
+const Result_container = ({ res_data, assets }) => {
     const model_responses = typeof (res_data["models_responses"]) === "string" ? JSON.parse(res_data["models_responses"]) : res_data["models_responses"];
     const upload_type = res_data["input_request"]["upload_type"];
 
@@ -114,6 +114,12 @@ const Result_container = ({ res_data }) => {
                 />
             }
 
+            {
+                assets.length !== 0 &&
+                <div className=' w-full flex justify-center py-5 '>
+                    <Assets_Show CurrAssets={assets} />
+                </div>
+            }
 
         </div>
     </>);
