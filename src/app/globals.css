@@ -25,6 +25,16 @@ body {
 	}
 }
 
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* For IE, Edge and Firefox */
+.scrollbar-hide {
+    -ms-overflow-style: none;  
+    scrollbar-width: none;  
+}
+
 .win10-thumb {
 	font-size: 1.5rem;
 	color: #fff;
