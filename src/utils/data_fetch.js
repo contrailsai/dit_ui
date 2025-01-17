@@ -140,6 +140,39 @@ export const get_result_for_id = async (transaction_id) => {
     return data;
 }
 
+export const get_assets_for_id = async (transaction_id) => {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (user === null)
+        return;
+
+    //get data from db and return it 
+    const { data, error } = await supabase
+        .from('Assets')
+        .select('*')
+        .eq('transaction_id', transaction_id)
+
+    if (error) {
+        console.error(error)
+        return {
+            "error": "error in getting user history"
+        }
+    }
+    // console.log(data, transaction_id)
+    let assets_data = []
+    for(let asset of data){
+        const signedUrl = await get_signed_url(`assets/${asset.id}`);
+        assets_data.push({
+            "signedUrl": signedUrl,
+            "name": asset.name,
+            "type": asset.type,
+            "id": asset.id
+        });
+    }
+    return assets_data;
+}
+
 export const get_signed_url = async (key) => {
     // Generate a signed URL for the media file in S3
     let signedUrl = null;
@@ -207,3 +240,18 @@ export const verify_case = async (id, metadata, user_id) => {
     return 0;
 };
 
+export const delete_asset_by_id = async(id) => {
+    const supabase = createClient();
+
+    const { data, error } = await supabase
+        .from('Assets')
+        .delete()
+        .eq('id', id);
+
+    if (error) {
+        console.error('Error deleting asset:', error);
+        return { error: 'error in deleting asset' };
+    }
+
+    return { success: true, data };
+}
