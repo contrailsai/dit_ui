@@ -101,7 +101,7 @@ const Transactions_history = ({ verifier }) => {
                                                     {idx + 1}
                                                 </span>
                                                 {/* NAME */}
-                                                <span className=' min-w-[450px] overflow-x-auto '>
+                                                <span className=' w-[450px] truncate'>
                                                     {name ? name : "---"}
                                                 </span>
                                                 {/* UPLAOD TYPE */}
