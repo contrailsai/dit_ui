@@ -19,7 +19,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     const [curr_model, set_curr_model] = useState(analysisTypes["frameCheck"] ? "frameCheck" : analysisTypes["audioAnalysis"] ? "audioAnalysis" : "");
     const [toggle_open, set_toggle_open] = useState(null);
 
-    let result_values = null;
+    let result_values = null; // formatted results to be used in UI and PDF
     let bboxes_data = null;
 
     let frame_charts = null;
@@ -39,15 +39,30 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     //-------------------------------------------------
     const get_chart_data = (duration, person_obj_list) => {
         let person_prediction_data = []
-        // default value 0.7 (if not data at that timestamp)
+        // default value 0.7 (if no data at that timestamp (frames in 1 sec))
         for (let i = 0; i <= duration; i++)
             person_prediction_data[i] = 0.7;
 
         let used_values = [];
 
+        let count = 0;
+        let prediction_sum = 0;
+        let curr_processing_time = 0;
+        // iterating through all data points of this person each point contains (start_index, end_index, predisction)
         for (let person_data of person_obj_list) {
             const time = Math.floor(person_data.start_index / fps);
-            person_prediction_data[time] = person_data.prediction;
+            if (curr_processing_time !== time){
+                // set the value to the average of all values in that second
+                person_prediction_data[curr_processing_time] = prediction_sum/count;
+                // reset values with the new time value
+                count = 1;
+                prediction_sum = person_data.prediction;
+                curr_processing_time = time;
+            }
+            else{
+                prediction_sum += person_data.prediction;
+                count += 1;
+            }
             used_values.push(person_data.prediction)
         }
         const mean_result = used_values.reduce((accumulator, currentValue) => accumulator + currentValue, 0) / used_values.length;
@@ -61,11 +76,13 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         const duration = results["frameCheck"]["duration"];
         const threshold = results["frameCheck"]["threshold"];
 
+        // going through each person-id (lable index) in the model result
         for (let label in results["frameCheck"]["labels_result"]) {
 
             const person = results["frameCheck"]["labels_result"][label];
             const { person_prediction_data, mean_result } = get_chart_data(duration, person);
 
+            // mean predictino result value for a person 
             temp_frame_values[label] = {
                 "prediction": mean_result > threshold,
                 "percentage": (mean_result * 100).toFixed(2)
