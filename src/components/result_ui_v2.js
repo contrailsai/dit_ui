@@ -38,56 +38,34 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
     //-------------------------------------------------
     const get_chart_data = (duration, person_obj_list) => {
-        let person_prediction_data = {}
+        let person_prediction_data = []
+        // default value 0.7 (if no data at that timestamp (frames in 1 sec))
+        for (let i = 0; i <= duration; i++)
+            person_prediction_data[i] = 0.7;
+
         let used_values = [];
 
-        // // fill only model result values
-        // for (let person_data of person_obj_list) {
-        //     person_prediction_data[person_data.start_index] = person_data.prediction;
-        //     used_values.push(person_data.prediction);
-        // }
-
-        // fill all values
-        let last_frame = 0;
-        let is_dfdc = false;
+        let count = 0;
+        let prediction_sum = 0;
+        let curr_processing_time = 0;
+        // iterating through all data points of this person each point contains (start_index, end_index, predisction)
         for (let person_data of person_obj_list) {
-            // person_prediction_data[person_data.start_index] = person_data.prediction;
-            for( let i=person_data.start_index; i<= person_data.end_index; i++){
-                person_prediction_data[i] = person_data.prediction;
+            const time = Math.floor(person_data.start_index / fps);
+            if (curr_processing_time !== time){
+                // set the value to the average of all values in that second
+                person_prediction_data[curr_processing_time] = prediction_sum/count;
+                // reset values with the new time value
+                count = 1;
+                prediction_sum = person_data.prediction;
+                curr_processing_time = time;
             }
-
-            if(person_data.start_index === person_data.end_index){
-                is_dfdc = true;
+            else{
+                prediction_sum += person_data.prediction;
+                count += 1;
             }
-            
-            used_values.push(person_data.prediction);
+            used_values.push(person_data.prediction)
+        }
         
-            last_frame = person_data.end_index;
-        }
-
-        if(!is_dfdc){
-
-            for (let i=0; i< last_frame; i+=1){
-                if(person_prediction_data[i] === undefined){
-                    person_prediction_data[i] = 0.7;
-                }
-            }
-        }
-
-        // fill default values
-        // let curr_value = 0.7;
-        // for (let i = 0; i < person_prediction_data.length; i++) {
-            
-        //     if (person_prediction_data[i] === undefined)
-        //         if(curr_value > 0.7)
-        //             person_prediction_data[i] = Math.max(0.7, curr_value - curr_value*0.2);
-        //         else
-        //             person_prediction_data[i] = Math.min(0.7, curr_value + curr_value*0.2);
-
-        //     //     person_prediction_data[i] = curr_value;
-        //     else
-        //         curr_value = person_prediction_data[i];
-        // }
         const mean_result = used_values.reduce((accumulator, currentValue) => accumulator + currentValue, 0) / used_values.length;
         return { person_prediction_data, mean_result };
     }
