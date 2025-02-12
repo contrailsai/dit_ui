@@ -51,21 +51,21 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         // iterating through all data points of this person each point contains (start_index, end_index, predisction)
         for (let person_data of person_obj_list) {
             const time = Math.floor(person_data.start_index / fps);
-            if (curr_processing_time !== time){
+            if (curr_processing_time !== time) {
                 // set the value to the average of all values in that second
-                person_prediction_data[curr_processing_time] = prediction_sum/count;
+                person_prediction_data[curr_processing_time] = prediction_sum / count;
                 // reset values with the new time value
                 count = 1;
                 prediction_sum = person_data.prediction;
                 curr_processing_time = time;
             }
-            else{
+            else {
                 prediction_sum += person_data.prediction;
                 count += 1;
             }
             used_values.push(person_data.prediction)
         }
-        
+
         const mean_result = used_values.reduce((accumulator, currentValue) => accumulator + currentValue, 0) / used_values.length;
         return { person_prediction_data, mean_result };
     }
@@ -82,7 +82,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         const threshold = results["frameCheck"]["threshold"];
 
         for (let label in results["frameCheck"]["labels_result"]) {
-            
+
             const person = results["frameCheck"]["labels_result"][label];
             const { person_prediction_data, mean_result } = get_chart_data(duration, person);
 
@@ -97,7 +97,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             temp_chart_data[label] = {
 
                 labels: Object.keys(person_prediction_data).map(
-                    (idx) => {return idx}
+                    (idx) => { return idx }
                 ),
                 datasets: [
 
@@ -254,8 +254,8 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
         doc.setFont("Outfit", "bold");
 
-        const my = 0.6;
-        const mx = 0.3;
+        const my = 1;
+        const mx = 0.4;
 
         let curr_x = mx;
         let curr_y = my;
@@ -288,47 +288,82 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         doc.setFontSize(fontSize);
         doc.text("File Data", curr_x, curr_y);
 
-        curr_y += fontSize / 72 + 6 / 72;
+        curr_y += fontSize / 72 + 12 / 72;
 
-        fontSize = 12;
+        fontSize = 14;
         doc.setFontSize(fontSize);
 
         // FILE NAME
         doc.setFont("Outfit", "bold");
         doc.text("File name: ", curr_x, curr_y);
-        curr_x += 70 / 72;
+        curr_x += 80 / 72;
         doc.setFont("Outfit", "normal")
         doc.text(`${file_metadata.name}`, curr_x, curr_y);
 
         curr_x = mx;
-        curr_y += fontSize / 72 + 6 / 72;
+        curr_y += fontSize / 72 + 12 / 72;
 
         //FILE SIZE
         doc.setFont("Outfit", "bold");
         doc.text("File Size: ", curr_x, curr_y);
-        curr_x += 70 / 72;
+        curr_x += 80 / 72;
         doc.setFont("Outfit", "normal")
         doc.text(`${file_metadata.size}`, curr_x, curr_y);
 
         curr_x = mx;
-        curr_y += fontSize / 72 + 6 / 72;
+        curr_y += fontSize / 72 + 36 / 72;
 
-        //FILE DURATION
-        // doc.setFont("Outfit", "bold");
-        // doc.text("Duration: ", curr_x, curr_y);
-        curr_x += 70 / 72;
-        // doc.setFont("Outfit", "normal")
-        // doc.text(`${videoRef.current.duration.toFixed(1)} sec`, curr_x, curr_y);
+        fontSize = 20;
+        doc.setFontSize(fontSize);
+        doc.setFont("Outfit", "bold");
+        doc.text("Result", curr_x, curr_y);
+        doc.setFont("Outfit", "normal");
 
-        curr_x = mx;
-        curr_y += (fontSize / 72) + (6 / 72);
+        curr_y += fontSize / 72 + 12 / 72;
+
+        // fontSize = 14;
+        // doc.setFontSize(fontSize);
+
+        fontSize = 18;
+        doc.setFontSize(fontSize);
+
+        if (analysisTypes["audioAnalysis"]) {
+            if (results["audioAnalysis"] && results["audioAnalysis"]["result"] < results["audioAnalysis"]["threshold"]) {
+                doc.text(`Manipulation detected in Audio`, curr_x, curr_y);
+            }
+            else {
+                doc.text(`No manipulation detected in Audio`, curr_x, curr_y);
+            }
+            curr_y += fontSize / 72 + 6 / 72;
+        }
+        if (analysisTypes["audioAnalysis"] && analysisTypes["frameCheck"] && results["audioAnalysis"] && results["frameCheck"]) {
+            doc.text('and', curr_x, curr_y);
+            curr_y += fontSize / 72 + 10 / 72;
+        }
+        if (analysisTypes["frameCheck"]) {
+            if (results["frameCheck"] && results["frameCheck"]["result"] < results["frameCheck"]["threshold"]) {
+                doc.text(`Manipulation detected in Video`, curr_x, curr_y);
+            }
+            else {
+                doc.text(`No manipulation detected in Video`, curr_x, curr_y);
+            }
+            curr_y += fontSize / 72;
+            curr_x = mx;
+        }
+
+        curr_y += 36 / 72; //gap of 20 px
 
         if (file_metadata.verifier_comment) {
+            fontSize = 18;
+            doc.setFontSize(fontSize);
             doc.setFont("Outfit", "bold");
             doc.text("Expert's Comment: ", curr_x, curr_y);
-            curr_x += 120 / 72;
-            doc.setFont("Outfit", "normal")
-            const maxWidth = 430/72;
+            curr_x = mx;
+            curr_y += fontSize / 72 + 12 / 72
+            doc.setFont("Outfit", "normal");
+            fontSize = 14;
+            doc.setFontSize(fontSize);
+            const maxWidth = 430 / 72;
             const commentLines = doc.splitTextToSize(file_metadata.verifier_comment, maxWidth);
 
             doc.text(commentLines, curr_x, curr_y);
@@ -338,10 +373,12 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             // curr_y += (2 * fontSize / 72) + (12 / 72);
         }
         else {
-            curr_y += (fontSize / 72) + (6 / 72);
+            curr_y += (fontSize / 72) + (12 / 72);
         }
 
+
         // SHOW VIDEO PREVIEW, RESULT OF BOTH ANALYSIS AND VERDICT
+
         // const result_element = result_ref.current;
         // let result_canvas = await html2canvas(result_element);
         // const result_imgData = result_canvas.toDataURL('image/png');
@@ -351,65 +388,35 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
         // doc.setFillColor(2, 83, 288)
         // doc.rect(curr_x, curr_y, 20*16/72, 20*9/72, 'F')
-        fontSize = 18;
-        doc.setFontSize(fontSize);
-        doc.setFont("Outfit", "bold");
-        doc.text("Result", curr_x, curr_y);
-        doc.setFont("Outfit", "normal");
-        curr_y += fontSize / 72 + 6 / 72;
-        fontSize = 12;
 
-        if (analysisTypes["audioAnalysis"]) {
-            doc.setFontSize(14);
-            if (results["audioAnalysis"] && results["audioAnalysis"]["result"] < results["audioAnalysis"]["threshold"]) {
-                doc.text(`Manipulation detected in Audio`, curr_x, curr_y);
-            }
-            else {
-                doc.text(`No manipulation detected in Audio`, curr_x, curr_y);
-            }
-            doc.setFontSize(fontSize);
-            curr_y += fontSize / 72 + 4 / 72;
-        }
-        if (analysisTypes["audioAnalysis"] && analysisTypes["frameCheck"] && results["audioAnalysis"] && results["frameCheck"]) {
-            doc.text('and', curr_x, curr_y);
-            curr_y += fontSize / 72 + 6 / 72;
-        }
-        if (analysisTypes["frameCheck"]) {
-            doc.setFontSize(14);
-            if (results["frameCheck"] && results["frameCheck"]["result"] < results["frameCheck"]["threshold"]) {
-                doc.text(`Manipulation detected in Video`, curr_x, curr_y);
-            }
-            else {
-                doc.text(`No manipulation detected in Video`, curr_x, curr_y);
-            }
-            doc.setFontSize(fontSize);
-            curr_y += fontSize / 72;
-            curr_x = mx;
-        }
-        curr_y += 10 / 72; //gap of 20 px
+        // doc.setDrawColor(150, 150, 150);
+        // doc.setLineWidth(1 / 72);
+        // doc.line(curr_x, curr_y, curr_x + 550 / 72, curr_y);
 
-        doc.setDrawColor(150, 150, 150);
-        doc.setLineWidth(1 / 72);
-        doc.line(curr_x, curr_y, curr_x + 550 / 72, curr_y);
 
-        curr_y += 30 / 72;
-
+        // _________________AUDIO ANALYSIS PAGE START_______________________
         if (results["audioAnalysis"] !== undefined) {
 
-            //AUDIO ANALYSIS START
-            fontSize = 18;
-            doc.setFontSize(fontSize);
-            doc.text("Audio Analysis", curr_x, curr_y);
+            // Create a new Page for audio analysis
+            doc.addPage();
+            curr_x = mx;
+            curr_y = my;
 
-            curr_y += fontSize / 72 + 6 / 72;
+            //AUDIO ANALYSIS START
+            fontSize = 24;
+            doc.setFontSize(fontSize);
+            doc.setFont("Outfit", "bold");
+            doc.text("Audio Analysis", curr_x, curr_y);
+            doc.setFont("Outfit", "normal");
+            curr_y += fontSize / 72 + 24 / 72;
 
             // set_curr_model("audioAnalysis");
             // Wait for the state update to be applied
-            await new Promise(resolve => {
-                setTimeout(resolve, 100);
-            });
+            // await new Promise(resolve => {
+            //     setTimeout(resolve, 100);
+            // });
 
-            fontSize = 16;
+            fontSize = 20;
             doc.setFontSize(fontSize);
 
             const audio_result = (results["audioAnalysis"].result).toFixed(4);
@@ -421,14 +428,14 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             else {
                 doc.text("The audio analysis detected manipulation", curr_x, curr_y);
             }
-            curr_y += fontSize / 72 + 8 / 72;
+            curr_y += fontSize / 72 + 20 / 72;
 
-            fontSize = 14;
+            fontSize = 18;
             doc.setFontSize(fontSize);
 
             doc.text("Audio result: ", curr_x, curr_y);
 
-            curr_x += 90 / 72;
+            curr_x += 120 / 72;
             doc.setFont("Outfit", "bold");
 
             audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
@@ -437,24 +444,38 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             doc.setTextColor(0, 0, 0);
             doc.setFont("Outfit", "normal");
             curr_x = mx;
-            curr_y += fontSize / 72 + 6 / 72;
+            curr_y += fontSize / 72 + 16 / 72;
             doc.text("Real Score: ", curr_x, curr_y);
 
-            curr_x += 90 / 72;
+            curr_x += 120 / 72;
             doc.setFont("Outfit", "bold");
             audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
             doc.text(` ${audio_result * 100} %`, curr_x, curr_y);
 
             curr_x = mx;
-            curr_y += fontSize / 72 + 5 / 72;
+            curr_y += fontSize / 72 + 10 / 72;
 
-            fontSize = 9;
+            fontSize = 11;
             doc.setFontSize(fontSize);
             doc.setTextColor(0, 0, 0);
             doc.setFont("Outfit", "normal");
 
             doc.text("(confidence of audio being real)", curr_x, curr_y);
-            curr_y += 2 * fontSize / 72;
+            curr_y += fontSize / 72 + 40 / 72 ; 
+            
+            fontSize = 18;
+            doc.setFontSize(fontSize);
+            doc.setFont("Outfit", "bold");
+            doc.text("Audio Analysis Graph", curr_x, curr_y);
+
+            doc.setFont("Outfit", "normal");
+            curr_y += fontSize / 72 + 12 / 72 ; 
+
+            fontSize = 14;
+            doc.setFontSize(fontSize);
+            doc.text("the graph shows the prediction score of the audio being real with respect to time.", curr_x, curr_y);
+
+            curr_y += fontSize / 72 + 16 / 72;
 
             const audio_result_element = audio_graph_Ref.current;
             console.log(audio_result_element);
@@ -467,29 +488,36 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             curr_x = mx;
             curr_y += aud_res_img_h + 30 / 72; //gap of 30 px
 
-            doc.setDrawColor(150, 150, 150);
-            doc.setLineWidth(1 / 72);
-            doc.line(curr_x, curr_y, curr_x + 550 / 72, curr_y);
+            // doc.setDrawColor(150, 150, 150);
+            // doc.setLineWidth(1 / 72);
+            // doc.line(curr_x, curr_y, curr_x + 550 / 72, curr_y);
 
             curr_y += 30 / 72;
         }
 
+
+        // _________________FRAME ANALYSIS PAGE START_______________________
         if (results["frameCheck"] !== undefined) {
+            doc.addPage();
+            curr_x = mx;
+            curr_y = my;
 
             //FRAME ANALYSIS START
-            fontSize = 18;
+            fontSize = 24;
             doc.setFontSize(fontSize);
+            doc.setFont("Outfit", "bold");
             doc.text("Frame Analysis", curr_x, curr_y);
+            doc.setFont("Outfit", "normal");
 
-            curr_y += fontSize / 72 + 6 / 72;
+            curr_y += fontSize / 72 + 24 / 72;
 
             // set_curr_model("frameCheck");
             // Wait for the state update to be applied
-            await new Promise(resolve => {
-                setTimeout(resolve, 100);
-            });
+            // await new Promise(resolve => {
+            //     setTimeout(resolve, 100);
+            // });
 
-            fontSize = 16;
+            fontSize = 20;
             doc.setFontSize(fontSize);
 
             const frame_result = (results["frameCheck"].result).toFixed(4);
@@ -501,14 +529,14 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             else {
                 doc.text("The video frames analysis detected manipulation", curr_x, curr_y);
             }
-            curr_y += fontSize / 72 + 8 / 72;
+            curr_y += fontSize / 72 + 20 / 72;
 
-            fontSize = 14;
+            fontSize = 18;
             doc.setFontSize(fontSize);
 
             doc.text("Frame result: ", curr_x, curr_y);
 
-            curr_x += 90 / 72;
+            curr_x += 120 / 72;
             doc.setFont("Outfit", "bold");
 
             frame_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
@@ -517,24 +545,38 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             doc.setTextColor(0, 0, 0);
             doc.setFont("Outfit", "normal");
             curr_x = mx;
-            curr_y += fontSize / 72 + 6 / 72;
+            curr_y += fontSize / 72 + 16 / 72;
             doc.text("Real Score: ", curr_x, curr_y);
 
-            curr_x += 90 / 72;
+            curr_x += 120 / 72;
             doc.setFont("Outfit", "bold");
             frame_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
             doc.text(` ${(frame_result * 100).toFixed(2)} %`, curr_x, curr_y);
 
             curr_x = mx;
-            curr_y += fontSize / 72 + 5 / 72;
+            curr_y += fontSize / 72 + 10 / 72;
 
-            fontSize = 9;
+            fontSize = 11;
             doc.setFontSize(fontSize);
             doc.setTextColor(0, 0, 0);
             doc.setFont("Outfit", "normal");
 
             doc.text("(confidence of video frames being real)", curr_x, curr_y);
-            curr_y += 2 * fontSize / 72;
+            curr_y += fontSize / 72 + 40 / 72 ; 
+            
+            fontSize = 18;
+            doc.setFontSize(fontSize);
+            doc.setFont("Outfit", "bold");
+            doc.text("Frames Analysis Chart", curr_x, curr_y);
+
+            doc.setFont("Outfit", "normal");
+            curr_y += fontSize / 72 + 12 / 72 ; 
+
+            fontSize = 14;
+            doc.setFontSize(fontSize);
+            doc.text("the charts shows individual people identified and prediction of their face being fake.", curr_x, curr_y);
+
+            curr_y += fontSize / 72 + 16 / 72;
 
             const frame_result_element = frame_graph_Ref.current;
             let frame_result_canvas = await html2canvas(frame_result_element);
@@ -608,7 +650,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
                             return (
                                 <div key={idx} onClick={() => { set_curr_model(analysisType) }} className={` transition-all cursor-pointer flex justify-center border-2 border-primary ${curr_model === analysisType ? "bg-primary text-white" : "bg-white text-primary"} h-20 w-36 px-2 py-4 rounded-3xl`}>
-                                    {analysisType==="frameCheck" ? "Frame Check" : analysisType==="audioAnalysis"? "Audio Check" : "Image Check"}
+                                    {analysisType === "frameCheck" ? "Frame Check" : analysisType === "audioAnalysis" ? "Audio Check" : "Image Check"}
                                 </div>
                             )
                         })
@@ -729,7 +771,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                     </>
                 }
                 {
-                    result_values && result_values["audioAnalysis"] && 
+                    result_values && result_values["audioAnalysis"] &&
                     <>
                         {/* AUDIO ANALYSIS */}
                         <div className={`${curr_model === "audioAnalysis" ? "max-h-[100vh]" : "max-h-0"} overflow-hidden duration-300 transition-all`}>
@@ -755,7 +797,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                 <div className=" h-[360px] flex flex-col justify-evenly bg-white rounded-2xl px-2 overflow-hidden transition-all w-full">
                                     <div className=" max-w-[1200px]  overflow-hidden py-3">
                                         {
-                                            videoRef.current && 
+                                            videoRef.current &&
                                             <div
                                                 className="pl-7 cursor-pointer"
                                                 style={{ width: (videoRef.current.duration / results["audioAnalysis"]["duration"]) * 1180 + "px" }}
