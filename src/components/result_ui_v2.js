@@ -38,21 +38,63 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
     //-------------------------------------------------
     const get_chart_data = (duration, person_obj_list) => {
-        let person_prediction_data = []
-        // default value 0.7 (if not data at that timestamp)
-        for (let i = 0; i <= duration; i++)
-            person_prediction_data[i] = 0.7;
-
+        let person_prediction_data = {}
         let used_values = [];
 
+        // // fill only model result values
+        // for (let person_data of person_obj_list) {
+        //     person_prediction_data[person_data.start_index] = person_data.prediction;
+        //     used_values.push(person_data.prediction);
+        // }
+
+        // fill all values
+        let last_frame = 0;
+        let is_dfdc = false;
         for (let person_data of person_obj_list) {
-            const time = Math.floor(person_data.start_index / fps);
-            person_prediction_data[time] = person_data.prediction;
-            used_values.push(person_data.prediction)
+            // person_prediction_data[person_data.start_index] = person_data.prediction;
+            for( let i=person_data.start_index; i<= person_data.end_index; i++){
+                person_prediction_data[i] = person_data.prediction;
+            }
+
+            if(person_data.start_index === person_data.end_index){
+                is_dfdc = true;
+            }
+            
+            used_values.push(person_data.prediction);
+        
+            last_frame = person_data.end_index;
         }
+
+        if(!is_dfdc){
+
+            for (let i=0; i< last_frame; i+=1){
+                if(person_prediction_data[i] === undefined){
+                    person_prediction_data[i] = 0.7;
+                }
+            }
+        }
+
+        // fill default values
+        // let curr_value = 0.7;
+        // for (let i = 0; i < person_prediction_data.length; i++) {
+            
+        //     if (person_prediction_data[i] === undefined)
+        //         if(curr_value > 0.7)
+        //             person_prediction_data[i] = Math.max(0.7, curr_value - curr_value*0.2);
+        //         else
+        //             person_prediction_data[i] = Math.min(0.7, curr_value + curr_value*0.2);
+
+        //     //     person_prediction_data[i] = curr_value;
+        //     else
+        //         curr_value = person_prediction_data[i];
+        // }
         const mean_result = used_values.reduce((accumulator, currentValue) => accumulator + currentValue, 0) / used_values.length;
         return { person_prediction_data, mean_result };
     }
+
+    // 3 cases
+    // using only returned values good looking curves, inconsistent with time frames 
+    // USING BOTJH 
 
     const update_frame_chart = () => {
         let temp_chart_data = {};
@@ -62,9 +104,12 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         const threshold = results["frameCheck"]["threshold"];
 
         for (let label in results["frameCheck"]["labels_result"]) {
-
+            
             const person = results["frameCheck"]["labels_result"][label];
             const { person_prediction_data, mean_result } = get_chart_data(duration, person);
+
+            console.log("label : ", label);
+            console.log("prediction table : ", person_prediction_data);
 
             temp_frame_values[label] = {
                 "prediction": mean_result > threshold,
@@ -73,15 +118,15 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
             temp_chart_data[label] = {
 
-                labels: person_prediction_data.map(
-                    (pred, idx) => formatTime(idx)
+                labels: Object.keys(person_prediction_data).map(
+                    (idx) => {return idx}
                 ),
                 datasets: [
 
                     {
                         label: "Probablility of real",
-                        data: person_prediction_data,
-                        backgroundColor: person_prediction_data.map((pred) => {
+                        data: Object.values(person_prediction_data),
+                        backgroundColor: Object.values(person_prediction_data).map((pred) => {
                             return pred >= threshold ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)"
                         }),
                         // borderColor: person.map((val, idx) => { return val.prediciton >= 0 ? "rgba(0,255,0,0.3)" : "rgba(255,0,0,0.3)" }),
@@ -101,7 +146,8 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                             below: "rgba(255,0,0,0.3)"    // below the origin
                         },
                         lineTension: 0.4,
-                        data: person_prediction_data,
+                        spanGaps: true,
+                        data: Object.values(person_prediction_data),
                         borderWidth: 1,
                     },
                 ]
