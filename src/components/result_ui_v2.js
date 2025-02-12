@@ -19,7 +19,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     const [curr_model, set_curr_model] = useState(analysisTypes["frameCheck"] ? "frameCheck" : analysisTypes["audioAnalysis"] ? "audioAnalysis" : "");
     const [toggle_open, set_toggle_open] = useState(null);
 
-    let result_values = null; // formatted results to be used in UI and PDF
+    let result_values = null;
     let bboxes_data = null;
 
     let frame_charts = null;
@@ -28,7 +28,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
     useEffect(() => {
         set_curr_model(analysisTypes["frameCheck"] ? "frameCheck" : analysisTypes["audioAnalysis"] ? "audioAnalysis" : "");
-    }, [analysisTypes])
+    }, [analysisTypes, videoRef])
 
     const formatTime = (time) => {
         const minutes = Math.floor(time / 60);
@@ -38,36 +38,63 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
     //-------------------------------------------------
     const get_chart_data = (duration, person_obj_list) => {
-        let person_prediction_data = []
-        // default value 0.7 (if no data at that timestamp (frames in 1 sec))
-        for (let i = 0; i <= duration; i++)
-            person_prediction_data[i] = 0.7;
-
+        let person_prediction_data = {}
         let used_values = [];
 
-        let count = 0;
-        let prediction_sum = 0;
-        let curr_processing_time = 0;
-        // iterating through all data points of this person each point contains (start_index, end_index, predisction)
+        // // fill only model result values
+        // for (let person_data of person_obj_list) {
+        //     person_prediction_data[person_data.start_index] = person_data.prediction;
+        //     used_values.push(person_data.prediction);
+        // }
+
+        // fill all values
+        let last_frame = 0;
+        let is_dfdc = false;
         for (let person_data of person_obj_list) {
-            const time = Math.floor(person_data.start_index / fps);
-            if (curr_processing_time !== time){
-                // set the value to the average of all values in that second
-                person_prediction_data[curr_processing_time] = prediction_sum/count;
-                // reset values with the new time value
-                count = 1;
-                prediction_sum = person_data.prediction;
-                curr_processing_time = time;
+            // person_prediction_data[person_data.start_index] = person_data.prediction;
+            for( let i=person_data.start_index; i<= person_data.end_index; i++){
+                person_prediction_data[i] = person_data.prediction;
             }
-            else{
-                prediction_sum += person_data.prediction;
-                count += 1;
+
+            if(person_data.start_index === person_data.end_index){
+                is_dfdc = true;
             }
-            used_values.push(person_data.prediction)
+            
+            used_values.push(person_data.prediction);
+        
+            last_frame = person_data.end_index;
         }
+
+        if(!is_dfdc){
+
+            for (let i=0; i< last_frame; i+=1){
+                if(person_prediction_data[i] === undefined){
+                    person_prediction_data[i] = 0.7;
+                }
+            }
+        }
+
+        // fill default values
+        // let curr_value = 0.7;
+        // for (let i = 0; i < person_prediction_data.length; i++) {
+            
+        //     if (person_prediction_data[i] === undefined)
+        //         if(curr_value > 0.7)
+        //             person_prediction_data[i] = Math.max(0.7, curr_value - curr_value*0.2);
+        //         else
+        //             person_prediction_data[i] = Math.min(0.7, curr_value + curr_value*0.2);
+
+        //     //     person_prediction_data[i] = curr_value;
+        //     else
+        //         curr_value = person_prediction_data[i];
+        // }
         const mean_result = used_values.reduce((accumulator, currentValue) => accumulator + currentValue, 0) / used_values.length;
         return { person_prediction_data, mean_result };
     }
+
+    // 3 cases
+    // using only returned values good looking curves, inconsistent with time frames 
+    // USING BOTJH 
 
     const update_frame_chart = () => {
         let temp_chart_data = {};
@@ -76,13 +103,14 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         const duration = results["frameCheck"]["duration"];
         const threshold = results["frameCheck"]["threshold"];
 
-        // going through each person-id (lable index) in the model result
         for (let label in results["frameCheck"]["labels_result"]) {
-
+            
             const person = results["frameCheck"]["labels_result"][label];
             const { person_prediction_data, mean_result } = get_chart_data(duration, person);
 
-            // mean predictino result value for a person 
+            // console.log("label : ", label);
+            // console.log("prediction table : ", person_prediction_data);
+
             temp_frame_values[label] = {
                 "prediction": mean_result > threshold,
                 "percentage": (mean_result * 100).toFixed(2)
@@ -90,15 +118,15 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
             temp_chart_data[label] = {
 
-                labels: person_prediction_data.map(
-                    (pred, idx) => formatTime(idx)
+                labels: Object.keys(person_prediction_data).map(
+                    (idx) => {return idx}
                 ),
                 datasets: [
 
                     {
                         label: "Probablility of real",
-                        data: person_prediction_data,
-                        backgroundColor: person_prediction_data.map((pred) => {
+                        data: Object.values(person_prediction_data),
+                        backgroundColor: Object.values(person_prediction_data).map((pred) => {
                             return pred >= threshold ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)"
                         }),
                         // borderColor: person.map((val, idx) => { return val.prediciton >= 0 ? "rgba(0,255,0,0.3)" : "rgba(255,0,0,0.3)" }),
@@ -118,7 +146,8 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                             below: "rgba(255,0,0,0.3)"    // below the origin
                         },
                         lineTension: 0.4,
-                        data: person_prediction_data,
+                        spanGaps: true,
+                        data: Object.values(person_prediction_data),
                         borderWidth: 1,
                     },
                 ]
@@ -317,15 +346,18 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         curr_y += (fontSize / 72) + (6 / 72);
 
         if (file_metadata.verifier_comment) {
-            //FILE DURATION
             doc.setFont("Outfit", "bold");
             doc.text("Expert's Comment: ", curr_x, curr_y);
             curr_x += 120 / 72;
             doc.setFont("Outfit", "normal")
-            doc.text(`${file_metadata.verifier_comment}`, curr_x, curr_y);
+            const maxWidth = 430/72;
+            const commentLines = doc.splitTextToSize(file_metadata.verifier_comment, maxWidth);
+
+            doc.text(commentLines, curr_x, curr_y);
 
             curr_x = mx;
-            curr_y += (2 * fontSize / 72) + (12 / 72);
+            curr_y += (commentLines.length * fontSize / 72) + (12 / 72);
+            // curr_y += (2 * fontSize / 72) + (12 / 72);
         }
         else {
             curr_y += (fontSize / 72) + (6 / 72);
@@ -719,7 +751,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                     </>
                 }
                 {
-                    result_values && result_values["audioAnalysis"] && videoRef.current &&
+                    result_values && result_values["audioAnalysis"] && 
                     <>
                         {/* AUDIO ANALYSIS */}
                         <div className={`${curr_model === "audioAnalysis" ? "max-h-[100vh]" : "max-h-0"} overflow-hidden duration-300 transition-all`}>
@@ -744,12 +776,15 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                 </div>
                                 <div className=" h-[360px] flex flex-col justify-evenly bg-white rounded-2xl px-2 overflow-hidden transition-all w-full">
                                     <div className=" max-w-[1200px]  overflow-hidden py-3">
-                                        <div
-                                            className="pl-7 cursor-pointer"
-                                            style={{ width: (videoRef.current.duration / results["audioAnalysis"]["duration"]) * 1180 + "px" }}
-                                        >
-                                            <Waveform videoRef={videoRef} />
-                                        </div>
+                                        {
+                                            videoRef.current && 
+                                            <div
+                                                className="pl-7 cursor-pointer"
+                                                style={{ width: (videoRef.current.duration / results["audioAnalysis"]["duration"]) * 1180 + "px" }}
+                                            >
+                                                <Waveform videoRef={videoRef} />
+                                            </div>
+                                        }
                                     </div>
                                     <div ref={audio_graph_Ref}>
                                         <LineChart chartData={audio_chart} />
