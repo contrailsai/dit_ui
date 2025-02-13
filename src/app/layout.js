@@ -6,7 +6,7 @@ import { Analytics } from "@vercel/analytics/react"
 const outfit = Outfit({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "DIT | Contrails",
+  title: "DIT | Tech Mahindra",
   description: "a media checker for detecting deepfakes",
 };
 
