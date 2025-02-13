@@ -250,7 +250,7 @@ const Form = ({ user_data, set_user_data, set_res_data, set_id }) => {
                         <>
                             {/* Drop FILE */}
                             <div
-                                className=" flex flex-col justify-center items-center gap-3 w-full h-full min-h-[40vh] cursor-pointer border-2 border-slate-300 border-dashed rounded-md p-8 bg-slate-100 "
+                                className=" flex flex-col justify-center items-center gap-3 w-full h-full min-h-[40vh] cursor-pointer border-2 border-stone-300 border-dashed rounded-md p-8 bg-stone-100 "
 
                                 onDrop={handleDrop}
                                 onDragOver={handleDragOver}
@@ -382,7 +382,7 @@ const Form = ({ user_data, set_user_data, set_res_data, set_id }) => {
 
                                 <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
                                     {/* SELECT BUTTON */}
-                                    <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full'>
+                                    <div className=' min-h-6 min-w-6 bg-stone-200 shadow-inner shadow-primary rounded-full'>
                                         {
                                             analysisTypes["frameCheck"] &&
                                             (
@@ -398,7 +398,7 @@ const Form = ({ user_data, set_user_data, set_res_data, set_id }) => {
                                             <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
                                         </svg>
 
-                                        <div className='w-fit min-w-32 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
+                                        <div className='w-fit min-w-32 absolute z-50 -transtone-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
                                             <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
                                                 Analyze frames in the video
                                             </div>
@@ -427,7 +427,7 @@ const Form = ({ user_data, set_user_data, set_res_data, set_id }) => {
 
                                 <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
                                     {/* SELECT BUTTON */}
-                                    <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full'>
+                                    <div className=' min-h-6 min-w-6 bg-stone-200 shadow-inner shadow-primary rounded-full'>
                                         {
                                             analysisTypes["audioAnalysis"] &&
                                             (
@@ -442,7 +442,7 @@ const Form = ({ user_data, set_user_data, set_res_data, set_id }) => {
                                             <path strokeLinecap="round" strokeLinejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
                                         </svg>
 
-                                        <div className='w-fit absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
+                                        <div className='w-fit absolute z-50 -transtone-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
                                             <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
                                                 Analyze audio in the file
                                             </div>

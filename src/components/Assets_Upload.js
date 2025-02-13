@@ -103,7 +103,7 @@ const Assets_Upload = ({ SavedAssets, CurrAssets, SetCurrAssets }) => {
     };
 
     return (
-        <div className="flex shadow border border-slate-200 p-2 w-full h-full overflow-hidden rounded-3xl bg-slate-100">
+        <div className="flex shadow border border-stone-200 p-2 w-full h-full overflow-hidden rounded-3xl bg-stone-100">
 
             <input
                 ref={fileInputRef}
@@ -140,7 +140,7 @@ const Assets_Upload = ({ SavedAssets, CurrAssets, SetCurrAssets }) => {
                     // {/* UPLOADED */ }
                     < div className="flex gap-2 w-full overflow-hidden ">
                         {/* PREVIEW */}
-                        <div className="border bg-slate-200 w-16 rounded-2xl h-full flex flex-col justify-between items-center gap-2 ">
+                        <div className="border bg-stone-200 w-16 rounded-2xl h-full flex flex-col justify-between items-center gap-2 ">
                             <div className="flex flex-col gap-3 py-1 max-h-96 overflow-y-auto scrollbar-hide ">
                                 {
                                     [...tempSavedAssets, ...CurrAssets].map(

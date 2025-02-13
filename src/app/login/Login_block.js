@@ -60,8 +60,7 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
 
                 {/* LOGO */}
                 <div className=' text-primary w-full text-xl font-bold pb-7 flex justify-start items-center gap-3'>
-                    <Image src={'/logo.svg'} width={30} height={20} alt="LOGO" />
-                    Contrails AI
+                    <Image src={'/logo.svg'} width={120} height={20} alt="LOGO" />
                 </div>
 
                 <div className=" text-3xl font-semibold">
@@ -72,7 +71,6 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
                 <div className=' font-light mb-2'>
                     {curr_shown === 'signup' && 'Hello! select method of signup:'}
                     {curr_shown === 'login' && 'Welcome back! select method to login:'}
-                    {curr_shown === 'forgot' && 'Enter email :'}
                 </div>
 
 

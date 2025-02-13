@@ -48,7 +48,7 @@ const VideoAnalysisForm = ({ user }) => {
                                         (
                                             <div className=' w-full flex flex-col justify-center items-center gap-16 '>
 
-                                                <div className=' bg-slate-100 px-10 py-6 w-fit flex flex-col gap-4 items-center justify-center rounded-full aspect-square shadow-inner shadow-primary'>
+                                                <div className=' bg-stone-100 px-10 py-6 w-fit flex flex-col gap-4 items-center justify-center rounded-full aspect-square shadow-inner shadow-primary'>
 
                                                     <span className="">
                                                         <DocumentDone className="size-20" strokeWidth={1} />
