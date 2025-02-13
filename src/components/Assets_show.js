@@ -66,13 +66,13 @@ const Assets_Show = ({ CurrAssets }) => {
     };
 
     return (
-        <div className="flex flex-col w-fit border bg-slate-100 shadow hover:shadow-primary p-2 h-full overflow-hidden rounded-3xl transition-all duration-300">
+        <div className="flex flex-col w-fit border bg-stone-100 shadow hover:shadow-primary p-2 h-full overflow-hidden rounded-3xl transition-all duration-300">
             <p className="text-2xl px-5 py-2" >Assets</p>
             {
                 CurrAssets.length !== 0 &&
                 < div className="flex gap-2 w-full overflow-hidden ">
                     {/* PREVIEW */}
-                    <div className="border border-slate-300  overflow-hidden  w-16 rounded-2xl h-full flex flex-col justify-between items-center gap-2 ">
+                    <div className="border border-stone-300  overflow-hidden  w-16 rounded-2xl h-full flex flex-col justify-between items-center gap-2 ">
                         <div className="flex flex-col gap-3 py-1 max-h-96 overflow-y-auto scrollbar-hide">
                             {
                                 CurrAssets.map(

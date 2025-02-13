@@ -434,7 +434,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                 {
                     file_metadata.verifier_comment &&
                     (
-                        <div className=' bg-slate-100 py-4 px-5 border rounded-lg w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                        <div className=' bg-stone-100 py-4 px-5 border rounded-lg w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
                             <span className=' text-xl'>
                                 Expert&apos;s Note
                             </span>

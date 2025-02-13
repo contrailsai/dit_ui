@@ -17,8 +17,7 @@ const Navbar = ({user_data}) => {
             {/* NAVBAR */}
             < div className='fixed z-50 top-0 bg-white  shadow flex items-center gap-10 w-full justify-between px-16 py-2' >
                 <div className=' text-primary w-full text-xl font-bold flex justify-start items-center gap-3'>
-                    <Image src={'/logo.svg'} width={30} height={20} alt="LOGO" />
-                    Contrails AI
+                    <Image src={'/logo.svg'} width={150} height={20} alt="LOGO" />
                 </div>
 
                 <div className=' flex gap-8'>
@@ -36,25 +35,25 @@ const Navbar = ({user_data}) => {
                         }
 
                         {/* logout, profile buttons popup */}
-                        <div className={`absolute z-30 group-hover:opacity-100 ${show_user_options ? "max-h-60" : "max-h-0"} overflow-hidden top-12 right-10  w-40 rounded bg-slate-100 text-gray-600 shadow transition-all`}>
+                        <div className={`absolute z-30 group-hover:opacity-100 ${show_user_options ? "max-h-60" : "max-h-0"} overflow-hidden top-12 right-10  w-40 rounded bg-stone-100 text-gray-600 shadow transition-all`}>
                             <div className=' flex flex-col divide-gray-300 w-full px-2 py-3 text-lg '>
                                 {
                                     user_data.verifier 
                                     &&
-                                    <Link href={"/media-analyzer"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
+                                    <Link href={"/media-analyzer"} className='px-2 py-1 hover:bg-stone-200 transition-all '>
                                         Direct Checker
                                     </Link>
                                 }
-                                <Link href={"/fact-checker"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
+                                <Link href={"/fact-checker"} className='px-2 py-1 hover:bg-stone-200 transition-all '>
                                     Fact Checker
                                 </Link>
-                                <Link href={"/user/case-list"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
+                                <Link href={"/user/case-list"} className='px-2 py-1 hover:bg-stone-200 transition-all '>
                                     {user_data.verifier ? "Verify Cases" :"Case List"}
                                 </Link>
-                                {/* <Link href={"/user/profile"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
+                                {/* <Link href={"/user/profile"} className='px-2 py-1 hover:bg-stone-200 transition-all '>
                                     Profile
                                 </Link> */}
-                                <div onClick={handle_logout} className='px-2 py-1 cursor-pointer hover:bg-slate-200 transition-all '>
+                                <div onClick={handle_logout} className='px-2 py-1 cursor-pointer hover:bg-stone-200 transition-all '>
                                     Logout
                                 </div>
                             </div>

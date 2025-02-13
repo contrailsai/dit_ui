@@ -873,7 +873,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                 {
                     file_metadata.verifier_comment &&
                     (
-                        <div className=' bg-slate-100 py-4 px-5 border rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                        <div className=' bg-stone-100 py-4 px-5 border rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
                             <span className=' text-xl'>
                                 Expert&apos;s Note
                             </span>
@@ -885,7 +885,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                 }
 
                 {/* VIDEO META DATA */}
-                <div className=' bg-slate-100 py-4 px-5 border rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                <div className=' bg-stone-100 py-4 px-5 border rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
                     <span className=' text-xl'>
                         Video Metadata
                     </span>

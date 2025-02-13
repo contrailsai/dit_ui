@@ -570,7 +570,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                     }
                 </div>
                 {/* ANALYSIS */}
-                <div className=" relative w-full flex flex-col lg:gap-3 items-center bg-slate-50 rounded-lg overflow-hidden ">
+                <div className=" relative w-full flex flex-col lg:gap-3 items-center bg-stone-50 rounded-lg overflow-hidden ">
 
                     <div className={` ${taking_ss ? '' : 'hidden'} absolute z-20 w-full h-full bg-black/90 backdrop-blur-2xl text-white `}>
 
@@ -721,7 +721,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                                         Real
                                     </div>
                                     <div
-                                        className="absolute z-50 bg-white text-black flex items-center justify-center rounded-full p-1 transform -translate-y-1/2 border-4"
+                                        className="absolute z-50 bg-white text-black flex items-center justify-center rounded-full p-1 transform -transtone-y-1/2 border-4"
                                         style={{
                                             left: `${prediction["prediction"] ? prediction["percentage"] : 100 - prediction["percentage"]}%`,
                                             top: '12.5px',
@@ -949,7 +949,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                     {
                         file_metadata.verifier_comment &&
                         (
-                            <div className=' bg-slate-100 py-4 px-5 border rounded-lg w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                            <div className=' bg-stone-100 py-4 px-5 border rounded-lg w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
                                 <span className=' text-xl'>
                                     Expert&apos;s Note
                                 </span>
@@ -961,7 +961,7 @@ const ResultsVideoUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                     }
 
                     {/* VIDEO META DATA */}
-                    <div className=' bg-slate-100 py-4 px-5 border rounded-lg w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                    <div className=' bg-stone-100 py-4 px-5 border rounded-lg w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
                         <span className=' text-xl'>
                             Video Metadata
                         </span>

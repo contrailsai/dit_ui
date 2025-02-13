@@ -268,7 +268,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                         <>
                             {/* Drop FILE */}
                             <div
-                                className=" flex flex-col justify-center items-center gap-3 w-full h-full min-h-[40vh] cursor-pointer border-2 border-slate-300 border-dashed rounded-2xl p-8 bg-slate-100 "
+                                className=" flex flex-col justify-center items-center gap-3 w-full h-full min-h-[40vh] cursor-pointer border-2 border-stone-300 border-dashed rounded-2xl p-8 bg-stone-100 "
 
                                 onDrop={handleDrop}
                                 onDragOver={handleDragOver}
@@ -386,7 +386,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                             >
                                 <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
                                     {/* SELECT BUTTON */}
-                                    <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full'>
+                                    <div className=' min-h-6 min-w-6 bg-stone-200 shadow-inner shadow-primary rounded-full'>
                                         {
                                             analysisTypes["frameCheck"] &&
                                             (
@@ -402,7 +402,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                                     <span className=' relative group text-xs ' >
                                         <InfoCircle className="size-6" strokeWidth={2} />
 
-                                        <div className='w-fit min-w-32 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
+                                        <div className='w-fit min-w-32 absolute z-50 -transtone-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
                                             <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
                                                 Analyze frames in the video
                                             </div>
@@ -423,7 +423,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                             >
                                 <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
                                     {/* SELECT BUTTON */}
-                                    <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full'>
+                                    <div className=' min-h-6 min-w-6 bg-stone-200 shadow-inner shadow-primary rounded-full'>
                                         {
                                             analysisTypes["audioAnalysis"] &&
                                             (
@@ -438,7 +438,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                                     <span className=' relative group text-xs ' >
                                         <InfoCircle className="size-6" strokeWidth={2} />
                                         
-                                        <div className='w-fit min-w-20 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
+                                        <div className='w-fit min-w-20 absolute z-50 -transtone-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
                                             <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
                                                 Analyze audio in the file
                                             </div>
@@ -462,7 +462,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                                 {/* BUTTON */}
                                 <div className=' w-full'>
                                     {/* SELECT BUTTON */}
-                                    <div className=' min-h-6 min-w-6 bg-slate-200 shadow-inner shadow-primary rounded-full w-fit '>
+                                    <div className=' min-h-6 min-w-6 bg-stone-200 shadow-inner shadow-primary rounded-full w-fit '>
                                         {
                                             analysisTypes["aigcCheck"] &&
                                             (
@@ -479,7 +479,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                                     <span className=' relative group text-xs ' >
                                         <InfoCircle className="size-6" strokeWidth={2} />
 
-                                        <div className=' min-w-24 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
+                                        <div className=' min-w-24 absolute z-50 -transtone-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
                                             <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
                                                 Analyze a image for forgery
                                             </div>
