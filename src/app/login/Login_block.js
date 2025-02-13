@@ -151,7 +151,7 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
                         {
                             loading &&
                             <div role="status">
-                                <LoadingCircle className="w-6 h-6 text-sky-300 animate-spin fill-sky-600" />
+                                <LoadingCircle className="w-6 h-6 text-stone-300 animate-spin fill-stone-600" />
                             </div>
                         }
                     </button>
