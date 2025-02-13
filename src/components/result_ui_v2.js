@@ -15,6 +15,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     const videoRef = useRef();
     const audio_graph_Ref = useRef();
     const frame_graph_Ref = useRef();
+    const frame_person_refs = [useRef(), useRef(), useRef()];
 
     const [curr_model, set_curr_model] = useState(analysisTypes["frameCheck"] ? "frameCheck" : analysisTypes["audioAnalysis"] ? "audioAnalysis" : "");
     const [toggle_open, set_toggle_open] = useState(null);
@@ -91,7 +92,8 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
             temp_frame_values[label] = {
                 "prediction": mean_result > threshold,
-                "percentage": (mean_result * 100).toFixed(2)
+                "percentage": (mean_result * 100).toFixed(2),
+                "data_points": person.length
             };
 
             temp_chart_data[label] = {
@@ -363,7 +365,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             doc.setFont("Outfit", "normal");
             fontSize = 14;
             doc.setFontSize(fontSize);
-            const maxWidth = 430 / 72;
+            const maxWidth = 550 / 72;
             const commentLines = doc.splitTextToSize(file_metadata.verifier_comment, maxWidth);
 
             doc.text(commentLines, curr_x, curr_y);
@@ -461,15 +463,15 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             doc.setFont("Outfit", "normal");
 
             doc.text("(confidence of audio being real)", curr_x, curr_y);
-            curr_y += fontSize / 72 + 40 / 72 ; 
-            
+            curr_y += fontSize / 72 + 40 / 72;
+
             fontSize = 18;
             doc.setFontSize(fontSize);
             doc.setFont("Outfit", "bold");
             doc.text("Audio Analysis Graph", curr_x, curr_y);
 
             doc.setFont("Outfit", "normal");
-            curr_y += fontSize / 72 + 12 / 72 ; 
+            curr_y += fontSize / 72 + 12 / 72;
 
             fontSize = 14;
             doc.setFontSize(fontSize);
@@ -520,7 +522,27 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             fontSize = 20;
             doc.setFontSize(fontSize);
 
-            const frame_result = (results["frameCheck"].result).toFixed(4);
+            // console.log((result_values["frameCheck"]));
+            let sorted_labels = Object.keys(result_values["frameCheck"]).sort((a ,b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"]);
+            
+            // let frame_result = (results["frameCheck"].result).toFixed(4);
+            let frame_prediction = 0;
+            let frame_result = true;
+            let labels_count = 0;  
+            for(let label of sorted_labels){
+                if( ! result_values["frameCheck"][label]["prediction"]){
+                    frame_prediction = Number(result_values["frameCheck"][label]["percentage"]).toFixed(2);
+                    frame_result = false;
+                    break;
+                }
+                if(labels_count>3)
+                    break;
+                labels_count++;
+            }
+            if(frame_result){
+                frame_prediction = Number(result_values["frameCheck"][sorted_labels[0]]["percentage"]).toFixed(2);
+            }
+
             const threshold = results["frameCheck"].threshold;
 
             if (frame_result >= threshold) {
@@ -551,7 +573,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             curr_x += 120 / 72;
             doc.setFont("Outfit", "bold");
             frame_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${(frame_result * 100).toFixed(2)} %`, curr_x, curr_y);
+            doc.text(` ${frame_prediction} %`, curr_x, curr_y);
 
             curr_x = mx;
             curr_y += fontSize / 72 + 10 / 72;
@@ -562,31 +584,49 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             doc.setFont("Outfit", "normal");
 
             doc.text("(confidence of video frames being real)", curr_x, curr_y);
-            curr_y += fontSize / 72 + 40 / 72 ; 
-            
+            curr_y += fontSize / 72 + 40 / 72;
+
             fontSize = 18;
             doc.setFontSize(fontSize);
             doc.setFont("Outfit", "bold");
             doc.text("Frames Analysis Chart", curr_x, curr_y);
 
             doc.setFont("Outfit", "normal");
-            curr_y += fontSize / 72 + 12 / 72 ; 
+            curr_y += fontSize / 72 + 12 / 72;
 
             fontSize = 14;
             doc.setFontSize(fontSize);
-            doc.text("the charts shows individual people identified and prediction of their face being fake.", curr_x, curr_y);
+            doc.text("the graphs show individual people identified and prediction of their face being fake.", curr_x, curr_y);
 
-            curr_y += fontSize / 72 + 16 / 72;
+            curr_y += fontSize / 72 + 20 / 72;
 
-            const frame_result_element = frame_graph_Ref.current;
-            let frame_result_canvas = await html2canvas(frame_result_element);
-            const frame_result_imgData = frame_result_canvas.toDataURL('image/png');
-            const frm_res_img_w = 550 / 72;
-            const frm_res_img_h = (frame_result_canvas.height * frm_res_img_w) / frame_result_canvas.width;
-            doc.addImage(frame_result_imgData, 'PNG', curr_x, curr_y, frm_res_img_w, frm_res_img_h, '', 'FAST');
+            for(let i=0; i<frame_person_refs.length; i++){
+                // check if the person's Ref was even made
+                if(frame_person_refs[i].current){
 
-            curr_x = mx;
-            curr_y += frm_res_img_h + 30 / 72; //gap of 30 px
+                    doc.text(`Person-${i+1}'s Graph`, curr_x, curr_y);
+                    curr_y += 20 / 72;
+
+                    const frame_result_element = frame_person_refs[i].current;
+                    let frame_result_canvas = await html2canvas(frame_result_element);
+                    const frame_result_imgData = frame_result_canvas.toDataURL('image/png');
+                    const frm_res_img_w = 550 / 72;
+                    const frm_res_img_h = (frame_result_canvas.height * frm_res_img_w) / frame_result_canvas.width;
+                    doc.addImage(frame_result_imgData, 'PNG', curr_x, curr_y, frm_res_img_w, frm_res_img_h, '', 'FAST');
+        
+                    curr_x = mx;
+                    curr_y += frm_res_img_h + 30 / 72; //gap of 30 px
+                }
+            }
+
+            // const frame_result_element = frame_graph_Ref.current;
+            // let frame_result_canvas = await html2canvas(frame_result_element);
+            // const frame_result_imgData = frame_result_canvas.toDataURL('image/png');
+            // const frm_res_img_w = 550 / 72;
+            // const frm_res_img_h = (frame_result_canvas.height * frm_res_img_w) / frame_result_canvas.width;
+            // doc.addImage(frame_result_imgData, 'PNG', curr_x, curr_y, frm_res_img_w, frm_res_img_h, '', 'FAST');
+            // curr_x = mx;
+            // curr_y += frm_res_img_h + 30 / 72; //gap of 30 px
         }
 
         // set_taking_ss(false);
@@ -664,11 +704,12 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                         <div className={`${curr_model === "frameCheck" ? "max-h-[100vh]" : "max-h-0"} overflow-hidden duration-300 transition-all`}>
                             <div ref={frame_graph_Ref} className={` h-full flex flex-col gap-2 py-5 rounded-3xl overflow-hidden`}>
                                 {
-                                    Object.keys(results["frameCheck"].labels_result).map((label, idx) => {
+                                    Object.keys(results["frameCheck"].labels_result)
+                                    .sort((a,b)=> result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
+                                    .map((label, idx) => {
 
                                         const perc = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["percentage"] : 0;
                                         const pred = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["prediction"] : false;
-
 
                                         return (
                                             <div key={idx} className=" flex flex-col">
@@ -695,7 +736,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                                     <PersonCircle className="size-14" strokeWidth={1} />
                                                                 </div>
                                                                 <div className="text-sm ">
-                                                                    person - {label}
+                                                                    person - {Number(label)+1}
                                                                 </div>
                                                             </div>
                                                             {
@@ -754,9 +795,18 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                         {/* PERSON's GRAPH */}
                                                         <div className={` ${toggle_open === idx ? 'max-h-72' : 'max-h-0'} h-full w-full bg-white rounded-2xl px-2 overflow-hidden transition-all `}>
                                                             {frame_charts &&
-                                                                <div className="chart-container">
-                                                                    <LineChart chartData={frame_charts[label]} />
-                                                                </div>
+                                                                idx < 3 ?
+                                                                (
+                                                                    <div className="chart-container" ref={frame_person_refs[idx]} >
+                                                                        <LineChart chartData={frame_charts[label]} />
+                                                                    </div>
+                                                                )
+                                                                :
+                                                                (
+                                                                    <div className="chart-container">
+                                                                        <LineChart chartData={frame_charts[label]} />
+                                                                    </div>
+                                                                )
                                                             }
                                                         </div>
 
