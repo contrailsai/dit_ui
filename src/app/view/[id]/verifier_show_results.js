@@ -183,7 +183,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
 
     const handle_submit = async () => {
 
-        if( assets_uploaded.length !== 0){
+        if (assets_uploaded.length !== 0) {
             // creating, uploading assets
             try {
                 // create supabase reference elements for assets
@@ -192,7 +192,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(
                         {
-                            uploaded_assets: assets_uploaded.map((asset)=>{
+                            uploaded_assets: assets_uploaded.map((asset) => {
                                 return {
                                     "name": asset.name,
                                     "type": asset.type,
@@ -205,9 +205,9 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                 if (!res.ok) throw new Error('Failed to get signed URL');
                 const assets_response = await res.json();
                 // uploading files to their s3 urls
-                for(let asset of Object.keys(assets_response)){
+                for (let asset of Object.keys(assets_response)) {
                     const signedUrl = assets_response[asset]["signedUrl"];
-    
+
                     //find the corresponding asset from uploaded files
                     const required_asset = assets_uploaded.find((obj) => obj.name === assets_response[asset].name && obj.type === assets_response[asset].type);
                     const res_s3 = await fetch(signedUrl, {
@@ -224,13 +224,29 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                 alert('Failed to upload file');
             }
         }
-        
+
         // assets corresponding to the transaction are ready 
         // verifiying remaining report
         const res_status = await verify_case(id, verifier_metadata, res_data["user_id"]);
         if (res_status === 0) {
             alert("Case Verified!");
         }
+    }
+
+    const handle_rerun_case = async () => {
+        
+        const res = await fetch('/api/send-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                    "task_id": id,
+                    "method": "verification",
+            }),
+        });
+        if (!res.ok) 
+            alert('Failed to Re-Run the case');
+        else
+            alert("Sent the case for Re-run")
     }
 
     return (<>
@@ -246,12 +262,12 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                 </div>
             }
 
-            {/* VERIFIER SETTINGS CHOOSE MODEL */}
+            {/* VERIFIER SETTINGS CHOOSE MODEL, CASE DETAILS */}
             <div className=' pt-6 pb-4 px-4 '>
                 <div className='text-3xl pb-4 font-semibold'>
                     Verifier Settings
                 </div>
-                {/* MODEL CHOOSE OPTIONS HERE */}
+                {/* MODEL CHOOSE OPTIONS, CASE DETAILS */}
                 <div className='py-2 flex w-full gap-20 border border-primary rounded-3xl '>
                     {/* FRAME MODELS*/}
                     {
@@ -375,8 +391,8 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                         )
                     }
 
-
-                    <div className=' flex flex-col divide-primary divide-y min-w-48 pb-4 my-4 ml-auto mr-4 border border-primary rounded-2xl overflow-hidden'>
+                    {/* CASE DETAILS */}
+                    <div className=' flex flex-col divide-primary divide-y min-w-48 pb-2 my-4 ml-auto mr-4 border border-primary rounded-2xl overflow-hidden'>
                         <div className=' w-fit h-fit px-4 py-3 rounded-lg flex gap-4'>
                             <span className=' font-semibold'>
                                 User email:
@@ -384,7 +400,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                             {client_email}
                         </div>
 
-                        <div className=' pt-2'>
+                        <div className=' pt-2 h-full'>
                             <div className='text-lg mb-3 px-4'>
                                 User Input
                             </div>
@@ -420,6 +436,12 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                             <div className='flex justify-between hover:bg-primary/10 px-4'>
                                 <span className=' font-light'>Aigc check :</span>
                                 {res_data["input_request"]["analysis_types"]["aigcCheck"] ? "True" : "False"}
+                            </div>
+                        </div>
+
+                        <div className='pt-2 px-2'>
+                            <div onClick={handle_rerun_case} className=' cursor-pointer text-white p-2 rounded-xl bg-primary text-center'>
+                                Re - Run Case
                             </div>
                         </div>
                     </div>
