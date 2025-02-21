@@ -6,7 +6,7 @@ const Footer = () => {
             <Link href={'https://contrails.ai'} target='_blank' className='hover:underline'>
                 Contrails AI
             </Link>
-            ©2024
+            ©2025
         </div>
     )
 }
