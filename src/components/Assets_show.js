@@ -114,7 +114,7 @@ const Assets_Show = ({ CurrAssets }) => {
                                                     asset.type === 'audio' ?
                                                         <audio src={asset.signedUrl} controls className=" w-full min-w-80" />
                                                         :
-                                                        <img src={asset.signedUrl} className=" h-full " />
+                                                        <img src={asset.signedUrl} alt="uploaded_asset" className=" h-full " />
                                             }
                                         </div>
                                         <div className="flex flex-col justify-end gap-8 pl-4 min-w-48 ">

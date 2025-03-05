@@ -19,7 +19,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
             }
         }
         if (temp_frame_index === null) {
-            temp_frame_index = "0";
+            temp_frame_index = Object.keys(model_results["frameCheck"])[0];
         }
         frame_index = temp_frame_index;
         // set_frame_index(temp_frame_index);
@@ -103,6 +103,8 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         console.log(event.target.error)
         setVideoError(event.target.error);
     };
+
+    console.log(model_results)
 
     return (
         <>
