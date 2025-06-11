@@ -1,8 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
-import { redirect } from "next/navigation";
+import { useState, useEffect } from 'react';
 
 import { createClient } from '@/utils/supabase/client';
 import { get_result_for_id } from '@/utils/data_fetch';
@@ -14,7 +12,7 @@ import ResultsVideoUI from "@/components/ResultVideoUI_v1";
 import ResultsAudioUI from "@/components/ResultAudioUI";
 
 const VideoAnalysisForm = ({ user }) => {
-    const [user_data, set_user_data] = useState(user);
+    // const [user_data, set_user_data] = useState(user);
     const [response_data, set_res_data] = useState({ got_result: false });
     const [id, set_id] = useState("");
 
@@ -38,7 +36,6 @@ const VideoAnalysisForm = ({ user }) => {
         // we have a ID subscribe to its updates for result
         if (id !== '') {
             const supabase = createClient();
-            console.log("subscribed to table changes ")
             const channel = supabase.channel('schema-db-changes')
                 .on(
                     'postgres_changes',
@@ -61,6 +58,8 @@ const VideoAnalysisForm = ({ user }) => {
                 )
                 .subscribe();
 
+                console.log("subscribed to table changes ")
+
             return () => {
                 supabase.removeChannel(channel);
             };
@@ -72,14 +71,10 @@ const VideoAnalysisForm = ({ user }) => {
         set_res_data({ got_result: false });
     }
 
-    const handle_cross_message = () => {
-        set_res_data({ got_result: false });
-    }
-
     return (
         <div className="min-h-screen">
 
-            <Navbar user_data={user_data} />
+            <Navbar user_data={user} />
             {/* ERROR OCCURED IN GETTING USER */}
             {
                 user.error !== undefined &&
@@ -105,8 +100,7 @@ const VideoAnalysisForm = ({ user }) => {
                         <>
                             <h2 className=" w-full text-3xl font-semibold px-6 pt-3 py-6">Media Manipulation Detection</h2>
                             <Form
-                                user_data={user_data}
-                                set_user_data={set_user_data}
+                                response_data={response_data}
                                 set_res_data={set_res_data}
                                 set_id={set_id}
                             />
@@ -116,29 +110,7 @@ const VideoAnalysisForm = ({ user }) => {
                     {
                         response_data.got_result &&
                         <>
-                            {
-                                response_data["input_request"]["upload_type"] === "video" &&
-
-                                <ResultsVideoUI
-                                    response_data={response_data["result"]["results"]}
-                                    fileUrl={response_data["signedUrl"]}
-                                    file_metadata={response_data["file_metadata"]}
-                                    analysisTypes={response_data["result"]["analysis_types"]}
-                                    handle_newCheck={handle_newCheck}
-                                />
-                            }
-                            {
-                                response_data["input_request"]["upload_type"] === "audio" &&
-
-                                <ResultsAudioUI
-                                    response_data={{
-                                        "audioAnalysis": response_data["result"]["results"]["audioAnalysis"],
-                                    }}
-                                    fileUrl={response_data["signedUrl"]}
-                                    file_metadata={response_data["file_metadata"]}
-                                    handle_newCheck={handle_newCheck}
-                                />
-                            }
+                            <Result_container res_data={response_data} assets={assets} />
                         </>
                     }
                 </div>
