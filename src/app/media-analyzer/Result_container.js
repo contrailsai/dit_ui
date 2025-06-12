@@ -60,6 +60,7 @@ const Result_container = ({ res_data, set_res_data }) => {
                                 analysisTypes={results_data["analysis_types"]}
                                 file_metadata={res_data["file_metadata"]}
                                 fileUrl={res_data["signedUrl"]}
+                                handle_new_analysis={handle_newCheck}
                             />
                         </>
                         :
