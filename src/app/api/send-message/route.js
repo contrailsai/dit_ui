@@ -15,14 +15,25 @@ export async function POST(request) {
 
   try {
     // SEND THE SQS MESSAGE WITH THE TRANSACTION ID 
+
+    let message_body = {}
+
+    if (method === "verification") {
+      message_body = {
+        "task_id": task_id,
+        "models": []
+      };
+    }
+    else if (method === "admin_demo") {
+      message_body = {
+        "task_id": task_id,
+        "models": ["sta_exp_1", "ssl_w2", "fatformer"]
+      };
+    }
+
     const sqsCommand = new SendMessageCommand({
       QueueUrl: process.env.NEXT_PUBLIC_ENVIRONMENT === "production" ? process.env.SQS_QUEUE_URL : process.env.DEV_SQS_QUEUE_URL,
-      MessageBody: JSON.stringify(
-        {
-          task_id: task_id,
-          application: method === "verification" ? "dit" : "admin_demo"
-        }
-      )
+      MessageBody: JSON.stringify(message_body)
     });
 
     await sqsClient.send(sqsCommand);
