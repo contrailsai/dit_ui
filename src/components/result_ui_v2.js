@@ -10,7 +10,7 @@ import { Outfit_normal_font } from './outfit-normal-font';
 import { logo_base64 } from './logo_base64';
 import { DownloadFile, PersonCircle, PlusCircle, RightArrow } from "./SVGs";
 
-export default function Result_UI({ results, analysisTypes, file_metadata, fileUrl }) {
+export default function Result_UI({ results, analysisTypes, file_metadata, fileUrl, handle_new_analysis=null }) {
 
     const videoRef = useRef();
     const audio_graph_Ref = useRef();
@@ -640,7 +640,12 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
     }
 
-    const handle_newCheck = () => { window.location.href = "/fact-checker" }
+    const handle_newCheck = () => { 
+        if(handle_new_analysis)
+            handle_new_analysis();
+        else
+            window.location.href = "/fact-checker" 
+    }
 
     return (
         <div className="min-h-screen bg-white text-black">
