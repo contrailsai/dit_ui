@@ -7,14 +7,12 @@ import Result_UI from '@/components/result_ui_v2';
 import Assets_Show from '@/components/Assets_show'
 // import { useState, useEffect } from 'react';
 
-const Result_container = ({ res_data }) => {
+const Result_container = ({ res_data, set_res_data }) => {
     const model_responses = typeof (res_data["models_responses"]) === "string" ? JSON.parse(res_data["models_responses"]) : res_data["models_responses"];
     const upload_type = res_data["input_request"]["upload_type"];
 
     const handle_newCheck = () => {
-        if (typeof window !== 'undefined') {
-            window.location.href = '/fact-checker';
-        }
+        set_res_data({ got_result: false });
     }
 
     let results_data = {

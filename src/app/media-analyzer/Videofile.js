@@ -109,7 +109,7 @@ const VideoAnalysisForm = ({ user }) => {
                     {
                         response_data.got_result &&
                         <>
-                            <Result_container res_data={response_data} />
+                            <Result_container res_data={response_data} set_res_data={set_res_data} />
                         </>
                     }
                 </div>
