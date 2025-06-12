@@ -303,13 +303,16 @@ const Form = ({ response_data, set_res_data, set_id }) => {
 
                     {/* SUBMIT AND LOADING */}
                     <div className=' flex items-center gap-10'>
-                        <button
-                            disabled={(loading || (!response_data.got_result))}
-                            type="submit"
-                            className=" disabled:cursor-no-drop disabled:bg-primary/70 outline-none bg-primary hover:bg-primary/90 hover:shadow-md text-white font-semibold py-3 px-12 rounded-3xl w-fit text-xl transition-all duration-300"
-                        >
-                            Submit
-                        </button>
+                        {
+                            (!response_data["uploaded"] || response_data["got_result"]) &&
+                            <button
+                                disabled={(loading || response_data.uploaded)}
+                                type="submit"
+                                className=" disabled:cursor-no-drop disabled:bg-primary/70 outline-none bg-primary hover:bg-primary/90 hover:shadow-md text-white font-semibold py-3 px-12 rounded-3xl w-fit text-xl transition-all duration-300"
+                            >
+                                Submit
+                            </button>
+                        }
 
                         {
                             loading &&

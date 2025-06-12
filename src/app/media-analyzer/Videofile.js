@@ -8,8 +8,7 @@ import { get_result_for_id } from '@/utils/data_fetch';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Form from './Form';
-import ResultsVideoUI from "@/components/ResultVideoUI_v1";
-import ResultsAudioUI from "@/components/ResultAudioUI";
+import Result_container from './Result_container';
 
 const VideoAnalysisForm = ({ user }) => {
     // const [user_data, set_user_data] = useState(user);
@@ -110,7 +109,7 @@ const VideoAnalysisForm = ({ user }) => {
                     {
                         response_data.got_result &&
                         <>
-                            <Result_container res_data={response_data} assets={assets} />
+                            <Result_container res_data={response_data} />
                         </>
                     }
                 </div>
