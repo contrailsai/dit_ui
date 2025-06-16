@@ -65,22 +65,46 @@ const Transactions_history = ({ verifier }) => {
                     {
                         loading ?
                             (
-                                < div className=' flex flex-col gap-3 px-2'>
-                                    <div className=' py-3 border-b-2 pl-7 pr-2 gap-3 flex flex-col justify-center px-10 skeleton-l rounded-md ' >
-                                        <div className=' h-3 w-32 skeleton-h rounded ' />
-                                        <div className=' h-5 w-72 skeleton-h rounded ' />
+                                < div className=' flex flex-col gap-5 px-2'>
+                                    <div className=' border-b-2 pl-6 pr-2 w-full flex gap-5 items-center py-3 max-h-28 skeleton-l rounded-full'>
+                                        <span className='min-w-14  h-5 skeleton-h' />
+                                        <span className=' w-[450px] h-5 skeleton-h'/>
+                                        <span className=' min-w-24  h-5 skeleton-h' />
+                                        <span className=' min-w-28 h-5 skeleton-h'/>
+                                        <span className=' min-w-28 h-5 skeleton-h '/>
+                                        <span className=' w-72  h-5 skeleton-h '/>
+                                        <span className='min-w-24 h-5 skeleton-h'/>
+                                        <span className='min-w-20 h-5 skeleton-h '/>
                                     </div>
-                                    <div className=' py-3 border-b-2 pl-7 pr-2 gap-3 flex flex-col justify-center px-10 skeleton-l rounded-md ' >
-                                        <div className=' h-3 w-32 skeleton-h rounded ' />
-                                        <div className=' h-5 w-72 skeleton-h rounded ' />
+                                    <div className=' border-b-2 pl-6 pr-2 w-full flex gap-5 items-center py-3 max-h-28 skeleton-l rounded-full'>
+                                        <span className='min-w-14  h-5 skeleton-h' />
+                                        <span className=' w-[450px] h-5 skeleton-h'/>
+                                        <span className=' min-w-24  h-5 skeleton-h' />
+                                        <span className=' min-w-28 h-5 skeleton-h'/>
+                                        <span className=' min-w-28 h-5 skeleton-h '/>
+                                        <span className=' w-72  h-5 skeleton-h '/>
+                                        <span className='min-w-24 h-5 skeleton-h'/>
+                                        <span className='min-w-20 h-5 skeleton-h '/>
                                     </div>
-                                    <div className=' py-3 border-b-2 pl-7 pr-2 gap-3 flex flex-col justify-center px-10 skeleton-l rounded-md ' >
-                                        <div className=' h-3 w-32 skeleton-h rounded ' />
-                                        <div className=' h-5 w-72 skeleton-h rounded ' />
+                                    <div className=' border-b-2 pl-6 pr-2 w-full flex gap-5 items-center py-3 max-h-28 skeleton-l rounded-full'>
+                                        <span className='min-w-14  h-5 skeleton-h' />
+                                        <span className=' w-[450px] h-5 skeleton-h'/>
+                                        <span className=' min-w-24  h-5 skeleton-h' />
+                                        <span className=' min-w-28 h-5 skeleton-h'/>
+                                        <span className=' min-w-28 h-5 skeleton-h '/>
+                                        <span className=' w-72  h-5 skeleton-h '/>
+                                        <span className='min-w-24 h-5 skeleton-h'/>
+                                        <span className='min-w-20 h-5 skeleton-h '/>
                                     </div>
-                                    <div className=' py-3 border-b-2 pl-7 pr-2 gap-3 flex flex-col justify-center px-10 skeleton-l rounded-md ' >
-                                        <div className=' h-3 w-32 skeleton-h rounded ' />
-                                        <div className=' h-5 w-72 skeleton-h rounded ' />
+                                    <div className=' border-b-2 pl-6 pr-2 w-full flex gap-5 items-center py-3 max-h-28 skeleton-l rounded-full'>
+                                        <span className='min-w-14  h-5 skeleton-h' />
+                                        <span className=' w-[450px] h-5 skeleton-h'/>
+                                        <span className=' min-w-24  h-5 skeleton-h' />
+                                        <span className=' min-w-28 h-5 skeleton-h'/>
+                                        <span className=' min-w-28 h-5 skeleton-h '/>
+                                        <span className=' w-72  h-5 skeleton-h '/>
+                                        <span className='min-w-24 h-5 skeleton-h'/>
+                                        <span className='min-w-20 h-5 skeleton-h '/>
                                     </div>
                                 </div>
                             )
@@ -174,7 +198,6 @@ const Transactions_history = ({ verifier }) => {
                                     :
 
                                     <>
-
                                         <div className=' w-full text-center text-2xl font-light pt-16 '>
                                             No Cases To Show
                                         </div>

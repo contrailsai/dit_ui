@@ -2,8 +2,10 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { EmailMessage, ClosedLock, Google, LoadingCircle, CrossCircle } from "@/components/SVGs";
+import { getUrlParam } from "@/utils/url_params";
+import { useSearchParams } from 'next/navigation';
 
-const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, eventInfo }) => {
+const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password }) => {
 
     // console.log(eventInfo);
 
@@ -11,13 +13,17 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
     const [password, setPassword] = useState('');
 
     const [curr_shown, set_curr_shown] = useState('login');   // 'signup', 'login', 'forgot'
-    const [show_message, set_show_message] = useState(eventInfo?.message);
+    const [show_message, set_show_message] = useState('');
 
     const [loading, setloading] = useState(false);
+    const searchParams = useSearchParams();
 
     useEffect(() => {
-        set_show_message(eventInfo?.message);
-    }, [eventInfo])
+        const message = searchParams.get('message');
+        if (message) {
+            set_show_message(message);
+        }
+    }, [searchParams]);
 
     const handle_pass_signin = async (e) => {
         e.preventDefault();
@@ -56,7 +62,7 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
 
     return (
         <>
-            <div className=' shadow-md shadow-primary bg-white mt-10 flex flex-col items-stretch w-fit py-10 px-10 rounded-3xl text-gray-800 '>
+            <div className=' shadow shadow-primary bg-white/50 border-primary/30 border mt-10 flex flex-col items-stretch w-fit py-10 px-10 rounded-3xl text-gray-800 '>
 
                 {/* LOGO */}
                 <div className=' text-primary w-full text-xl font-bold pb-7 flex justify-start items-center gap-3'>
@@ -184,15 +190,16 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
             </div >
 
             {/* MESSAGE NOTIFICATION */}
-            <div className={` absolute bottom-10 right-10 bg-primary text-white shadow-md min-h-20 w-72 rounded-3xl px-3 pt-6 pb-4 flex justify-between  ${show_message ? "" : "hidden"} `} >
-
-                <div className="w-full pt-3 pl-2 break-words">
-                    {eventInfo.message}
+            {show_message && (
+                <div className="absolute bottom-10 right-10 bg-primary text-white shadow-md min-h-20 w-72 rounded-3xl px-3 pt-6 pb-4 flex justify-between">
+                    <div className="w-full pt-3 pl-2 break-words">
+                        {show_message}
+                    </div>
+                    <div onClick={() => { set_show_message(false) }}>
+                        <CrossCircle className="absolute right-2 top-2 size-8 cursor-pointer" strokeWidth={1} />
+                    </div>
                 </div>
-                <div onClick={() => { set_show_message(false) }}>
-                    <CrossCircle className=" absolute right-2 top-2 size-8 cursor-pointer" strokeWidth={1} />
-                </div>
-            </div>
+            )}
 
         </>
     )

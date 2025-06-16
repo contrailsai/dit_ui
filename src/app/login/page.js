@@ -5,9 +5,8 @@ import { redirect } from "next/navigation";
 import Login_block from "./Login_block";
 import { headers } from "next/headers";
 
-export default async function Login({ searchParams }) {
-
-  const supabase = createClient();
+export default async function Login() {
+  const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -18,15 +17,21 @@ export default async function Login({ searchParams }) {
 
   const signIn = async ({ email, password }) => {
     "use server";
-    const supabase = createClient();
+    const supabase = await createClient();
+    try{
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      console.log(error);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        console.log(error);
+        return redirect("/login?message=Could not authenticate user");
+      }
+    }
+    catch(e){
+      console.error("Error: ", e);
       return redirect("/login?message=Could not authenticate user");
     }
     return redirect("/fact-checker");
@@ -34,9 +39,8 @@ export default async function Login({ searchParams }) {
 
   const signUp = async ({ email, password }) => {
     "use server";
-
     const origin = headers().get("origin");
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const { error } = await supabase.auth.signUp({
       email,
@@ -57,7 +61,7 @@ export default async function Login({ searchParams }) {
   const handleGoogleSignIn = async () => {
     "use server";
     const origin = headers().get("origin");
-    const supabase = createClient();
+    const supabase = await createClient();
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -71,13 +75,13 @@ export default async function Login({ searchParams }) {
     }
 
     if (data.url) {
-      redirect(data.url); // use the redirect API for your server framework
+      redirect(data.url);
     }
   };
 
   const forgot_password = async ({ email }) => {
     "use server";
-    const supabase = createClient();
+    const supabase = await createClient();
     const origin = headers().get("origin");
 
     const { error } = await supabase.auth.resetPasswordForEmail(email)
@@ -86,43 +90,27 @@ export default async function Login({ searchParams }) {
       console.log(error);
       return redirect("/login?message=Could not verify user");
     }
-    // return redirect("/fact-checker");
   };
 
   return (
     <>
-      <div className=' flex flex-col justify-between h-screen items-center bg-white'>
-
-        {/* <div className=' absolute -z-10 h-screen w-screen'>
-          <Image
-            src={`/background.jpg`}
-            fill
-            quality={50}
-            alt="background_img"
-            priority
-            className=' h-screen w-screen brightness-90 aspect-video object-cover'
-          />
-        </div> */}
-
+      <div className='flex flex-col justify-between h-screen items-center bg-white'>
         <Login_block
           signIn={signIn}
           signUp={signUp}
           handleGoogleSignIn={handleGoogleSignIn}
           forgot_password={forgot_password}
-          eventInfo={searchParams}
         />
 
-        <div className='flex  pb-4 text-black font-medium divide-x-2 divide-black'>
-          <div className=' hover:underline underline-offset-4 text-center px-3'>
-            <Link href={'/terms-of-service'} > Terms of Service</Link>
+        <div className='flex pb-4 text-black font-medium divide-x-2 divide-black'>
+          <div className='hover:underline underline-offset-4 text-center px-3'>
+            <Link href={'/terms-of-service'}>Terms of Service</Link>
           </div>
-          <div className=' hover:underline underline-offset-4 px-3'>
-            <Link href={'/privacy-policy'} > Privacy Policy</Link>
+          <div className='hover:underline underline-offset-4 px-3'>
+            <Link href={'/privacy-policy'}>Privacy Policy</Link>
           </div>
         </div>
-
       </div>
-
     </>
   );
 }

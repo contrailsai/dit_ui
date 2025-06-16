@@ -7,14 +7,17 @@ import { get_result_for_id, get_assets_for_id, get_user_email_by_id } from "@/ut
 import { redirect } from 'next/navigation';
 
 const page = async ({ params }) => {
+  // Ensure params is resolved
+  const { id } = await Promise.resolve(params);
+  
   const user_data = await get_user_data();
-  const case_result_data = await get_result_for_id(params.id);
-  const assets = await get_assets_for_id(params.id)
-  const client_email = await get_user_email_by_id(case_result_data.user_id)
-
   if (!user_data) {
     return redirect("/login");
   }
+
+  const case_result_data = await get_result_for_id(id);
+  const assets = await get_assets_for_id(id);
+  const client_email = user_data.verifier ? await get_user_email_by_id(case_result_data.user_id) : "";
 
   return (
     <>
@@ -22,7 +25,6 @@ const page = async ({ params }) => {
 
       {
         user_data.verifier ?
-
           // VERIFIER BASED 
           <Verifier_results_container 
             client_email={client_email} 
@@ -36,12 +38,15 @@ const page = async ({ params }) => {
               case_result_data.status ?
                 <Result_container res_data={case_result_data} assets={assets} />
                 :
-                <div className=' text-xl pt-28 pb-10 px-16'>
-                  <span className=' underline px-2'>
-                    Status:
+                <div className=' flex flex-col gap-2 items-center text-xl pt-28 px-16 min-h-[95vh]'>
+                  <span className=' text-4xl underline px-2 pb-8'>
+                    Status
                   </span>
-                  <span className=' font-light'>
-                    Results are currently not available. <br /> (they will be updated shorty)
+                  <span className=' font-light text-2xl '>
+                    Results are currently not available. 
+                  </span>
+                  <span className=' font-light '>
+                    (they will be updated shorty) 
                   </span>
                 </div>
             }
@@ -51,4 +56,5 @@ const page = async ({ params }) => {
     </>
   );
 }
+
 export default page;
