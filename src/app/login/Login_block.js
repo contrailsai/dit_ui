@@ -62,7 +62,7 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password }) =>
 
     return (
         <>
-            <div className=' shadow shadow-primary bg-white/50 border-primary/30 border mt-10 flex flex-col items-stretch w-fit py-10 px-10 rounded-3xl text-gray-800 '>
+            <div className=' shadow border border-primary bg-white/70 backdrop-blur-sm mt-10 flex flex-col items-stretch w-fit py-10 px-10 rounded-3xl text-gray-800 '>
 
                 {/* LOGO */}
                 <div className=' text-primary w-full text-xl font-bold pb-7 flex justify-start items-center gap-3'>
@@ -88,7 +88,7 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password }) =>
                         {/* OTHER PROVIDERS */}
                         < button
                             onClick={(e) => { e.preventDefault(); handleGoogleSignIn() }}
-                            className=' mt-5 flex items-center gap-2 border px-4 py-3 min-w-80 border-gray-300 rounded-3xl hover:bg-gray-50 transition-all'
+                            className=' mt-5 flex items-center gap-2 border px-4 py-3 min-w-80 border-gray-300 rounded-3xl bg-gray-50 transition-all'
                         >
 
                             <span>
@@ -115,7 +115,7 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password }) =>
                 <form onSubmit={handle_pass_signin} className=' flex flex-col gap-2'>
                     <div className="flex flex-col gap-6">
                         <div className="relative">
-                            <label className=' flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-white ' htmlFor="email">
+                            <label className=' flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-gradient-to-t from-white to-transparent rounded-full ' htmlFor="email">
                                 <EmailMessage strokeWidth={1} className="size-4" />
                                 Email
                             </label>
@@ -131,7 +131,7 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password }) =>
                         {
                             curr_shown !== 'forgot' &&
                             <div className="relative">
-                                <label className=' flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-white ' htmlFor="password">
+                                <label className=' flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-gradient-to-t from-white to-transparent rounded-full ' htmlFor="password">
                                     <ClosedLock className="size-4" strokeWidth={1} />
                                     Password
                                 </label>
