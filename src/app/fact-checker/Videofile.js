@@ -45,7 +45,7 @@ const VideoAnalysisForm = ({ user }) => {
                         :
                         (
                             // VIDEO FORM PAGE
-                            < div className="  px-10 h-[95vh] pt-16 pb-10 ">
+                            < div className=" bg-primary/5  px-10 min-h-[95vh] pt-16 pb-10 ">
                                 {
                                     response_data["uploaded"] ?
                                         // SUCCESS RESPONSE PAGE 
@@ -92,6 +92,7 @@ const VideoAnalysisForm = ({ user }) => {
                                         )
                                         :
                                         (
+                                            // UPLOAD CASES FORM
                                             <>
                                                 <h2 className=" w-full text-3xl font-semibold px-6 pb-6">Deepfake Investigator</h2>
                                                 <Form

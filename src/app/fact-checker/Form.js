@@ -236,10 +236,13 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
             <div className=' w-3/5 flex flex-col justify-start gap-4'>
 
                 {/* choose upload file */}
-                <div className={` p-5 h-fit w-full flex flex-col justify-center rounded-3xl border border-gray-200 transition-all duration-500 `}>
+                <div className={` relative bg-white p-5 h-fit w-full flex flex-col justify-center rounded-3xl border border-primary/30 transition-all duration-500 overflow-hidden `}>
+
+                    <div className='absolute h-full w-full bg-[url("/graph-paper.svg")] top-0 left-0 blur-3xl opacity-50 ' />
+                    <div className='absolute h-full w-full bg-[url("/graph-paper.svg")] top-12 left-0 rotate-180 blur-3xl opacity-50  ' />
 
                     {
-                        !file && <label className="block text-gray-800 mb-2 pl-4 text-xl font-semibold ">Upload File</label>
+                        !file && <label className="block relative z-10 text-gray-800 mb-2 pl-4 text-xl font-bold ">Upload File</label>
                     }
 
                     {file ? (
@@ -268,7 +271,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                         <>
                             {/* Drop FILE */}
                             <div
-                                className=" flex flex-col justify-center items-center gap-3 w-full h-full min-h-[40vh] cursor-pointer border-2 border-slate-300 border-dashed rounded-2xl p-8 bg-slate-100 "
+                                className=" flex flex-col justify-center items-center gap-3 w-full h-full min-h-[40vh] cursor-pointer border-2 border-primary/20 border-dashed rounded-2xl p-8 bg-white/50 backdrop-blur-xl "
 
                                 onDrop={handleDrop}
                                 onDragOver={handleDragOver}
@@ -339,7 +342,10 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
 
                 {/* SHOW FILES DETAILS WHEN WE HAVE FILES */}
                 <div className={` ${file ? "h-50 mb-4" : "h-0"} overflow-hidden transition-all`}>
-                    <div className=' border rounded-3xl px-5 py-4'>
+                    <div className=' relative rounded-3xl px-5 py-4 border border-primary/30 overflow-hidden '>
+
+                        <div className='absolute h-full w-full bg-[url("/graph-paper.svg")] top-0 left-0 blur-3xl opacity-20 ' />
+                        <div className='absolute h-full w-full bg-[url("/graph-paper.svg")] top-12 left-0 rotate-180 blur-3xl opacity-20  ' />
 
                         <label className="block text-gray-800 mb-2 pl-4 text-xl font-semibold ">Uploaded File</label>
 
@@ -373,7 +379,11 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                 </div>
 
                 {/* checkboxes */}
-                <div className={` ${file ? "h-fit" : "h-0"} h-fit rounded-3xl p-5 border border-gray-200 transition-all duration-500 flex flex-col `}>
+                <div className={` relative ${file ? "h-fit" : "h-0"} h-fit rounded-3xl p-5 border border-primary/30 transition-all duration-500 flex flex-col overflow-hidden `}>
+
+                    <div className='absolute h-full w-full bg-[url("/graph-paper.svg")] top-0 left-0 blur-3xl opacity-25' />
+                    <div className='absolute h-full w-full bg-[url("/graph-paper.svg")] top-12 left-0 rotate-180 blur-3xl opacity-25  ' />
+
                     <label className=" block text-gray-800 mb-2 pl-4 text-xl font-semibold   ">Select Analysis Types</label>
 
                     <div className='flex flex-col gap-4 items-center justify-evenly'>
@@ -382,7 +392,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                             {/* FRAME ANALYSIS SELECT */}
                             <div
                                 onClick={() => { handleAnalysisTypeChange("frameCheck") }}
-                                className={` flex flex-col justify-evenly items-center z-10 text-primary text-lg font-medium shadow shadow-primary ${uploadType === 'audio' ? 'hidden' : ''} relative px-3 py-2 cursor-pointer rounded-2xl w-full bg-white h-64 transition-all `}
+                                className={` flex flex-col justify-evenly items-center z-10 text-primary text-lg font-medium shadow shadow-primary ${uploadType === 'audio' ? 'hidden' : ''} relative px-3 py-2 cursor-pointer rounded-2xl w-full bg-white/50 backdrop-blur h-64 transition-all `}
                             >
                                 <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
                                     {/* SELECT BUTTON */}
@@ -397,7 +407,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
 
                                     {/* TEXT AND (i) */}
                                     <span className='font-semibold'>
-                                    Video Deepfake
+                                        Video Deepfake
                                     </span>
                                     <span className=' relative group text-xs ' >
                                         <InfoCircle className="size-6" strokeWidth={2} />
@@ -419,7 +429,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                             {/* AUDIO ANALYSIS SELECT */}
                             <div
                                 onClick={() => { handleAnalysisTypeChange("audioAnalysis") }}
-                                className={` flex flex-col justify-evenly items-center text-primary text-lg font-medium cursor-pointer shadow shadow-primary relative  px-3 py-2  rounded-2xl w-full bg-white h-64 transition-all `}
+                                className={` flex flex-col justify-evenly items-center text-primary text-lg font-medium cursor-pointer shadow shadow-primary relative  px-3 py-2  rounded-2xl w-full bg-white/50 backdrop-blur h-64 transition-all `}
                             >
                                 <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
                                     {/* SELECT BUTTON */}
@@ -437,7 +447,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                                     </span>
                                     <span className=' relative group text-xs ' >
                                         <InfoCircle className="size-6" strokeWidth={2} />
-                                        
+
                                         <div className='w-fit min-w-20 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
                                             <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
                                                 Analyze audio in the file
@@ -454,7 +464,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                         </div>
                         {/* IMAGE ANALYSIS SELECT */}
                         <div
-                            className={` w-full ${uploadType === "audio" || uploadType === 'video' ? "hidden" : ""} flex z-10 text-primary text-xl text-center font-medium shadow shadow-primary relative px-3 py-2 cursor-pointer rounded-2xl bg-white transition-all `}
+                            className={` w-full ${uploadType === "audio" || uploadType === 'video' ? "hidden" : ""} flex z-10 text-primary text-xl text-center font-medium shadow shadow-primary relative px-3 py-2 cursor-pointer rounded-2xl bg-white/50 backdrop-blur transition-all `}
                             onClick={() => { handleAnalysisTypeChange("aigcCheck") }}
                         >
                             {/* TEXT, IMAGE AND (i) */}

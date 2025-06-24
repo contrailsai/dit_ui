@@ -21,7 +21,7 @@ const Transactions_history = ({ verifier }) => {
     }, [])
 
     return (
-        <div className='pt-16 h-[95vh] overflow-hidden '>
+        <div className='pt-10 h-[95vh] overflow-hidden '>
             <div className=' w-full flex justify-between px-10 py-3 items-center '>
                 <div className=' text-3xl font-semibold'>
                     List of Cases
@@ -39,7 +39,7 @@ const Transactions_history = ({ verifier }) => {
                     <span className='min-w-14 '>
                         Sno.
                     </span>
-                    <span className='min-w-[450px] '>
+                    <span className='min-w-[300px] '>
                         File name
                     </span>
                     <span className=' min-w-24 '>
@@ -68,7 +68,7 @@ const Transactions_history = ({ verifier }) => {
                                 < div className=' flex flex-col gap-5 px-2'>
                                     <div className=' border-b-2 pl-6 pr-2 w-full flex gap-5 items-center py-3 max-h-28 skeleton-l rounded-full'>
                                         <span className='min-w-14  h-5 skeleton-h' />
-                                        <span className=' w-[450px] h-5 skeleton-h'/>
+                                        <span className=' w-[300px] h-5 skeleton-h'/>
                                         <span className=' min-w-24  h-5 skeleton-h' />
                                         <span className=' min-w-28 h-5 skeleton-h'/>
                                         <span className=' min-w-28 h-5 skeleton-h '/>
@@ -78,7 +78,7 @@ const Transactions_history = ({ verifier }) => {
                                     </div>
                                     <div className=' border-b-2 pl-6 pr-2 w-full flex gap-5 items-center py-3 max-h-28 skeleton-l rounded-full'>
                                         <span className='min-w-14  h-5 skeleton-h' />
-                                        <span className=' w-[450px] h-5 skeleton-h'/>
+                                        <span className=' w-[300px] h-5 skeleton-h'/>
                                         <span className=' min-w-24  h-5 skeleton-h' />
                                         <span className=' min-w-28 h-5 skeleton-h'/>
                                         <span className=' min-w-28 h-5 skeleton-h '/>
@@ -88,7 +88,7 @@ const Transactions_history = ({ verifier }) => {
                                     </div>
                                     <div className=' border-b-2 pl-6 pr-2 w-full flex gap-5 items-center py-3 max-h-28 skeleton-l rounded-full'>
                                         <span className='min-w-14  h-5 skeleton-h' />
-                                        <span className=' w-[450px] h-5 skeleton-h'/>
+                                        <span className=' w-[300px] h-5 skeleton-h'/>
                                         <span className=' min-w-24  h-5 skeleton-h' />
                                         <span className=' min-w-28 h-5 skeleton-h'/>
                                         <span className=' min-w-28 h-5 skeleton-h '/>
@@ -98,7 +98,7 @@ const Transactions_history = ({ verifier }) => {
                                     </div>
                                     <div className=' border-b-2 pl-6 pr-2 w-full flex gap-5 items-center py-3 max-h-28 skeleton-l rounded-full'>
                                         <span className='min-w-14  h-5 skeleton-h' />
-                                        <span className=' w-[450px] h-5 skeleton-h'/>
+                                        <span className=' w-[300px] h-5 skeleton-h'/>
                                         <span className=' min-w-24  h-5 skeleton-h' />
                                         <span className=' min-w-28 h-5 skeleton-h'/>
                                         <span className=' min-w-28 h-5 skeleton-h '/>
@@ -125,7 +125,7 @@ const Transactions_history = ({ verifier }) => {
                                                     {idx + 1}
                                                 </span>
                                                 {/* NAME */}
-                                                <span className=' w-[450px] truncate'>
+                                                <span className=' w-[300px] truncate'>
                                                     {name ? name : "---"}
                                                 </span>
                                                 {/* UPLAOD TYPE */}
@@ -162,7 +162,7 @@ const Transactions_history = ({ verifier }) => {
                                                     {(val.status) ? "Done" : "Pending"}
                                                 </span>
                                                 <span className=' min-w-28  '>
-                                                    <div className={`rounded-full ${(val.status || verifier) && (val.prediction !== null) ? (val.prediction ? "bg-green-200" : "bg-red-200") : ""} w-fit px-5 py-0.5`}>
+                                                    <div className={`rounded-full ${(val.status || verifier) && (val.prediction !== null) ? (val.prediction ? "bg-green-200 border border-green-300" : "bg-red-200 border border-red-300") : ""} w-fit px-5 py-0.5`}>
                                                         {(val.status || verifier) && (val.prediction !== null) ? (val.prediction ? "Real" : "Fake") : "---"}
                                                     </div>
                                                 </span>
@@ -170,7 +170,7 @@ const Transactions_history = ({ verifier }) => {
                                                     {Object.keys(analysis_types).map((input_type, input_idx) => {
                                                         if (analysis_types[input_type])
                                                             return (
-                                                                <span key={input_idx} className=' bg-primary/20 rounded-full px-3 w-fit h-fit py-0.5'>
+                                                                <span key={input_idx} className=' bg-primary/20 border border-primary/40 rounded-full px-3 w-fit h-fit py-0.5'>
                                                                     {input_type}
                                                                 </span>
                                                             )
