@@ -1,11 +1,11 @@
 'use client'
 import Image from "next/image";
-import { createClient } from "@/utils/supabase/client";
+import { password_update } from "@/utils/login_calls"
 import { useState } from "react";
 
 const ResetPasswordBlock = ({user, eventInfo }) => {
 
-    const [email, setEmail] = useState(user.email);
+    const email = user.email;
     const [password, setPassword] = useState('');
 
     const [show_message, set_show_message] = useState(eventInfo?.message);
@@ -15,10 +15,9 @@ const ResetPasswordBlock = ({user, eventInfo }) => {
     const handle_password_update = async (e) => {
         e.preventDefault();
         setloading(true);
-        const supabase = createClient();
-
+        
         try {
-            await supabase.auth.updateUser({ password: password })
+            await update_password();
         }
         catch (error) {
             console.log(error);

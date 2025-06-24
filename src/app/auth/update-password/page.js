@@ -1,17 +1,13 @@
 import Link from "next/link";
-import { createClient } from "@/utils/supabase/server";
+// import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import ResetPasswordBlock from "./ResetPassword";
-import { headers } from "next/headers";
+// import { headers } from "next/headers";
+import { check_login } from "@/utils/login_calls"
 
 export default async function Login({ searchParams }) {
 
-    const supabase = createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-        return redirect("/login");
-    }
+    await check_login();
 
     return (
         <>

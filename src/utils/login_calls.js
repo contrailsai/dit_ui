@@ -92,3 +92,15 @@ export const check_login = async () => {
     }
 }
 
+export const password_update = async ({ password }) => {
+    const supabase = await createServerSupabaseClient();
+
+    const { error } = await supabase.auth.updateUser({ password });
+
+    if (error) {
+        console.log(error);
+        return redirect("/login?message=Could not update user");
+    }
+
+    return redirect("/");
+}
