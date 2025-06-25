@@ -24,11 +24,11 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         frame_index = temp_frame_index;
         // set_frame_index(temp_frame_index);
     }
-    if( model_results && model_results["frameCheck"] !== undefined){
+    if (model_results && model_results["frameCheck"] !== undefined) {
         setup_frame_index();
     }
 
-    
+
     useEffect(() => {
         const video = videoRef.current;
 
@@ -38,7 +38,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                 setProgress((video.currentTime / video.duration) * 100);
             else
                 setProgress((video.currentTime / duration) * 100);
-    
+
             if (model_results && model_results["frameCheck"] !== undefined)
                 set_current_bboxes(bbox_data[Math.floor(video.currentTime)]);
         };
@@ -94,9 +94,9 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
             videoRef.current.pause();
             setIsPaused(videoRef.current.paused);
         }
-        if(videoDimensions.width === 0)
+        if (videoDimensions.width === 0)
             handleVideoLoadedMetadata();
-        
+
     }, [progress])
 
     const handleVideoError = (event) => {
@@ -104,7 +104,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         setVideoError(event.target.error);
     };
 
-    console.log(model_results)
+    // console.log(model_results)
 
     return (
         <>
@@ -220,6 +220,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                                         <div className=' flex justify-evenly items-center py-4 w-full gap-4 '>
                                             {
                                                 // result of all analysis
+                                                model_results &&
                                                 Object.keys(model_results).map((val, idx) => {
                                                     if (model_results[val] == undefined)
                                                         return
@@ -237,8 +238,14 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                                                             pred = model_results[val][frame_index]["prediction"];
                                                         }
                                                         else {
-                                                            perc = model_results[val]["0"]["percentage"];
-                                                            pred = model_results[val]["0"]["prediction"];
+                                                            if (model_results[val]["0"] === undefined) {
+                                                                perc = "-";
+                                                                pred = false;
+                                                            }
+                                                            else {
+                                                                perc = isNaN(model_results[val]["0"]["percentage"]) ? "-" : model_results[val]["0"]["percentage"];
+                                                                pred = model_results[val]["0"]["prediction"];
+                                                            }
                                                         }
                                                     }
 
@@ -282,7 +289,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                                                                     Score:
                                                                 </span>
                                                                 <span className={` mx-auto text-2xl px-3 py-1 rounded-full  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                                                    {perc} %
+                                                                    {isNaN(perc) ? "-" :perc } %
                                                                 </span>
                                                             </div>
                                                             <div className="relative left-0 top-0 h-3 my-3 ml-16 w-[236px] " >
@@ -327,7 +334,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                     }
 
                     {/* BBOXES + VIDEO */}
-                    <div className='relative'>
+                    <div className='relative h-fit w-fit'>
                         {/* BBOX */}
                         {current_bboxes !== undefined && current_bboxes.length > 0 && (
                             current_bboxes.map((person, idx) => {
@@ -371,7 +378,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                                     onError={handleVideoError}
                                     // onTimeUpdate={handleTimeUpdate}
                                     onLoadedMetadata={handleVideoLoadedMetadata}
-                                    className=" w-fit max-w-3xl h-[60vh] "
+                                    className=" w-fit max-w-3xl h-[50vh]"
                                 />
                         }
                     </div>

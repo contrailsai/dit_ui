@@ -16,14 +16,14 @@ export default function RootLayout({ children }) {
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet" />
         <meta property="og:image" content="/logo.svg" />
         <link rel="icon" href="/logo.svg" />
       </head>
 
       <body className={outfit.className}>
         <Analytics />
-        <div className="min-w-[1080px] ">
+        <div className="min-w-[1080px] font-outfit ">
           {children}
         </div>
         <SpeedInsights />
