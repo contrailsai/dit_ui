@@ -22,11 +22,11 @@ export const Sidebar = ({ user }) => {
             </div>
 
 
-            <div className=' flex flex-col gap-2 divide-gray-300 w-full py-10 text-lg '>
+            <div className=' flex flex-col gap-2 divide-gray-300 w-full py-10  '>
                 {
                     user.verifier
                     &&
-                    <Link href={"/media-analyzer"} className='px-2 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-primary transition-all flex items-center gap-1 '>
+                    <Link href={"/media-analyzer"} className='  w-fit pl-2 pr-4 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-primary transition-all flex items-center gap-1 '>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-5">
                             <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" />
                         </svg>
@@ -36,7 +36,7 @@ export const Sidebar = ({ user }) => {
                         </span>
                     </Link>
                 }
-                <Link href={"/fact-checker"} className='px-2 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-primary transition-all flex items-center gap-1 '>
+                <Link href={"/fact-checker"} className='w-fit pl-2 pr-4 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-primary transition-all flex items-center gap-1 '>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
                     </svg>
@@ -44,7 +44,7 @@ export const Sidebar = ({ user }) => {
                         Fact Checker
                     </span>
                 </Link>
-                <Link href={"/user/case-list"} className='px-2 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-primary transition-all flex items-center gap-1 '>
+                <Link href={"/user/case-list"} className='w-fit pl-2 pr-4 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-primary transition-all flex items-center gap-1 '>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-6">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                     </svg>
@@ -70,7 +70,7 @@ export const Sidebar = ({ user }) => {
                 </div>
 
                 {/* LOGOUT */}
-                <div onClick={handle_logout} className=' w-fit pl-2 pr-10 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-red-500  hover:bg-red-50 transition-all cursor-pointer flex items-center gap-1 '>
+                <div onClick={handle_logout} className=' w-fit pl-8 pr-6 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-red-500  hover:bg-red-50 transition-all cursor-pointer flex items-center gap-1 '>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
                         <path fillRule="evenodd" d="M16.5 3.75a1.5 1.5 0 0 1 1.5 1.5v13.5a1.5 1.5 0 0 1-1.5 1.5h-6a1.5 1.5 0 0 1-1.5-1.5V15a.75.75 0 0 0-1.5 0v3.75a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V5.25a3 3 0 0 0-3-3h-6a3 3 0 0 0-3 3V9A.75.75 0 1 0 9 9V5.25a1.5 1.5 0 0 1 1.5-1.5h6ZM5.78 8.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 0 0 1.06l3 3a.75.75 0 0 0 1.06-1.06l-1.72-1.72H15a.75.75 0 0 0 0-1.5H4.06l1.72-1.72a.75.75 0 0 0 0-1.06Z" clipRule="evenodd" />
                     </svg>

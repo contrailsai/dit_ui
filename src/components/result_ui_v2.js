@@ -606,7 +606,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                 // check if the person's Ref was even made
                 if (frame_person_refs[i].current) {
 
-                    doc.text(`Person-${i + 1}'s Graph`, curr_x, curr_y);
+                    doc.text(`P ${i + 1}'s Graph`, curr_x, curr_y);
                     curr_y += 10 / 72;
 
                     const frame_result_element = frame_person_refs[i].current;
@@ -718,7 +718,9 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
                                             const perc = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["percentage"] : 0;
                                             const pred = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["prediction"] : false;
-
+                                            if (isNaN(perc)) {
+                                                return null;
+                                            }
                                             return (
                                                 <div key={idx} className=" flex flex-col">
                                                     <div
@@ -738,18 +740,18 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                             <div className={` flex flex-col justify-between items-center min-w-[169px]  h-full ${toggle_open === idx ? "py-5" : ""} transition-all`}>
 
                                                                 {/* PERSON IMAGE + LABEL */}
-                                                                <div className={` flex ${toggle_open === idx ? "flex-col" : "flex-row"} justify-center items-center w-full gap-2 `}>
+                                                                <div className={` flex ${toggle_open === idx ? "flex-col" : "flex-row"} justify-evenly items-center w-full gap-2 `}>
 
                                                                     <div className="rounded-full overflow-hidden flex">
                                                                         {
                                                                             results?.frameCheck?.label_faces && results?.frameCheck?.label_faces[label] ?
-                                                                                <Image src={results?.frameCheck?.label_faces[label]} width={56} height={56} alt={`person - ${Number(idx) + 1} `} />
+                                                                                <Image src={results?.frameCheck?.label_faces[label]} width={56} height={56} alt={`P - ${Number(idx) + 1} `} />
                                                                                 :
                                                                                 <PersonCircle className="size-14" strokeWidth={1} />
                                                                         }
                                                                     </div>
                                                                     <div className=" ">
-                                                                        person - {Number(idx) + 1}
+                                                                        P {Number(idx) + 1}
                                                                     </div>
                                                                 </div>
                                                                 {
@@ -768,7 +770,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                                                 Score
                                                                             </span>
                                                                             <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                                                                {isNaN(perc) ? "-": perc} %
+                                                                                {isNaN(perc) ? "-" : perc} %
                                                                             </span>
                                                                         </div>
                                                                     </div>
@@ -834,14 +836,14 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                         Object.keys(results["frameCheck"].labels_result).length > 3 &&
                                         Object.keys(results["frameCheck"].labels_result)
                                             .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
-                                            .slice(4, -1)
+                                            .slice(4, 10)
                                             .map((label, index) => {
 
                                                 const perc = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["percentage"] : 0;
                                                 const pred = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["prediction"] : false;
                                                 let idx = index + 3; // to make sure the index is unique for each person
 
-                                                if ( isNaN(perc)){
+                                                if (isNaN(perc)) {
                                                     return null;
                                                 }
 
@@ -864,7 +866,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                                 <div className={` flex flex-col justify-between items-center min-w-[169px]  h-full ${toggle_open === idx ? "py-5" : ""} transition-all`}>
 
                                                                     {/* PERSON IMAGE + LABEL */}
-                                                                    <div className={` flex ${toggle_open === idx ? "flex-col" : "flex-row"} justify-between items-center w-full gap-2 `}>
+                                                                    <div className={` flex ${toggle_open === idx ? "flex-col" : "flex-row  pr-10"} justify-between items-center w-full gap-2 `}>
 
                                                                         <div className="rounded-full overflow-hidden flex">
                                                                             {
@@ -874,8 +876,8 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                                                     <PersonCircle className="size-14" strokeWidth={1} />
                                                                             }
                                                                         </div>
-                                                                        <div className=" pr-6 ">
-                                                                            person - {Number(idx) + 1}
+                                                                        <div className="  ">
+                                                                            P {Number(idx) + 1}
                                                                         </div>
                                                                     </div>
                                                                     {
@@ -903,7 +905,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
                                                             </div>
 
-                                                            <div className={`w-full absolute left-[186px] bg-yellow-300 rounded-2xl overflow-hidden ${toggle_open === idx ? 'ml-0' : 'ml-8'} transition-all `}>
+                                                            <div className={`w-full absolute left-[186px] rounded-2xl overflow-hidden ${toggle_open === idx ? 'ml-0' : 'ml-8'} transition-all `}>
                                                                 {/* PERSON's GRAPH */}
                                                                 <div className={` ${toggle_open === idx ? 'max-h-70' : 'max-h-0'} h-full w-[70vw] bg-white rounded-2xl px-2 overflow-hidden transition-all `}>
                                                                     {frame_charts &&
