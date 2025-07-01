@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { sqsClient } from '@/utils/sqs';
-import { createClient } from "@/utils/supabase/server";
+import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import { publishSNSMessage } from '@/utils/sns';
 
 export async function POST(request) {
   const { task_id, method } = await request.json();
   // Check Supabase authentication
-  const supabase = createClient();
+  const supabase = await createServerSupabaseClient();
   const { data: { user }, error } = await supabase.auth.getUser();
   if (error || !user) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });

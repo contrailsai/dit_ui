@@ -1,4 +1,4 @@
-import { createClient } from "@/utils/supabase/server";
+import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
@@ -10,7 +10,7 @@ export async function GET(request) {
   const origin = requestUrl.origin;
 
   if (code) {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       console.error('Error exchanging code for session:', error);
