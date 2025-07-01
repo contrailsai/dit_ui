@@ -1,5 +1,4 @@
 import Link from "next/link";
-// import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import ResetPasswordBlock from "./ResetPassword";
 // import { headers } from "next/headers";
