@@ -65,11 +65,15 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password }) =>
             <div className=' shadow border border-primary bg-white/70 backdrop-blur-sm mt-10 flex flex-col items-stretch w-fit py-10 px-10 rounded-3xl text-gray-800 '>
 
                 {/* LOGO */}
-                <div className=' text-primary w-full text-xl font-bold pb-7 flex justify-start items-center gap-3'>
+                <div className=' text-primary w-full text-xl font-bold pb-7 flex justify-between items-end'>
                     <Image src={'/logo.svg'} width={150} height={20} alt="LOGO" />
+                    <span className="text-[#2530ff] text font-bold flex flex-row items-center gap-2 ">
+                        <Image src={'/contrails_logo.png'} width={21} height={14} alt="logo 2" /> 
+                        Contrails AI
+                    </span>
                 </div>
 
-                <div className=" text-3xl font-semibold">
+                <div className=" text-2xl font-semibold">
                     {curr_shown === 'signup' && 'Create your Account'}
                     {curr_shown === 'login' && 'Login to your Account'}
                     {curr_shown === 'forgot' && 'Reset your Account Password'}

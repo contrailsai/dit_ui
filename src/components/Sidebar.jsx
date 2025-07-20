@@ -16,9 +16,20 @@ export const Sidebar = ({ user }) => {
     return (
         <div className="fixed h-screen w-44 bg-white py-5 shadow-inner shadow-primary">
 
-            <div className=' text-primary w-full text-xl font-bold flex justify-start items-center gap-2 px-[13px] '>
-                <Image src={'/logo.svg'} width={150} height={20} alt="LOGO" />
-                {/* Contrails AI */}
+            {/* <div className=' text-primary w-full text-xl font-bold flex justify-start items-center gap-2 px-[13px] '> */}
+            {/* <Image src={'/logo.svg'} width={150} height={20} alt="LOGO" /> */}
+            {/* Contrails AI */}
+            {/* </div> */}
+            {/* LOGO */}
+            <div className=' text-primary w-full text-xl font-bold flex flex-col justify-between items-start px-[13px]'>
+                <Image src={'/logo.svg'} width={150} height={20} alt="LOGO" className='mb-7' />
+                <div className='w-full flex justify-end text-xs font-light'>
+                    Powered by
+                </div>
+                <span className="text-[#2530ff] text-sm font-bold flex flex-row justify-end items-center gap-1 w-full ">
+                    <Image src={'/contrails_logo.png'} width={15} height={10} alt="logo 2" />
+                    Contrails AI
+                </span>
             </div>
 
 
