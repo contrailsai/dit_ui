@@ -10,7 +10,7 @@ export default async function Index() {
       return redirect("/login");
   }
   else{
-    return redirect('/fact-checker');
+    return redirect('/media-analyzer');
   }
   
   // return (
@@ -20,7 +20,7 @@ export default async function Index() {
   //       LOGIN
   //     </Link>
 
-  //     <Link href={'/fact-checker'} className=" w-fit px-60 bg-gray-100 border py-6 shadow rounded">
+  //     <Link href={'/media-analyzer'} className=" w-fit px-60 bg-gray-100 border py-6 shadow rounded">
   //       FACT CHECKER
   //     </Link>
       

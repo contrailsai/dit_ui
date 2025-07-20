@@ -21,7 +21,7 @@ export const signIn = async ({ email, password }) => {
         console.error("Error: ", e);
         return redirect("/login?message=Could not authenticate user");
     }
-    return redirect("/fact-checker");
+    return redirect("/media-analyzer");
 };
 
 export const signUp = async ({ email, password }) => {
@@ -88,7 +88,7 @@ export const check_login = async () => {
 
     if (user) {
         console.log("User logged in but went to login page");
-        return redirect("/fact-checker");
+        return redirect("/media-analyzer");
     }
 }
 

@@ -203,7 +203,7 @@ const Transactions_history = ({ verifier }) => {
                                             No Cases To Show
                                         </div>
                                         <div className=' flex items-center justify-center h-fit'>
-                                            <Link href={'/fact-checker'} className=' mt-16 bg-primary w-fit text-stone-200 hover:text-white  rounded-full px-4 py-2 cursor-pointer hover:shadow transition-all '>
+                                            <Link href={'/media-analyzer'} className=' mt-16 bg-primary w-fit text-stone-200 hover:text-white  rounded-full px-4 py-2 cursor-pointer hover:shadow transition-all '>
                                                 Create a new case
                                             </Link>
                                         </div>

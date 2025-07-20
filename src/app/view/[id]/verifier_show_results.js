@@ -113,7 +113,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
 
     const handle_newCheck = () => {
         if (typeof window !== 'undefined') {
-            window.location.href = '/fact-checker';
+            window.location.href = '/media-analyzer';
         }
     }
 

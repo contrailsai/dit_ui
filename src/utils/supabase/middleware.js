@@ -68,7 +68,7 @@ export async function updateSession(request) {
   }
 
   if (user && request.nextUrl.pathname.startsWith('/login')) {
-    const redirectUrl = new URL('/fact-checker', request.url);
+    const redirectUrl = new URL('/media-analyzer', request.url);
     return NextResponse.redirect(redirectUrl);
   }
 

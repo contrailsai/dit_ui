@@ -646,7 +646,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         if (handle_new_analysis)
             handle_new_analysis();
         else
-            window.location.href = "/fact-checker"
+            window.location.href = "/media-analyzer"
     }
 
     return (
