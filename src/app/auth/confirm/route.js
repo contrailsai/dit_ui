@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
 // The client you created from the Server-Side Auth instructions
-import { createClient } from '@/utils/supabase/server'
+import { createServerSupabaseClient } from "@/utils/supabase/server";
 import { redirect } from 'next/navigation'
 
 export async function GET(request) {
@@ -12,7 +12,7 @@ export async function GET(request) {
   // redirectTo.pathname = next
 
   if (token_hash && type) {
-    const supabase = createClient()
+    const supabase = await createServerSupabaseClient();
 
     const { error } = await supabase.auth.verifyOtp({
       type,

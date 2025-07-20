@@ -1,6 +1,6 @@
 "use server"
 import { redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
+import { createServerSupabaseClient, createAdminClient } from "@/utils/supabase/server";
 import { publishSNSMessage } from "./sns";
 import { s3Client } from "@/utils/s3";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
@@ -8,7 +8,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 // get model response
 export const db_updates = async ({ new_token_amount, user_id }) => {
 
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     //update user tokens
     const { token_data, token_error } = await supabase
         .from('Tokens')
@@ -25,7 +25,7 @@ export const db_updates = async ({ new_token_amount, user_id }) => {
 // get user data
 export const get_user_data = async () => {
 
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
     //IF NO USER LOGIN RETURN UNDEFINED 
     if (user === null) {
@@ -54,7 +54,7 @@ export const get_user_data = async () => {
 
 // logout user
 export const user_logout = async () => {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user === null)
@@ -66,7 +66,7 @@ export const user_logout = async () => {
 
 export const get_user_transactions = async (verifier) => {
 
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user === null)
@@ -115,7 +115,7 @@ export const get_user_transactions = async (verifier) => {
 
 export const get_result_for_id = async (transaction_id) => {
 
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user === null)
@@ -141,7 +141,7 @@ export const get_result_for_id = async (transaction_id) => {
 }
 
 export const get_assets_for_id = async (transaction_id) => {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (user === null)
@@ -193,15 +193,15 @@ export const get_signed_url = async (key) => {
 
 export const get_user_email_by_id = async (id) => {
 
-    const supabase = createClient()
-    const { data: { user: { email } }, error } = await supabase.auth.admin.getUserById(id)
-
+    const supabase = createAdminClient()
+    const { data: {user: {email}}, error } = await supabase.auth.admin.getUserById(id) //.getUserById(id)
+    // console.log(email);
     return email
 }
 
 export const verify_case = async (id, metadata, user_id) => {
 
-    const supabase = createClient()
+    const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     // console.log('Transaction ID:', id);
@@ -241,7 +241,7 @@ export const verify_case = async (id, metadata, user_id) => {
 };
 
 export const delete_asset_by_id = async(id) => {
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
 
     const { data, error } = await supabase
         .from('Assets')

@@ -9,8 +9,9 @@ import { Outfit_bold_font } from './outfit-bold-font';
 import { Outfit_normal_font } from './outfit-normal-font';
 import { logo_base64 } from './logo_base64';
 import { DownloadFile, PersonCircle, PlusCircle, RightArrow } from "./SVGs";
+import Image from "next/image";
 
-export default function Result_UI({ results, analysisTypes, file_metadata, fileUrl }) {
+export default function Result_UI({ results, analysisTypes, file_metadata, fileUrl, handle_new_analysis = null }) {
 
     const videoRef = useRef();
     const audio_graph_Ref = useRef();
@@ -216,6 +217,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     // LOAD CHART AND RESULTS
     if (results["frameCheck"] || results["audioAnalysis"]) {
         console.log("creating graphs, results");
+        console.log("frameCheck", results["frameCheck"]);
 
         let temp_result_values = {
             "frameCheck": undefined,
@@ -523,23 +525,23 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             doc.setFontSize(fontSize);
 
             // console.log((result_values["frameCheck"]));
-            let sorted_labels = Object.keys(result_values["frameCheck"]).sort((a ,b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"]);
-            
+            let sorted_labels = Object.keys(result_values["frameCheck"]).sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"]);
+
             // let frame_result = (results["frameCheck"].result).toFixed(4);
             let frame_prediction = 0;
             let frame_result = true;
-            let labels_count = 0;  
-            for(let label of sorted_labels){
-                if( ! result_values["frameCheck"][label]["prediction"]){
+            let labels_count = 0;
+            for (let label of sorted_labels) {
+                if (!result_values["frameCheck"][label]["prediction"]) {
                     frame_prediction = Number(result_values["frameCheck"][label]["percentage"]).toFixed(2);
                     frame_result = false;
                     break;
                 }
-                if(labels_count>3)
+                if (labels_count > 3)
                     break;
                 labels_count++;
             }
-            if(frame_result){
+            if (frame_result) {
                 frame_prediction = Number(result_values["frameCheck"][sorted_labels[0]]["percentage"]).toFixed(2);
             }
 
@@ -600,20 +602,20 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
             curr_y += fontSize / 72 + 20 / 72;
 
-            for(let i=0; i<frame_person_refs.length; i++){
+            for (let i = 0; i < frame_person_refs.length; i++) {
                 // check if the person's Ref was even made
-                if(frame_person_refs[i].current){
+                if (frame_person_refs[i].current) {
 
-                    doc.text(`Person-${i+1}'s Graph`, curr_x, curr_y);
-                    curr_y += 20 / 72;
+                    doc.text(`P ${i + 1}'s Graph`, curr_x, curr_y);
+                    curr_y += 10 / 72;
 
                     const frame_result_element = frame_person_refs[i].current;
                     let frame_result_canvas = await html2canvas(frame_result_element);
                     const frame_result_imgData = frame_result_canvas.toDataURL('image/png');
-                    const frm_res_img_w = 550 / 72;
+                    const frm_res_img_w = 500 / 72;
                     const frm_res_img_h = (frame_result_canvas.height * frm_res_img_w) / frame_result_canvas.width;
                     doc.addImage(frame_result_imgData, 'PNG', curr_x, curr_y, frm_res_img_w, frm_res_img_h, '', 'FAST');
-        
+
                     curr_x = mx;
                     curr_y += frm_res_img_h + 30 / 72; //gap of 30 px
                 }
@@ -640,7 +642,12 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
     }
 
-    const handle_newCheck = () => { window.location.href = "/fact-checker" }
+    const handle_newCheck = () => {
+        if (handle_new_analysis)
+            handle_new_analysis();
+        else
+            window.location.href = "/fact-checker"
+    }
 
     return (
         <div className="min-h-screen bg-white text-black">
@@ -669,7 +676,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             </div>
 
             {/* VIDEO RESULTS + CHARTS */}
-            <div className="min-h-screen flex flex-col pt-10">
+            <div className="min-h-[132vh] flex flex-col pt-10 relative">
 
                 <VideoPlayer
                     videoRef={videoRef}
@@ -701,121 +708,229 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                     result_values && result_values["frameCheck"] &&
                     <>
                         {/* FRAME CHECK */}
-                        <div className={`${curr_model === "frameCheck" ? "max-h-[100vh]" : "max-h-0"} overflow-hidden duration-300 transition-all`}>
+                        <div className={`${curr_model === "frameCheck" ? "opacity-100 z-20" : "opacity-0 z-0"} max-w-[83vw] overflow-hidden duration-300 transition-all`}>
                             <div ref={frame_graph_Ref} className={` h-full flex flex-col gap-2 py-5 rounded-3xl overflow-hidden`}>
                                 {
                                     Object.keys(results["frameCheck"].labels_result)
-                                    .sort((a,b)=> result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
-                                    .map((label, idx) => {
+                                        .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
+                                        .slice(0, 3)
+                                        .map((label, idx) => {
 
-                                        const perc = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["percentage"] : 0;
-                                        const pred = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["prediction"] : false;
-
-                                        return (
-                                            <div key={idx} className=" flex flex-col">
-                                                <div
-                                                    className={` group rounded-3xl bg-primary border-8 border-primary flex ${toggle_open === idx ? "h-72" : " "} transition-all overflow-hidden `}
-                                                    key={idx}
-                                                >
-                                                    {/* PERSON DETAILS */}
+                                            const perc = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["percentage"] : 0;
+                                            const pred = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["prediction"] : false;
+                                            if (isNaN(perc)) {
+                                                return null;
+                                            }
+                                            return (
+                                                <div key={idx} className=" flex flex-col">
                                                     <div
-                                                        onClick={() => { toggle_open === idx ? set_toggle_open(null) : set_toggle_open(idx) }}
-                                                        className=" cursor-pointer text-white flex flex-row items-center px-2 group relative"
+                                                        className={` group rounded-3xl bg-primary border-8 border-primary flex ${toggle_open === idx ? "h-72" : " "} transition-all overflow-hidden `}
+                                                        key={idx}
                                                     >
-                                                        {/* ARROW */}
-                                                        <div className={` absolute top-5  h-5 w-5 ${toggle_open === idx ? " rotate-90 group-hover:rotate-[70deg]" : " group-hover:rotate-[20deg]"}  transition-all`}>
-                                                            <RightArrow strokeWidth={1} className=" size-6" />
-                                                        </div>
-
-                                                        <div className={` flex flex-col justify-between items-center min-w-[169px]  h-full ${toggle_open === idx ? "py-5" : ""} transition-all`}>
-
-                                                            {/* PERSON IMAGE + LABEL */}
-                                                            <div className={` flex ${toggle_open === idx ? "flex-col" : "flex-row"} justify-center items-center w-full gap-2 `}>
-
-                                                                <div className="rounded-full overflow-hidden flex">
-                                                                    <PersonCircle className="size-14" strokeWidth={1} />
-                                                                </div>
-                                                                <div className="text-sm ">
-                                                                    person - {Number(label)+1}
-                                                                </div>
+                                                        {/* PERSON DETAILS */}
+                                                        <div
+                                                            onClick={() => { toggle_open === idx ? set_toggle_open(null) : set_toggle_open(idx) }}
+                                                            className=" cursor-pointer text-white flex flex-row items-center px-2 group relative"
+                                                        >
+                                                            {/* ARROW */}
+                                                            <div className={` absolute top-5 left-0  h-5 w-5 ${toggle_open === idx ? " rotate-90 group-hover:rotate-[70deg]" : " group-hover:rotate-[20deg]"}  transition-all`}>
+                                                                <RightArrow strokeWidth={1} className=" size-6" />
                                                             </div>
-                                                            {
-                                                                toggle_open === idx &&
-                                                                <div className="flex flex-col gap-3 h-full items-center justify-center">
-                                                                    <div className=' flex  items-center w-full gap-2'>
-                                                                        <span>
-                                                                            Result
-                                                                        </span>
-                                                                        <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                                                            {pred ? "Real" : "Fake"}
-                                                                        </span>
+
+                                                            <div className={` flex flex-col justify-between items-center min-w-[169px]  h-full ${toggle_open === idx ? "py-5" : ""} transition-all`}>
+
+                                                                {/* PERSON IMAGE + LABEL */}
+                                                                <div className={` flex ${toggle_open === idx ? "flex-col" : "flex-row"} justify-evenly items-center w-full gap-2 `}>
+
+                                                                    <div className="rounded-full overflow-hidden flex">
+                                                                        {
+                                                                            results?.frameCheck?.label_faces && results?.frameCheck?.label_faces[label] ?
+                                                                                <Image src={results?.frameCheck?.label_faces[label]} width={56} height={56} alt={`P - ${Number(idx) + 1} `} />
+                                                                                :
+                                                                                <PersonCircle className="size-14" strokeWidth={1} />
+                                                                        }
                                                                     </div>
-                                                                    <div className=' flex  items-center w-full gap-2'>
-                                                                        <span>
-                                                                            Score
-                                                                        </span>
-                                                                        <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                                                            {perc} %
-                                                                        </span>
+                                                                    <div className=" ">
+                                                                        P {Number(idx) + 1}
                                                                     </div>
                                                                 </div>
-                                                            }
-                                                        </div>
-
-                                                    </div>
-
-                                                    <div className={`w-full flex flex-col bg-white rounded-2xl overflow-hidden ${toggle_open === idx ? 'ml-0' : 'ml-8'} transition-all `}>
-
-                                                        {/* PERSON's VIDEO SECTIONS */}
-                                                        < div className={` ${toggle_open === idx ? 'max-h-0' : 'max-h-72'} h-full  w-full pr-2 bg-white flex items-center relative rounded-xl overflow-hidden transition-all `}>
-                                                            {/* REFERENCE LINE */}
-                                                            <div className="bg-gray-300 w-full h-[1px]" />
-                                                            {
-                                                                results["frameCheck"].labels_result[label].map((v, i) => {
-                                                                    const total_frames = results["frameCheck"].duration * fps
-                                                                    let width = 0
-                                                                    if (v.end_index === v.start_index)
-                                                                        width = 100 / (results["frameCheck"].labels_result[label].length);
-                                                                    else
-                                                                        width = 100 * (v.end_index - v.start_index) / total_frames;
-                                                                    let start = 100 * v.start_index / total_frames;
-                                                                    // console.log(width, start);
-                                                                    return (
-                                                                        <div
-                                                                            key={i}
-                                                                            style={{ width: `${width}%`, left: `${start}%` }}
-                                                                            className={` h-full absolute ${v.prediction > 0.7 ? 'bg-green-400' : 'bg-red-400'} `}
-                                                                        />
-                                                                    );
-                                                                })
-                                                            }
-                                                            {/* <div className="h-full w-20 bg-red-500/40 absolute"/> */}
-                                                        </div>
-
-                                                        {/* PERSON's GRAPH */}
-                                                        <div className={` ${toggle_open === idx ? 'max-h-72' : 'max-h-0'} h-full w-full bg-white rounded-2xl px-2 overflow-hidden transition-all `}>
-                                                            {frame_charts &&
-                                                                idx < 3 ?
-                                                                (
-                                                                    <div className="chart-container" ref={frame_person_refs[idx]} >
-                                                                        <LineChart chartData={frame_charts[label]} />
+                                                                {
+                                                                    toggle_open === idx &&
+                                                                    <div className="flex flex-col gap-3 h-full items-center justify-center">
+                                                                        <div className=' flex  items-center w-full gap-2'>
+                                                                            <span>
+                                                                                Result
+                                                                            </span>
+                                                                            <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
+                                                                                {pred ? "Real" : "Fake"}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className=' flex  items-center w-full gap-2'>
+                                                                            <span>
+                                                                                Score
+                                                                            </span>
+                                                                            <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
+                                                                                {isNaN(perc) ? "-" : perc} %
+                                                                            </span>
+                                                                        </div>
                                                                     </div>
-                                                                )
-                                                                :
-                                                                (
-                                                                    <div className="chart-container">
-                                                                        <LineChart chartData={frame_charts[label]} />
-                                                                    </div>
-                                                                )
-                                                            }
+                                                                }
+                                                            </div>
+
                                                         </div>
 
+                                                        <div className={`w-full flex flex-col bg-white rounded-2xl overflow-hidden ${toggle_open === idx ? 'ml-0' : 'ml-8'} transition-all `}>
+
+                                                            {/* PERSON's VIDEO SECTIONS */}
+                                                            < div className={` ${toggle_open === idx ? 'max-h-0' : 'max-h-72'} h-full w-[75vw] pr-2 bg-white flex items-center relative rounded-xl overflow-hidden transition-all `}>
+                                                                {/* REFERENCE LINE */}
+                                                                <div className="bg-gray-300 w-full h-[1px]" />
+                                                                {
+                                                                    results["frameCheck"].labels_result[label].map((v, i) => {
+                                                                        const total_frames = results["frameCheck"].duration * fps
+                                                                        let width = 0
+                                                                        if (v.end_index === v.start_index)
+                                                                            width = 100 / (results["frameCheck"].labels_result[label].length);
+                                                                        else
+                                                                            width = 100 * (v.end_index - v.start_index) / total_frames;
+                                                                        let start = 100 * v.start_index / total_frames;
+                                                                        // console.log(width, start);
+                                                                        return (
+                                                                            <div
+                                                                                key={i}
+                                                                                style={{ width: `${width}%`, left: `${start}%` }}
+                                                                                className={` h-full absolute ${v.prediction > 0.7 ? 'bg-green-400' : 'bg-red-400'} `}
+                                                                            />
+                                                                        );
+                                                                    })
+                                                                }
+                                                                {/* <div className="h-full w-20 bg-red-500/40 absolute"/> */}
+                                                            </div>
+
+                                                            {/* PERSON's GRAPH */}
+                                                            <div className={` ${toggle_open === idx ? 'max-h-72' : 'max-h-0'} h-full w-full bg-white rounded-2xl px-2 overflow-hidden transition-all `}>
+                                                                {frame_charts &&
+                                                                    idx < 3 ?
+                                                                    (
+                                                                        <div className="chart-container" ref={frame_person_refs[idx]} >
+                                                                            <LineChart chartData={frame_charts[label]} />
+                                                                        </div>
+                                                                    )
+                                                                    :
+                                                                    (
+                                                                        <div className="chart-container">
+                                                                            <LineChart chartData={frame_charts[label]} />
+                                                                        </div>
+                                                                    )
+                                                                }
+                                                            </div>
+
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        )
-                                    })
+                                            )
+                                        })
                                 }
+                                <div className="flex flex-row flex-wrap max-w-[80vw] gap-3">
+                                    {
+                                        Object.keys(results["frameCheck"].labels_result).length > 3 &&
+                                        Object.keys(results["frameCheck"].labels_result)
+                                            .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
+                                            .slice(4, 10)
+                                            .map((label, index) => {
+
+                                                const perc = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["percentage"] : 0;
+                                                const pred = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["prediction"] : false;
+                                                let idx = index + 3; // to make sure the index is unique for each person
+
+                                                if (isNaN(perc)) {
+                                                    return null;
+                                                }
+
+                                                return (
+                                                    <div key={idx} className=" flex flex-col">
+                                                        <div
+                                                            className={` group relative  bg-primary border-primary rounded-3xl  border-8 flex ${toggle_open === idx ? "h-72 w-[83vw] " : " "} transition-all overflow-hidden `}
+                                                            key={idx}
+                                                        >
+                                                            {/* PERSON DETAILS */}
+                                                            <div
+                                                                onClick={() => { toggle_open === idx ? set_toggle_open(null) : set_toggle_open(idx) }}
+                                                                className=" cursor-pointer text-white flex flex-row items-center group relative"
+                                                            >
+                                                                {/* ARROW */}
+                                                                <div className={` absolute top-5 left-0  h-5 w-5 ${toggle_open === idx ? " rotate-90 group-hover:rotate-[70deg] opacity-100" : " opacity-0 group-hover:rotate-[20deg]"}  transition-all`}>
+                                                                    <RightArrow strokeWidth={1} className=" size-6" />
+                                                                </div>
+
+                                                                <div className={` flex flex-col justify-between items-center min-w-[169px]  h-full ${toggle_open === idx ? "py-5" : ""} transition-all`}>
+
+                                                                    {/* PERSON IMAGE + LABEL */}
+                                                                    <div className={` flex ${toggle_open === idx ? "flex-col" : "flex-row  pr-10"} justify-between items-center w-full gap-2 `}>
+
+                                                                        <div className="rounded-full overflow-hidden flex">
+                                                                            {
+                                                                                results?.frameCheck?.label_faces && results?.frameCheck?.label_faces[label] ?
+                                                                                    <Image src={results?.frameCheck?.label_faces[label]} width={56} height={56} alt={`person - ${Number(idx) + 1} `} />
+                                                                                    :
+                                                                                    <PersonCircle className="size-14" strokeWidth={1} />
+                                                                            }
+                                                                        </div>
+                                                                        <div className="  ">
+                                                                            P {Number(idx) + 1}
+                                                                        </div>
+                                                                    </div>
+                                                                    {
+                                                                        toggle_open === idx &&
+                                                                        <div className="flex flex-col gap-3 h-full items-center justify-center">
+                                                                            <div className=' flex  items-center w-full gap-2'>
+                                                                                <span>
+                                                                                    Result
+                                                                                </span>
+                                                                                <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
+                                                                                    {pred ? "Real" : "Fake"}
+                                                                                </span>
+                                                                            </div>
+                                                                            <div className=' flex  items-center w-full gap-2'>
+                                                                                <span>
+                                                                                    Score
+                                                                                </span>
+                                                                                <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
+                                                                                    {perc} %
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    }
+                                                                </div>
+
+                                                            </div>
+
+                                                            <div className={`w-full absolute left-[186px] rounded-2xl overflow-hidden ${toggle_open === idx ? 'ml-0' : 'ml-8'} transition-all `}>
+                                                                {/* PERSON's GRAPH */}
+                                                                <div className={` ${toggle_open === idx ? 'max-h-70' : 'max-h-0'} h-full w-[70vw] bg-white rounded-2xl px-2 overflow-hidden transition-all `}>
+                                                                    {frame_charts &&
+                                                                        idx < 3 ?
+                                                                        (
+                                                                            <div className="chart-container" ref={frame_person_refs[idx]} >
+                                                                                <LineChart chartData={frame_charts[label]} />
+                                                                            </div>
+                                                                        )
+                                                                        :
+                                                                        (
+                                                                            <div className="chart-container">
+                                                                                <LineChart chartData={frame_charts[label]} />
+                                                                            </div>
+                                                                        )
+                                                                    }
+                                                                </div>
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })
+                                    }
+                                </div>
                             </div>
                         </div>
                     </>
@@ -824,7 +939,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                     result_values && result_values["audioAnalysis"] &&
                     <>
                         {/* AUDIO ANALYSIS */}
-                        <div className={`${curr_model === "audioAnalysis" ? "max-h-[100vh]" : "max-h-0"} overflow-hidden duration-300 transition-all`}>
+                        <div className={`${curr_model === "audioAnalysis" ? "opacity-100 z-20" : "opacity-0 z-0"} absolute top-[77vh] max-w-[83vw]  overflow-hidden duration-300 transition-all`}>
                             <div className={` overflow-hidden bg-primary w-full rounded-3xl border-8 border-primary flex my-5 `}>
                                 <div className="w-52  border-8 border-primary rounded-3xl flex flex-col gap-3 items-center justify-center text-white ">
                                     <div className=' flex  items-center w-full gap-2'>

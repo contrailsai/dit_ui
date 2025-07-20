@@ -104,7 +104,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                 "AudioCheckModelUse": 0,
                 "AigcCheckModelUse": 0,
                 "verifierComment": "",
-                "ShowCommentToUser": false
+                "ShowCommentToUser": true
             }
     );
     const [data_resultsUI, setdata_resultsUI] = useState(null);
@@ -234,36 +234,38 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
     }
 
     const handle_rerun_case = async () => {
-        
+
         const res = await fetch('/api/send-message', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                    "task_id": id,
-                    "method": "verification",
+                "task_id": id,
+                "method": "verification",
             }),
         });
-        if (!res.ok) 
+        if (!res.ok)
             alert('Failed to Re-Run the case');
         else
             alert("Sent the case for Re-run")
     }
 
     return (<>
-        <div className=' pt-16 pb-10 px-12'>
+        <div className=' pt-16 bg-primary/5'>
 
-            {
-                res_data["status"] &&
-                <div className=' py-4 px-5 bg-primary/10 border-primary/20 border-2 rounded-3xl '>
-                    <span className=' font-semibold pr-3 text-lg '>
-                        Note:
-                    </span>
-                    This case has been verified once
-                </div>
-            }
+            <div className=' px-6'>
+                {
+                    res_data["status"] &&
+                    <div className=' py-4 px-5 bg-primary/10 border-primary/20 border-2 rounded-3xl '>
+                        <span className=' font-semibold pr-3 text-lg '>
+                            Note:
+                        </span>
+                        This case has been verified once
+                    </div>
+                }
+            </div>
 
             {/* VERIFIER SETTINGS CHOOSE MODEL, CASE DETAILS */}
-            <div className=' pt-6 pb-4 px-4 '>
+            <div className=' pt-6 pb-4 px-8 border-b border-primary '>
                 <div className='text-3xl pb-4 font-semibold'>
                     Verifier Settings
                 </div>
@@ -446,47 +448,47 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* COMMENTS AND SUBMISSION */}
-            <div className=' px-4 py-4 gap-3 relative flex'>
-                <div className='w-full min-w-[450px]'>
-                    <label className=' px-2 font-medium absolute top-1 left-10 bg-white ' htmlFor="verifier-comment">Verifier Comments</label>
-                    <textarea
-                        onChange={handleInputChange}
-                        value={verifier_metadata["verifierComment"]} id="verifier-comment"
-                        name="verifierComment"
-                        rows={5}
-                        className=' py-5 px-5 rounded-3xl border border-primary/80 outline-1 outline-primary w-full caret-primary'
-                    />
-                    <div className=' flex items-center gap-3 py-4'>
-                        <label htmlFor="show-comment-to-user">Show Comment to user </label>
-                        <input
+                {/* COMMENTS AND SUBMISSION */}
+                <div className=' px-4 py-4 gap-3 relative flex'>
+                    <div className='w-full min-w-[450px]'>
+                        <label className=' px-2 font-medium absolute top-1 left-10 bg-white ' htmlFor="verifier-comment">Verifier Comments</label>
+                        <textarea
                             onChange={handleInputChange}
-                            checked={verifier_metadata["ShowCommentToUser"]}
-                            className=' size-5 ' type="checkbox" id="show-comment-to-user"
-                            name="ShowCommentToUser"
+                            value={verifier_metadata["verifierComment"]} id="verifier-comment"
+                            name="verifierComment"
+                            rows={5}
+                            className=' py-5 px-5 rounded-3xl border border-primary/80 outline-1 outline-primary w-full caret-primary'
                         />
-                    </div>
+                        <div className=' flex items-center gap-3 py-4'>
+                            <label htmlFor="show-comment-to-user">Show Comment to user </label>
+                            <input
+                                onChange={handleInputChange}
+                                checked={verifier_metadata["ShowCommentToUser"]}
+                                className=' size-5 ' type="checkbox" id="show-comment-to-user"
+                                name="ShowCommentToUser"
+                            />
+                        </div>
 
-                    <div>
-                        <div onClick={() => { handle_submit(); }} className=' cursor-pointer bg-primary px-6 rounded-full text-white py-2 w-fit hover:scale-x-105 transition-all'>
-                            Submit verification
+                        <div>
+                            <div onClick={() => { handle_submit(); }} className=' cursor-pointer bg-primary px-6 rounded-full text-white py-2 w-fit hover:scale-x-105 transition-all'>
+                                Submit verification
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* ADD ASSETS TO SHOW HERE */}
-                <div className='w-full'>
-                    <Assets_Upload SavedAssets={saved_assets} CurrAssets={assets_uploaded} SetCurrAssets={set_assets_uploaded} />
-                </div>
+                    {/* ADD ASSETS TO SHOW HERE */}
+                    <div className='w-full'>
+                        <Assets_Upload SavedAssets={saved_assets} CurrAssets={assets_uploaded} SetCurrAssets={set_assets_uploaded} />
+                    </div>
 
+                </div>
             </div>
+
 
             {/* PAGE PREVIEW */}
             {
                 data_resultsUI !== null &&
-                (<>
+                (<div className=' bg-white px-10 pb-10 pt-6'>
                     {
                         upload_type === "video" &&
                         (
@@ -530,7 +532,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                             handle_newCheck={handle_newCheck}
                         />
                     }
-                </>)
+                </div>)
             }
 
         </div >

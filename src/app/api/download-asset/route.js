@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from "@/utils/supabase/server";
+import { createServerSupabaseClient } from "@/utils/supabase/server";
 
 export async function GET(request) {
 
@@ -8,7 +8,7 @@ export async function GET(request) {
     const filename = searchParams.get('filename');
 
     // Check Supabase authentication
-    const supabase = createClient();
+    const supabase = await createServerSupabaseClient();
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error || !user) {
         return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });

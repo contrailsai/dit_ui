@@ -2,8 +2,10 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { EmailMessage, ClosedLock, Google, LoadingCircle, CrossCircle } from "@/components/SVGs";
+import { getUrlParam } from "@/utils/url_params";
+import { useSearchParams } from 'next/navigation';
 
-const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, eventInfo }) => {
+const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password }) => {
 
     // console.log(eventInfo);
 
@@ -11,13 +13,17 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
     const [password, setPassword] = useState('');
 
     const [curr_shown, set_curr_shown] = useState('login');   // 'signup', 'login', 'forgot'
-    const [show_message, set_show_message] = useState(eventInfo?.message);
+    const [show_message, set_show_message] = useState('');
 
     const [loading, setloading] = useState(false);
+    const searchParams = useSearchParams();
 
     useEffect(() => {
-        set_show_message(eventInfo?.message);
-    }, [eventInfo])
+        const message = searchParams.get('message');
+        if (message) {
+            set_show_message(message);
+        }
+    }, [searchParams]);
 
     const handle_pass_signin = async (e) => {
         e.preventDefault();
@@ -56,11 +62,11 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
 
     return (
         <>
-            <div className=' shadow-md shadow-primary bg-white mt-10 flex flex-col items-stretch w-fit py-10 px-10 rounded-3xl text-gray-800 '>
+            <div className=' shadow border border-primary bg-white/70 backdrop-blur-sm mt-10 flex flex-col items-stretch w-fit py-10 px-10 rounded-3xl text-gray-800 '>
 
                 {/* LOGO */}
                 <div className=' text-primary w-full text-xl font-bold pb-7 flex justify-start items-center gap-3'>
-                    <Image src={'/logo.svg'} width={120} height={20} alt="LOGO" />
+                    <Image src={'/logo.svg'} width={150} height={20} alt="LOGO" />
                 </div>
 
                 <div className=" text-3xl font-semibold">
@@ -80,7 +86,7 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
                         {/* OTHER PROVIDERS */}
                         < button
                             onClick={(e) => { e.preventDefault(); handleGoogleSignIn() }}
-                            className=' mt-5 flex items-center gap-2 border px-4 py-3 min-w-80 border-gray-300 rounded-3xl hover:bg-gray-50 transition-all'
+                            className=' mt-5 flex items-center gap-2 border px-4 py-3 min-w-80 border-gray-300 rounded-3xl bg-gray-50 transition-all'
                         >
 
                             <span>
@@ -107,7 +113,7 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
                 <form onSubmit={handle_pass_signin} className=' flex flex-col gap-2'>
                     <div className="flex flex-col gap-6">
                         <div className="relative">
-                            <label className=' flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-white ' htmlFor="email">
+                            <label className=' flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-gradient-to-t from-white to-transparent rounded-full ' htmlFor="email">
                                 <EmailMessage strokeWidth={1} className="size-4" />
                                 Email
                             </label>
@@ -123,7 +129,7 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
                         {
                             curr_shown !== 'forgot' &&
                             <div className="relative">
-                                <label className=' flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-white ' htmlFor="password">
+                                <label className=' flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-gradient-to-t from-white to-transparent rounded-full ' htmlFor="password">
                                     <ClosedLock className="size-4" strokeWidth={1} />
                                     Password
                                 </label>
@@ -182,15 +188,16 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password, even
             </div >
 
             {/* MESSAGE NOTIFICATION */}
-            <div className={` absolute bottom-10 right-10 bg-primary text-white shadow-md min-h-20 w-72 rounded-3xl px-3 pt-6 pb-4 flex justify-between  ${show_message ? "" : "hidden"} `} >
-
-                <div className="w-full pt-3 pl-2 break-words">
-                    {eventInfo.message}
+            {show_message && (
+                <div className="absolute bottom-10 right-10 bg-primary text-white shadow-md min-h-20 w-72 rounded-3xl px-3 pt-6 pb-4 flex justify-between">
+                    <div className="w-full pt-3 pl-2 break-words">
+                        {show_message}
+                    </div>
+                    <div onClick={() => { set_show_message(false) }}>
+                        <CrossCircle className="absolute right-2 top-2 size-8 cursor-pointer" strokeWidth={1} />
+                    </div>
                 </div>
-                <div onClick={() => { set_show_message(false) }}>
-                    <CrossCircle className=" absolute right-2 top-2 size-8 cursor-pointer" strokeWidth={1} />
-                </div>
-            </div>
+            )}
 
         </>
     )
