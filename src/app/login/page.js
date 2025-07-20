@@ -9,10 +9,10 @@ export default async function Login() {
 
   return (
     <>
-      <div className=' relative flex flex-col justify-between h-screen items-center bg-white'>
+      <div className=' relative flex flex-col justify-between h-screen items-center bg-red-500'>
 
-        <div className="absolute left-0 top-0 bg-[url(/circles-and-squares.svg)]  h-full max-h-screen overflow-hidden w-full text-primary" >
-          <WavyBackground colors={["#0253FF", "#0253FF", "#0253FF", "#0253FF", "#FFFFFF"]} blur={20} waveWidth={100} backgroundFill={"#DDEEFF"} className={"h-full"}/>
+        <div className="absolute left-0 top-0 h-full max-h-screen overflow-hidden w-full text-primary bg-white" >
+          <WavyBackground colors={["#4d4d4f", "#4d4d4f", "#4d4d4f", "#4d4d4f", "#FFFFFF"]} blur={20} waveWidth={100} backgroundFill={"#FFF"} className={"h-full"}/>
           {/* <WavyBackground/>
           <WavyBackground/>
           <WavyBackground/> */}

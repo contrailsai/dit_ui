@@ -28,7 +28,7 @@ const Transactions_history = ({ verifier }) => {
                 </div>
 
                 {/* NEW ANALYSIS */}
-                <Link href={'/fact-checker'} className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 rounded-3xl shadow-primary shadow'>
+                <Link href={'/media-analyzer'} className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 rounded-3xl shadow-primary shadow'>
                     New Analysis
                     <PlusCircle strokeWidth={1.5} className={'size-6'} />
                 </Link>
@@ -148,8 +148,9 @@ const Transactions_history = ({ verifier }) => {
                                                     {upload_type}
                                                 </span>
                                                 {/* STATUS */}
+                                                {/* NO verification so we would get the status as done as soon as we get the result */}
                                                 <span className=' min-w-28 flex items-center gap-2 '>
-                                                    {val.status ? (
+                                                    {(val.prediction !== null) ? (
                                                         <div className='text-emerald-600 bg-green-200 rounded-full'>
                                                             <DoneBadgeCircle className='size-6' strokeWidth={2} />
 
@@ -159,11 +160,11 @@ const Transactions_history = ({ verifier }) => {
                                                             <PendingWatch className='size-6' strokeWidth={2} />
                                                         </div>
                                                     )}
-                                                    {(val.status) ? "Done" : "Pending"}
+                                                    {(val.prediction !== null) ? "Done" : "Pending"}
                                                 </span>
                                                 <span className=' min-w-28  '>
-                                                    <div className={`rounded-full ${(val.status || verifier) && (val.prediction !== null) ? (val.prediction ? "bg-green-200 border border-green-300" : "bg-red-200 border border-red-300") : ""} w-fit px-5 py-0.5`}>
-                                                        {(val.status || verifier) && (val.prediction !== null) ? (val.prediction ? "Real" : "Fake") : "---"}
+                                                    <div className={`rounded-full ${ (val.prediction !== null) ? (val.prediction ? "bg-green-200 border border-green-300" : "bg-red-200 border border-red-300") : ""} w-fit px-5 py-0.5`}>
+                                                        {(val.prediction !== null) ? (val.prediction ? "Real" : "Fake") : "---"}
                                                     </div>
                                                 </span>
                                                 <span className=' w-72 flex flex-wrap gap-4 '>

@@ -66,8 +66,7 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password }) =>
 
                 {/* LOGO */}
                 <div className=' text-primary w-full text-xl font-bold pb-7 flex justify-start items-center gap-3'>
-                    <Image src={'/logo.svg'} width={30} height={20} alt="LOGO" />
-                    Contrails AI
+                    <Image src={'/logo.svg'} width={150} height={20} alt="LOGO" />
                 </div>
 
                 <div className=" text-3xl font-semibold">
