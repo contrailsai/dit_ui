@@ -17,7 +17,7 @@ const ResultsImageUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
 
     const handle_pdf_tester = async () => {
 
-        set_taking_ss(true);
+        // set_taking_ss(true);
         // Wait for the state update to be applied
         await new Promise(resolve => {
             setTimeout(resolve, 500);
@@ -89,18 +89,26 @@ const ResultsImageUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
         doc.text(`${file_metadata.size}`, curr_x, curr_y);
 
         curr_x = mx;
-        curr_y += fontSize / 72 + 6 / 72;
+        curr_y += fontSize / 72 + 8 / 72;
 
         if (file_metadata.verifier_comment) {
-            //FILE DURATION
+            fontSize = 12;
+            doc.setFontSize(fontSize);
             doc.setFont("Outfit", "bold");
             doc.text("Expert's Comment: ", curr_x, curr_y);
-            curr_x += 120 / 72;
-            doc.setFont("Outfit", "normal")
-            doc.text(`${file_metadata.verifier_comment}`, curr_x, curr_y);
+            curr_x = mx;
+            curr_y += fontSize / 72 + 6 / 72
+            doc.setFont("Outfit", "normal");
+            fontSize = 11;
+            doc.setFontSize(fontSize);
+            const maxWidth = 550 / 72;
+            const commentLines = doc.splitTextToSize(file_metadata.verifier_comment, maxWidth);
+
+            doc.text(commentLines, curr_x, curr_y);
 
             curr_x = mx;
-            curr_y += (2 * fontSize / 72) + (12 / 72);
+            curr_y += (commentLines.length * fontSize / 72) + (12 / 72);
+            // curr_y += (2 * fontSize / 72) + (12 / 72);
         }
         else {
             curr_y += (fontSize / 72) + (6 / 72);
@@ -124,7 +132,7 @@ const ResultsImageUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
         curr_y += fontSize / 72 + 6 / 72;
         fontSize = 12;
 
-        if (analysisTypes["aigcCheck"]) {
+        if (response_data["aigcCheck"] !== undefined) {
             doc.setFontSize(14);
             if (response_data["aigcCheck"] && response_data["aigcCheck"]["result"] < response_data["aigcCheck"]["threshold"]) {
                 doc.text(`Manipulation detected in Image`, curr_x, curr_y);
@@ -211,8 +219,8 @@ const ResultsImageUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
             // const result_imgData = result_canvas.toDataURL('image/png');
             // const res_img_w = 550 / 72;
             // const res_img_h = (result_canvas.height * res_img_w) / result_canvas.width;
-            const res_img_h = 400/72;
-            const res_img_w = 400/72;
+            const res_img_h = 300/72;
+            const res_img_w = 300/72;
             doc.addImage(fileUrl, 'PNG', curr_x, curr_y, res_img_w, res_img_h, '', 'FAST');
 
             curr_x = mx;
@@ -225,10 +233,12 @@ const ResultsImageUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
             // curr_y += 30 / 72;
         }
 
-        set_taking_ss(false);
+        // set_taking_ss(false);
 
         doc.save("deepfake_report.pdf");
     }
+
+    // console.log(response_data, analysisTypes)
 
     if (Object.keys(response_data).length > 0 && response_data["message"] === undefined) {
         // console.log(response_data);
