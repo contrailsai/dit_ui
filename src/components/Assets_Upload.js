@@ -103,7 +103,7 @@ const Assets_Upload = ({ SavedAssets, CurrAssets, SetCurrAssets }) => {
     };
 
     return (
-        <div className="flex shadow border border-slate-200 p-2 w-full h-full overflow-hidden rounded-3xl bg-slate-100">
+        <div className="flex border border-primary p-2 w-full h-full overflow-hidden rounded-3xl bg-white">
 
             <input
                 ref={fileInputRef}
@@ -124,7 +124,7 @@ const Assets_Upload = ({ SavedAssets, CurrAssets, SetCurrAssets }) => {
                         <label htmlFor="uploaded" className=" px-4">UPLOAD ASSETS</label>
                         {/* Drop FILE */}
                         <div
-                            className=" flex flex-col justify-center items-center gap-3 h-full w-full cursor-pointer border-2 border-primary border-dashed rounded-2xl p-8 bg-white "
+                            className=" flex flex-col justify-center items-center gap-3 h-full w-full cursor-pointer border-2 border-primary border-dashed rounded-2xl p-8 bg-primary/10 "
 
                             onDrop={handleDrop}
                             onDragOver={handleDragOver}

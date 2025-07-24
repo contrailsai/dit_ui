@@ -66,8 +66,10 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password }) =>
 
                 {/* LOGO */}
                 <div className=' text-primary w-full text-xl font-bold pb-7 flex justify-start items-center gap-3'>
-                    <Image src={'/logo.svg'} width={30} height={20} alt="LOGO" />
-                    Contrails AI
+                    <Image src={'/logo.png'} width={30} height={20} alt="LOGO" />
+                    <span className="font-bold text-2xl text-[#2530FF]">
+                        Contrails AI
+                    </span>
                 </div>
 
                 <div className=" text-3xl font-semibold">
@@ -191,8 +193,8 @@ const Login_block = ({ signIn, signUp, handleGoogleSignIn, forgot_password }) =>
 
             {/* MESSAGE NOTIFICATION */}
             {show_message && (
-                <div className="absolute bottom-10 right-10 bg-primary text-white shadow-md min-h-20 w-72 rounded-3xl px-3 pt-6 pb-4 flex justify-between">
-                    <div className="w-full pt-3 pl-2 break-words">
+                <div className="absolute bottom-5 -right-[100%] bg-primary text-white shadow min-h-20 w-72 rounded-3xl px-3 pt-6 pb-4 flex justify-between border-2 border-white/40">
+                    <div className="w-full font-semibold text-lg pt-3 pl-2 break-words">
                         {show_message}
                     </div>
                     <div onClick={() => { set_show_message(false) }}>

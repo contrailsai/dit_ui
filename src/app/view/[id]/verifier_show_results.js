@@ -449,9 +449,9 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                     </div>
                 </div>
                 {/* COMMENTS AND SUBMISSION */}
-                <div className=' px-4 py-4 gap-3 relative flex'>
+                <div className=' py-4 relative flex gap-5 mt-2'>
                     <div className='w-full min-w-[450px]'>
-                        <label className=' px-2 font-medium absolute top-1 left-10 bg-white ' htmlFor="verifier-comment">Verifier Comments</label>
+                        <label className=' font-medium absolute top-1 left-10 bg-gradient-to-t from-transparent via-white via-50% to-transparent ' htmlFor="verifier-comment">Verifier Comments</label>
                         <textarea
                             onChange={handleInputChange}
                             value={verifier_metadata["verifierComment"]} id="verifier-comment"

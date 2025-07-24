@@ -17,8 +17,8 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet" />
-        <meta property="og:image" content="/logo.svg" />
-        <link rel="icon" href="/logo.svg" />
+        <meta property="og:image" content="/logo.png" />
+        <link rel="icon" href="/logo.png" />
       </head>
 
       <body className={outfit.className}>

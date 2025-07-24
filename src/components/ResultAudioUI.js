@@ -11,14 +11,19 @@ import { Play, Pause, PlusCircle, DownloadFile } from './SVGs';
 
 const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck }) => {
 
+    // console.log("ResultsAudioUI", response_data);
+    const duration = response_data["audioAnalysis"]?.duration || 0;
+
     const waveformRef = useRef(null);
     const wavesurferRef = useRef(null);
     const audio_graph_ref = useRef(null);
 
+    // console.log(wavesurferRef, "waveformRef");
     //output results
     const [chartData, setChartData] = useState(null);
 
     const [playing, setPlaying] = useState(false);
+    const [progress, setProgress] = useState(0);
 
     const formatTime = (time) => {
         const minutes = Math.floor(time / 60);
@@ -190,7 +195,31 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
         doc.text(`${wavesurferRef.current.getDuration().toFixed(1)} sec`, curr_x, curr_y);
 
         curr_x = mx;
-        curr_y += (2 * fontSize / 72) + (12 / 72) + (30 / 72);
+        curr_y += (2 * fontSize / 72);
+
+        // PRINT VERIFIER COMMENT
+        if (file_metadata.verifier_comment) {
+            fontSize = 12;
+            doc.setFontSize(fontSize);
+            doc.setFont("Outfit", "bold");
+            doc.text("Expert's Comment: ", curr_x, curr_y);
+            curr_x = mx;
+            curr_y += fontSize / 72 + 6 / 72
+            doc.setFont("Outfit", "normal");
+            fontSize = 11;
+            doc.setFontSize(fontSize);
+            const maxWidth = 550 / 72;
+            const commentLines = doc.splitTextToSize(file_metadata.verifier_comment, maxWidth);
+
+            doc.text(commentLines, curr_x, curr_y);
+
+            curr_x = mx;
+            curr_y += (commentLines.length * fontSize / 72) + (30 / 72);
+            // curr_y += (2 * fontSize / 72) + (12 / 72);
+        }
+        else {
+            curr_y += (fontSize / 72) + (30 / 72);
+        }
 
         //AUDIO ANALYSIS START
         fontSize = 18;
@@ -262,6 +291,26 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
         doc.save("a4.pdf");
     }
 
+    useEffect(() => {
+        const audio = wavesurferRef?.current?.media;
+
+        const handleTimeUpdate = () => {
+            setProgress((audio.currentTime / audio.duration) * 100);
+        };
+
+        if (audio.error) {
+            console.error(audio.error);
+            // setAudioError(audio.error);
+            return;
+        }
+
+        audio.addEventListener('timeupdate', handleTimeUpdate);
+
+        return () => {
+            audio.removeEventListener('timeupdate', handleTimeUpdate);
+        };
+    });
+
 
     if (response_data["message"] === undefined) {
 
@@ -274,7 +323,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                         fileUrl &&
                         <div className=' flex gap-7 items-center mr-1 '>
                             {/* NEW ANALYSIS */}
-                            <div onClick={handle_newCheck} className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-lg shadow-primary shadow'>
+                            <div onClick={handle_newCheck} className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow'>
                                 <PlusCircle className='size-6' strokeWidth={1.5} />
                                 New Analysis
                             </div>
@@ -282,7 +331,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                             {/* PDF EXPORT */}
                             <div
                                 onClick={async () => { await handle_pdf_creation() }}
-                                className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-lg shadow-primary shadow '
+                                className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow '
                             >
                                 <DownloadFile className='size-6' strokeWidth={1.5} />
                                 Export Report
@@ -292,94 +341,99 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                 </div>
 
                 {/* ANALYSIS */}
-                <div className=" relative w-full flex flex-col lg:gap-3 items-center rounded-lg overflow-hidden ">
+                <div className=" relative w-full flex flex-col lg:gap-3 items-center rounded-lg overflow-hidden py-2 ">
 
                     {/* VERDICT + BUTTON | RESULT + METADATA */}
-                    <div className=' w-full flex items-center justify-between px-8 gap-10 '>
+                    <div className=' w-full flex items-end justify-between px-2 gap-10 '>
 
-                        {/* Verdict */}
-                        <div className=' min-w-80 h-fit w-fit'>
+                        <div className=' flex flex-col gap-5 w-full items-center py-3'>
+
+                            {/* Verdict */}
+                            <div className=' min-w-80 h-fit w-fit'>
+                                {
+                                    response_data["audioAnalysis"] !== undefined && (
+                                        <>
+                                            {/* AUDIO OK */}
+                                            {
+                                                response_data["audioAnalysis"].result.toFixed(3) >= response_data["audioAnalysis"].threshold &&
+                                                <span className='flex gap-1 items-center text-xl'>
+                                                    <span className='font-medium bg-green-200 px-2 mx-2 py-1 rounded-full w-fit'>No manipulation detected</span>
+                                                    in<span className='font-medium'>Audio</span>
+                                                </span>
+                                            }
+                                            {/* AUDIO NOT OK */}
+                                            {
+                                                response_data["audioAnalysis"].result.toFixed(3) < response_data["audioAnalysis"].threshold &&
+                                                <span className='flex gap-1 items-center text-xl'>
+                                                    <span className='font-medium bg-red-200 px-2 mx-2 py-1 rounded-full w-fit'>Manipulation detected</span>
+                                                    in<span className='font-medium'>Audio</span>
+                                                </span>
+                                            }
+                                        </>
+                                    )
+                                }
+                            </div>
+
+                            {/* RESULT */}
                             {
-                                response_data["audioAnalysis"] !== undefined && (
-                                    <>
-                                        {/* AUDIO OK */}
-                                        {
-                                            response_data["audioAnalysis"].result.toFixed(3) >= response_data["audioAnalysis"].threshold &&
-                                            <span className='flex gap-1 items-center text-xl'>
-                                                <span className='font-medium bg-green-200 px-2 mx-2 py-1 rounded-full w-fit'>No manipulation detected</span>
-                                                in<span className='font-medium'>Audio</span>
+                                // result of all analysis
+                                Object.keys(response_data).map((val, idx) => {
+                                    if (response_data[val] == undefined)
+                                        return
+
+                                    let pred = response_data[val].result > response_data[val].threshold;
+                                    let perc = (response_data[val].result * 100).toFixed(2);
+                                    return (
+                                        <div key={idx} className={` w-64 bg-white flex flex-col items-center gap-3 px-5 py-2 rounded-3xl shadow ${pred ? " shadow-green-700" : " shadow-red-700"}  `}>
+                                            <span className=' text-xl'>
+                                                {
+                                                    val === "audioAnalysis" &&
+                                                    (
+
+                                                        <div className="flex flex-col gap-2">
+                                                            <span className=''>
+                                                                <span className=' pr-4'>
+                                                                    Audio Result:
+                                                                </span>
+                                                                <span className={` w-full text-center font-semibold ${pred ? " text-green-700" : "text-red-700"}`}>
+                                                                    {pred ? "Real" : "Fake"}
+                                                                </span>
+                                                            </span>
+                                                        </div>
+                                                    )
+                                                }
                                             </span>
-                                        }
-                                        {/* AUDIO OK */}
-                                        {
-                                            response_data["audioAnalysis"].result.toFixed(3) < response_data["audioAnalysis"].threshold &&
-                                            <span className='flex gap-1 items-center text-xl'>
-                                                <span className='font-medium bg-red-200 px-2 mx-2 py-1 rounded-full w-fit'>Manipulation detected</span>
-                                                in<span className='font-medium'>Audio</span>
+                                            <div className=' flex  items-center w-full gap-2'>
+                                                <span>
+                                                    Score:
+                                                </span>
+                                                <span className={` mx-auto text-2xl px-3 py-1 rounded-full  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
+                                                    {perc} %
+                                                </span>
+                                            </div>
+                                            <div className="relative left-0 top-0 h-3 my-3 ml-16 w-[236px] " >
+                                                <input
+                                                    type="range"
+                                                    className={`result-seperate-slider absolute w-[168px] outline-none transition-all duration-300 cursor-default`}
+                                                    min="0"
+                                                    max="100"
+                                                    value={perc}
+                                                    readOnly
+                                                />
+                                            </div>
+                                            <span className=' text-xs'>
+                                                confidence on real
                                             </span>
-                                        }
-                                    </>
-                                )
+
+                                        </div>
+                                    )
+                                })
                             }
+
                         </div>
 
-                        {/* RESULT */}
-                        {
-                            // result of all analysis
-                            Object.keys(response_data).map((val, idx) => {
-                                if (response_data[val] == undefined)
-                                    return
-
-                                let pred = response_data[val].result > response_data[val].threshold;
-                                let perc = (response_data[val].result * 100).toFixed(2);
-                                return (
-                                    <div key={idx} className={` w-64 bg-white flex flex-col items-center gap-3 px-5 py-2 rounded-lg shadow ${pred ? " shadow-green-700" : " shadow-red-700"}  `}>
-                                        <span className=' text-xl'>
-                                            {
-                                                val === "audioAnalysis" &&
-                                                (
-
-                                                    <div className="flex flex-col gap-2">
-                                                        <span className=''>
-                                                            <span className=' pr-4'>
-                                                                Audio Result:
-                                                            </span>
-                                                            <span className={` w-full text-center font-semibold ${pred ? " text-green-700" : "text-red-700"}`}>
-                                                                {pred ? "Real" : "Fake"}
-                                                            </span>
-                                                        </span>
-                                                    </div>
-                                                )
-                                            }
-                                        </span>
-                                        <div className=' flex  items-center w-full gap-2'>
-                                            <span>
-                                                Score:
-                                            </span>
-                                            <span className={` mx-auto text-2xl px-3 py-1 rounded-full  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                                {perc} %
-                                            </span>
-                                        </div>
-                                        <div className="relative left-0 top-0 h-3 my-3 ml-16 w-[236px] " >
-                                            <input
-                                                type="range"
-                                                className={`result-seperate-slider absolute w-[168px] outline-none transition-all duration-300 cursor-default`}
-                                                min="0"
-                                                max="100"
-                                                value={perc}
-                                            />
-                                        </div>
-                                        <span className=' text-xs'>
-                                            confidence on real
-                                        </span>
-
-                                    </div>
-                                )
-                            })
-                        }
-
                         {/* AUDIO META DATA */}
-                        <div className=' bg-white py-4 px-5 border rounded-lg w-fit min-w-96 flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                        <div className=' bg-white my-2 py-4 px-5 border rounded-3xl w-fit min-w-96 flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
                             <span className=' text-xl'>
                                 Audio Metadata
                             </span>
@@ -402,28 +456,39 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                     </div>
 
                     {/* GRAPH AND waveform slider */}
-                    <div className=' relative z-10 flex flex-col gap-2 justify-stretch w-full bg-primary border px-3 pb-4 pt-3 rounded-lg '>
+                    <div className=' relative z-10 flex flex-col gap-3 justify-stretch w-full bg-primary border px-3 pb-3 pt-3 rounded-3xl '>
                         {/* data chart and slider */}
-                        {/* play button */}
-                        <button
-                            onClick={handlePlayPause}
-                            className=" outline-none border-white border-2 w-fit bg-primary text-white text-4xl font-bold py-2 px-2 rounded-full transition-all duration-300 "
-                        >
-                            {playing ?
-                                <Pause className='size-6' strokeWidth={1.5} />
-                                :
-                                <Play className='size-6' strokeWidth={1.5} />
-                            }
-                        </button>
+                        {/* play button with time */}
+                        <div className=' mx-4 flex gap-3 items-center text-white'>
+                            <button
+                                onClick={handlePlayPause}
+                                className=" outline-none border-white border-2 w-fit bg-primary text-white text-4xl font-bold py-2 px-2 rounded-full transition-all duration-300 "
+                            >
+                                {playing ?
+                                    <Pause className='size-6' strokeWidth={1.5} />
+                                    :
+                                    <Play className='size-6' strokeWidth={1.5} />
+                                }
+                            </button>
+                            <div className="text-lg font-semibold flex flex-row divide-x-2 min-w-9 items-center border-2 border-white rounded-3xl py-2 ">
+                                <span className='px-2 min-w-16 text-center'>
+                                    {formatTime(wavesurferRef.current?.media?.currentTime || 0)}
+                                </span>
+                                <span className='px-2 min-w-16 text-center'>
+                                    {formatTime(wavesurferRef.current?.media?.duration || 0)}
+                                </span>
+                            </div>
+                        </div>
 
-                        <div ref={audio_graph_ref} className="w-full ">
+
+                        <div ref={audio_graph_ref} className="w-full flex flex-col gap-3 ">
                             {
                                 waveformRef !== null &&
-                                <div ref={waveformRef} className=' w-full pl-10 pr-4 h-56 bg-white rounded-md' />
+                                <div ref={waveformRef} className=' w-full pl-10 pr-4 h-56 bg-white rounded-2xl' />
                             }
                             {
                                 chartData !== null &&
-                                <div className=' bg-white max-h-64 w-full px-3 mt-2 rounded-md'>
+                                <div className=' bg-white max-h-64 w-full px-3 rounded-2xl'>
                                     <LineChart chartData={chartData["audioAnalysis"]} />
                                 </div>
                             }
@@ -434,7 +499,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                 {
                     file_metadata.verifier_comment &&
                     (
-                        <div className=' bg-slate-100 py-4 px-5 border rounded-lg w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                        <div className=' bg-slate-100 mt-5 py-4 px-5 border rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
                             <span className=' text-xl'>
                                 Expert&apos;s Note
                             </span>
