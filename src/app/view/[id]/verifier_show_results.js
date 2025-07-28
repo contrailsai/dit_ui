@@ -233,11 +233,11 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
             prediciton = prediciton && frame_prediciton;
         }
         if (data_resultsUI["analysis_types"]["audioAnalysis"]) {
-            audio_prediciton = data_resultsUI["results"]["audioAnalysis"]["result"] > data_resultsUI["results"]["audioAnalysis"]["threshold"];
+            let audio_prediciton = data_resultsUI["results"]["audioAnalysis"]["result"] > data_resultsUI["results"]["audioAnalysis"]["threshold"];
             prediciton = prediciton && audio_prediciton;
         }
         if (data_resultsUI["analysis_types"]["aigcCheck"]){
-            image_prediciton = data_resultsUI["results"]["aigcCheck"]["result"] > data_resultsUI["results"]["aigcCheck"]["threshold"];
+            let image_prediciton = data_resultsUI["results"]["aigcCheck"]["result"] > data_resultsUI["results"]["aigcCheck"]["threshold"];
             prediciton = prediciton && image_prediciton;
         }
 
