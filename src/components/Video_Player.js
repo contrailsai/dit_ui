@@ -13,7 +13,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
     const setup_frame_index = () => {
         let temp_frame_index = null;
         for (let label in model_results["frameCheck"]) {
-            if (!model_results["frameCheck"][label]["prediction"]) {
+            if (!model_results["frameCheck"][label]["prediction"] && !isNaN(model_results["frameCheck"][label]["percentage"])) {
                 temp_frame_index = label;
                 break;
             }
