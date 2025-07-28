@@ -224,10 +224,25 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                 alert('Failed to upload file');
             }
         }
-
         // assets corresponding to the transaction are ready 
+
+        let prediciton = true; // default to true (real)
+
+        if (data_resultsUI["analysis_types"]["frameCheck"]) {
+            let frame_prediciton = data_resultsUI["results"]["frameCheck"]["result"] > data_resultsUI["results"]["frameCheck"]["threshold"];
+            prediciton = prediciton && frame_prediciton;
+        }
+        if (data_resultsUI["analysis_types"]["audioAnalysis"]) {
+            audio_prediciton = data_resultsUI["results"]["audioAnalysis"]["result"] > data_resultsUI["results"]["audioAnalysis"]["threshold"];
+            prediciton = prediciton && audio_prediciton;
+        }
+        if (data_resultsUI["analysis_types"]["aigcCheck"]){
+            image_prediciton = data_resultsUI["results"]["aigcCheck"]["result"] > data_resultsUI["results"]["aigcCheck"]["threshold"];
+            prediciton = prediciton && image_prediciton;
+        }
+
         // verifiying remaining report
-        const res_status = await verify_case(id, verifier_metadata, res_data["user_id"]);
+        const res_status = await verify_case(id, verifier_metadata, res_data["user_id"], prediciton);
         if (res_status === 0) {
             alert("Case Verified!");
         }

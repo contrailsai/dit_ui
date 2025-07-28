@@ -199,7 +199,7 @@ export const get_user_email_by_id = async (id) => {
     return email
 }
 
-export const verify_case = async (id, metadata, user_id) => {
+export const verify_case = async (id, metadata, user_id, prediction) => {
 
     const supabase = await createServerSupabaseClient()
     const { data: { user } } = await supabase.auth.getUser();
@@ -210,6 +210,7 @@ export const verify_case = async (id, metadata, user_id) => {
         .from('Transactions')
         .update({
             status: true,
+            prediction: prediction,
             verifier_metadata: { ...metadata, verifier_id: user.id }
         })
         .match({ id });
