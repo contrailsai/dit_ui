@@ -11,7 +11,7 @@ export default async function Login() {
     <>
       <div className=' relative flex flex-col justify-between h-screen items-center bg-white'>
 
-        <div className="absolute left-0 top-0 bg-[url(/circles-and-squares.svg)]  h-full max-h-screen overflow-hidden w-full text-primary" >
+        <div className="absolute left-0 top-0 h-full max-h-screen overflow-hidden w-full text-primary" >
           <WavyBackground colors={["#0253FF", "#0253FF", "#0253FF", "#0253FF", "#FFFFFF"]} blur={20} waveWidth={100} backgroundFill={"#DDEEFF"} className={"h-full"}/>
           {/* <WavyBackground/>
           <WavyBackground/>

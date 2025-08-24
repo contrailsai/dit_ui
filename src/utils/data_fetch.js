@@ -2,9 +2,12 @@
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient, createAdminClient } from "@/utils/supabase/server";
 import { publishSNSMessage } from "./sns";
-import { s3Client } from "@/utils/s3";
-import { GetObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+// import { s3Client } from "@/utils/s3";
+// import { GetObjectCommand } from "@aws-sdk/client-s3";
+// import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+
+import { getSignedUrl } from '@aws-sdk/cloudfront-signer';
+
 // get model response
 export const db_updates = async ({ new_token_amount, user_id }) => {
 
@@ -161,7 +164,7 @@ export const get_assets_for_id = async (transaction_id) => {
     }
     // console.log(data, transaction_id)
     let assets_data = []
-    for(let asset of data){
+    for (let asset of data) {
         const signedUrl = await get_signed_url(`assets/${asset.id}`);
         assets_data.push({
             "signedUrl": signedUrl,
@@ -174,27 +177,35 @@ export const get_assets_for_id = async (transaction_id) => {
 }
 
 export const get_signed_url = async (key) => {
-    // Generate a signed URL for the media file in S3
-    let signedUrl = null;
-    if (key) {
-        try {
-            const command = new GetObjectCommand({
-                Bucket: process.env.S3_BUCKET_NAME,
-                Key: key,
-            });
 
-            signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 }); // URL valid for 1 hour
-        } catch (s3Error) {
-            console.error('Error generating signed URL:', s3Error);
-        }
+    const keyPairId = process.env.CLOUDFRONT_PUBLIC_KEY_ID;
+    const CDN_URL = process.env.CDN_URL;
+    const privateKey = process.env.PRIVATE_KEY;
+    if (!keyPairId || !CDN_URL || !privateKey) {
+        console.error("Missing environment variables for CloudFront signing.");
+        return null
     }
-    return signedUrl
+
+    const url = `${CDN_URL}/${key}`;
+
+    // The URL will be valid for 1 hour from the time of creation.
+    const expirationDate = new Date();
+    expirationDate.setMinutes(expirationDate.getMinutes() + 60); // URL valid for 60 minutes
+
+    const signedUrl = getSignedUrl({
+        url: url,
+        keyPairId: keyPairId,
+        privateKey: privateKey,
+        dateLessThan: expirationDate.toISOString(), // The policy expiration date
+    });
+
+    return signedUrl;
 }
 
 export const get_user_email_by_id = async (id) => {
 
     const supabase = createAdminClient()
-    const { data: {user: {email}}, error } = await supabase.auth.admin.getUserById(id) //.getUserById(id)
+    const { data: { user: { email } }, error } = await supabase.auth.admin.getUserById(id) //.getUserById(id)
     // console.log(email);
     return email
 }
@@ -217,7 +228,7 @@ export const verify_case = async (id, metadata, user_id, prediction) => {
 
     // get client's email
     let email = await get_user_email_by_id(user_id)
-    
+
     if (process.env.NEXT_PUBLIC_ENVIRONMENT === 'production') {
 
         let message = {
@@ -241,7 +252,7 @@ export const verify_case = async (id, metadata, user_id, prediction) => {
     return 0;
 };
 
-export const delete_asset_by_id = async(id) => {
+export const delete_asset_by_id = async (id) => {
     const supabase = await createServerSupabaseClient();
 
     const { data, error } = await supabase
