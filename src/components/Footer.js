@@ -6,7 +6,7 @@ const Footer = () => {
             <Link href={'https://contrails.ai'} target='_blank' className='hover:underline'>
                 Contrails AI
             </Link>
-            ©2025
+            ©{new Date().getFullYear()}
         </div>
     )
 }

@@ -1,5 +1,5 @@
-import { useEffect, useState, useRef } from "react";
-import { Play, Pause } from "./SVGs";
+import { useEffect, useState, useRef, useCallback } from "react";
+import { Play, Pause, RefreshCw, AlertCircle } from "./SVGs";
 
 export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_results }) => {
 
@@ -9,6 +9,14 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
     const [current_bboxes, set_current_bboxes] = useState(); // array of objects -> [{"bbox": [t,r,b,l], "pred": bool}, ..]
     const [videoDimensions, setVideoDimensions] = useState({ width: 0, height: 0 });
     const [videoError, setVideoError] = useState(null);
+
+    // New states for retry logic and loading
+    const [isLoading, setIsLoading] = useState(true);
+    const [retryCount, setRetryCount] = useState(0);
+    const [isRetrying, setIsRetrying] = useState(false);
+
+    const MAX_RETRIES = 5;
+    const RETRY_DELAY = 2000; // 2 seconds
 
     const setup_frame_index = () => {
         let temp_frame_index = null;
@@ -27,6 +35,37 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
     if (model_results && model_results["frameCheck"] !== undefined) {
         setup_frame_index();
     }
+
+    // Retry function with exponential backoff
+    const retryVideoLoad = useCallback(() => {
+        if (retryCount < MAX_RETRIES && videoRef.current) {
+            setIsRetrying(true);
+            setVideoError(null);
+
+            const delay = RETRY_DELAY * Math.pow(2, retryCount);
+
+            setTimeout(() => {
+                setRetryCount(prev => prev + 1);
+                videoRef.current.load(); // Reload the video
+                setIsRetrying(false);
+            }, delay);
+        }
+    }, [retryCount, videoRef]);
+
+
+    // Safe video operations with error handling
+    const safeVideoOperation = useCallback(async (operation) => {
+        if (!videoRef.current) return;
+        try {
+            await operation();
+        } catch (error) {
+            // Only log real errors, not interruption errors
+            if (!error.message.includes('interrupted by a call to pause')) {
+                console.error('Video operation failed:', error);
+                setVideoError({ message: `Playback failed: ${error.message}` });
+            }
+        }
+    }, [videoRef]);
 
 
     useEffect(() => {
@@ -57,51 +96,165 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
     }, [duration, bbox_data]);
 
     const handlePlayToggle = () => {
+        if (!videoRef.current) return;
 
-        if (progress >= 100) {
-            videoRef.current.currentTime = 0;
-            setProgress(0);
-        }
+        safeVideoOperation(async () => {
+            if (progress >= 100) {
+                videoRef.current.currentTime = 0;
+                setProgress(0);
+            }
 
-        if (videoRef.current.paused) {
-            videoRef.current.play();
-        } else {
-            videoRef.current.pause();
-        }
-        setIsPaused(videoRef.current.paused);
+            if (videoRef.current.paused) {
+                await videoRef.current.play(); // Handle promise properly
+            } else {
+                videoRef.current.pause();
+            }
+            setIsPaused(videoRef.current.paused);
+        });
     };
 
+    // Enhanced error handler with retry logic
+    const handleVideoError = useCallback((event) => {
+        const error = event.target.error;
+        console.error('Video error:', error);
+
+        setIsLoading(false);
+
+        // Categorize errors and decide whether to retry
+        const shouldRetry = error && (
+            error.code === MediaError.MEDIA_ERR_NETWORK ||
+            error.code === MediaError.MEDIA_ERR_DECODE ||
+            error.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
+        );
+
+        if (shouldRetry && retryCount < MAX_RETRIES) {
+            console.log(`Retrying video load (attempt ${retryCount + 1}/${MAX_RETRIES})`);
+            retryVideoLoad();
+        } else {
+            setVideoError({
+                message: error?.message || 'Unknown video error',
+                code: error?.code,
+                canRetry: retryCount < MAX_RETRIES
+            });
+        }
+    }, [retryCount, retryVideoLoad]);
+
+    // Video event handlers
+    const handleTimeUpdate = useCallback(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        const currentProgress = (duration === 0)
+            ? (video.currentTime / video.duration) * 100
+            : (video.currentTime / duration) * 100;
+
+        setProgress(currentProgress);
+
+        if (model_results && model_results["frameCheck"] !== undefined) {
+            const frameData = bbox_data[Math.floor(video.currentTime)];
+            set_current_bboxes(frameData);
+        }
+    }, [duration, bbox_data, model_results]);
+
+
+    const handleVideoLoadedMetadata = useCallback(() => {
+        if (!videoRef.current) return;
+
+        const { videoWidth, videoHeight } = videoRef.current;
+        setVideoDimensions({ width: videoWidth, height: videoHeight });
+        setIsLoading(false);
+        setRetryCount(0); // Reset retry count on successful load
+    }, []);
+
+    const handleLoadStart = useCallback(() => {
+        setIsLoading(true);
+        setVideoError(null);
+    }, []);
+
+    const handleCanPlay = useCallback(() => {
+        setIsLoading(false);
+    }, []);
+
+    const handleStalled = useCallback(() => {
+        setIsLoading(true);
+    }, []);
+
+    const handleWaiting = useCallback(() => {
+        setIsLoading(true);
+    }, []);
+
+    const handleLoadedData = useCallback(() => {
+        setIsLoading(false);
+    }, []);
+
+
+    // Main effect for video event listeners
+    useEffect(() => {
+        const video = videoRef.current;
+        if (!video) return;
+
+        // Add all event listeners
+        video.addEventListener('timeupdate', handleTimeUpdate);
+        video.addEventListener('error', handleVideoError);
+        video.addEventListener('loadedmetadata', handleVideoLoadedMetadata);
+        video.addEventListener('loadstart', handleLoadStart);
+        video.addEventListener('canplay', handleCanPlay);
+        video.addEventListener('stalled', handleStalled);
+        video.addEventListener('waiting', handleWaiting);
+        video.addEventListener('loadeddata', handleLoadedData);
+
+        return () => {
+            // Clean up ALL event listeners
+            video.removeEventListener('timeupdate', handleTimeUpdate);
+            video.removeEventListener('error', handleVideoError);
+            video.removeEventListener('loadedmetadata', handleVideoLoadedMetadata);
+            video.removeEventListener('loadstart', handleLoadStart);
+            video.removeEventListener('canplay', handleCanPlay);
+            video.removeEventListener('stalled', handleStalled);
+            video.removeEventListener('waiting', handleWaiting);
+            video.removeEventListener('loadeddata', handleLoadedData);
+        };
+    }, [
+        handleTimeUpdate,
+        handleVideoError,
+        handleVideoLoadedMetadata,
+        handleLoadStart,
+        handleCanPlay,
+        handleStalled,
+        handleWaiting,
+        handleLoadedData
+    ]);
+
+    // Handle video end
+    useEffect(() => {
+        if (progress > 100 && videoRef.current) {
+            console.log("video ended");
+            videoRef.current.pause();
+            setIsPaused(true);
+        }
+    }, [progress]);
+
     const formatTime = (seconds) => {
+        if (isNaN(seconds)) return "0:00";
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = Math.floor(seconds % 60);
         return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
     };
 
     const handleSliderChange = (e) => {
+        if (!videoRef.current || !duration) return;
+
         const time = (e.target.value * duration) / 100;
         videoRef.current.currentTime = time;
         setProgress(e.target.value);
     };
 
-    const handleVideoLoadedMetadata = (e) => {
-        const { videoWidth, videoHeight } = videoRef.current;
-        setVideoDimensions({ width: videoWidth, height: videoHeight });
-    }
-
-    useEffect(() => {
-        if (progress > 100) {
-            console.log("video ended");
-            videoRef.current.pause();
-            setIsPaused(videoRef.current.paused);
+    const handleManualRetry = () => {
+        if (videoRef.current) {
+            setRetryCount(0);
+            setVideoError(null);
+            videoRef.current.load();
         }
-        if (videoDimensions.width === 0)
-            handleVideoLoadedMetadata();
-
-    }, [progress])
-
-    const handleVideoError = (event) => {
-        console.log(event.target.error)
-        setVideoError(event.target.error);
     };
 
     // console.log(model_results)
@@ -289,7 +442,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                                                                     Score:
                                                                 </span>
                                                                 <span className={` mx-auto text-2xl px-3 py-1 rounded-full  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                                                    {isNaN(perc) ? "-" :perc } %
+                                                                    {isNaN(perc) ? "-" : perc} %
                                                                 </span>
                                                             </div>
                                                             <div className="relative left-0 top-0 h-3 my-3 ml-16 w-[236px] " >
@@ -360,26 +513,55 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                         {
                             videoError ?
                                 (
-                                    <div className="text-red-500  h-1/2 w-1/2 p-5 mx-auto flex flex-col ">
-                                        <span>
-                                            Error Occured:
-                                        </span>
-                                        <span>
-                                            {videoError.message}
-                                        </span>
+                                    <div className="text-red-500 h-1/2 w-1/2 p-5 mx-auto flex flex-col items-center gap-4">
+                                        <AlertCircle className="size-12" />
+                                        <div className="text-center">
+                                            <p className="font-semibold">Video Error:</p>
+                                            <p className="text-sm">{videoError.message}</p>
+                                            {videoError.code && (
+                                                <p className="text-xs opacity-75">Error Code: {videoError.code}</p>
+                                            )}
+                                        </div>
+                                        {videoError.canRetry && (
+                                            <button
+                                                onClick={handleManualRetry}
+                                                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                            >
+                                                <RefreshCw className="size-4" />
+                                                Retry
+                                            </button>
+                                        )}
                                     </div>
                                 )
                                 :
-                                <video
-                                    data-html2canvas-ignore
-                                    ref={videoRef}
-                                    src={fileUrl}
-                                    controls={false} // Disable inbuilt video player buttons and interactions
-                                    onError={handleVideoError}
-                                    // onTimeUpdate={handleTimeUpdate}
-                                    onLoadedMetadata={handleVideoLoadedMetadata}
-                                    className=" w-fit max-w-3xl h-[50vh]"
-                                />
+                                (
+                                    <div className="relative">
+                                        <video
+                                            data-html2canvas-ignore
+                                            ref={videoRef}
+                                            src={fileUrl}
+                                            controls={false}
+                                            onError={handleVideoError}
+                                            onLoadedMetadata={handleVideoLoadedMetadata}
+                                            className="w-fit max-w-3xl h-[50vh]"
+                                        />
+
+                                        {/* Loading overlay */}
+                                        {(isLoading || isRetrying) && (
+                                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                                                <div className="text-white text-center">
+                                                    <RefreshCw className="size-8 animate-spin mx-auto mb-2" />
+                                                    <p>
+                                                        {isRetrying
+                                                            ? `Retrying... (${retryCount}/${MAX_RETRIES})`
+                                                            : 'Loading video'
+                                                        }
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )
                         }
                     </div>
                 </div>
@@ -387,13 +569,17 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
             {/* PLAYBACK BOARD / RECTANGLE */}
             <div className=" z-10 flex w-full gap-14 mb-1 py-5 px-5 bg-primary text-white rounded-3xl items-center">
                 {/* PLAY BUTTON */}
-                <div onClick={handlePlayToggle} className="cursor-pointer border-2 rounded-full p-2 ">
+                <button
+                    disabled={videoError}
+                    onClick={handlePlayToggle}
+                    className={` border-2 rounded-full p-2 ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                >
                     {isPaused ? (
                         <Play className="size-8" strokeWidth={1.5} />
                     ) : (
                         <Pause className="size-8" strokeWidth={1.5} />
                     )}
-                </div>
+                </button>
                 {/* DURATION/PROGRESS */}
                 <div className="text-sm flex flex-col divide-y-2 min-w-9 items-center ">
                     <span>
@@ -411,7 +597,8 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                     max="100"
                     value={progress}
                     onChange={handleSliderChange}
-                    className=" win10-thumb  w-full rounded-md outline-none transition-all duration-300 cursor-pointer"
+                    disabled={isLoading || videoError}
+                    className="win10-thumb w-full rounded-md outline-none transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 />
 
             </div>
