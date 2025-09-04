@@ -28,6 +28,8 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     let audio_chart = null;
     let fps = results["frameCheck"] ? results["frameCheck"]["video_fps"] : 25;
 
+    console.log(results)
+
     useEffect(() => {
         set_curr_model(analysisTypes["frameCheck"] ? "frameCheck" : analysisTypes["audioAnalysis"] ? "audioAnalysis" : "");
     }, [analysisTypes, videoRef])
@@ -39,11 +41,11 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     };
 
     //-------------------------------------------------
-    const get_chart_data = (duration, person_obj_list) => {
+    const get_chart_data = (duration, person_obj_list, threshold = 0.7) => {
         let person_prediction_data = []
         // default value 0.7 (if no data at that timestamp (frames in 1 sec))
         for (let i = 0; i <= duration; i++)
-            person_prediction_data[i] = 0.7;
+            person_prediction_data[i] = threshold;
 
         let used_values = [];
 
@@ -86,7 +88,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         for (let label in results["frameCheck"]["labels_result"]) {
 
             const person = results["frameCheck"]["labels_result"][label];
-            const { person_prediction_data, mean_result } = get_chart_data(duration, person);
+            const { person_prediction_data, mean_result } = get_chart_data(duration, person, threshold);
 
             // console.log("label : ", label);
             // console.log("prediction table : ", person_prediction_data);
@@ -718,6 +720,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
                                             const perc = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["percentage"] : 0;
                                             const pred = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["prediction"] : false;
+                                            const threshold = results["frameCheck"]["threshold"];
                                             if (isNaN(perc)) {
                                                 return null;
                                             }
@@ -757,7 +760,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                                 {
                                                                     toggle_open === idx &&
                                                                     <div className="flex flex-col gap-3 h-full items-center justify-center">
-                                                                        <div className=' flex  items-center w-full gap-2'>
+                                                                        <div className=' flex flex-col items-center w-full gap-2'>
                                                                             <span>
                                                                                 Result
                                                                             </span>
@@ -765,14 +768,14 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                                                 {pred ? "Real" : "Fake"}
                                                                             </span>
                                                                         </div>
-                                                                        <div className=' flex  items-center w-full gap-2'>
+                                                                        {/* <div className=' flex  items-center w-full gap-2'>
                                                                             <span>
                                                                                 Score
                                                                             </span>
                                                                             <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
                                                                                 {isNaN(perc) ? "-" : perc} %
                                                                             </span>
-                                                                        </div>
+                                                                        </div> */}
                                                                     </div>
                                                                 }
                                                             </div>
@@ -799,7 +802,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                                             <div
                                                                                 key={i}
                                                                                 style={{ width: `${width}%`, left: `${start}%` }}
-                                                                                className={` h-full absolute ${v.prediction > 0.7 ? 'bg-green-400' : 'bg-red-400'} `}
+                                                                                className={` h-full absolute ${v.prediction > threshold ? 'bg-green-400' : 'bg-red-400'} `}
                                                                             />
                                                                         );
                                                                     })
@@ -883,7 +886,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                                     {
                                                                         toggle_open === idx &&
                                                                         <div className="flex flex-col gap-3 h-full items-center justify-center">
-                                                                            <div className=' flex  items-center w-full gap-2'>
+                                                                            <div className=' flex flex-col items-center w-full gap-2'>
                                                                                 <span>
                                                                                     Result
                                                                                 </span>
@@ -891,14 +894,14 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                                                     {pred ? "Real" : "Fake"}
                                                                                 </span>
                                                                             </div>
-                                                                            <div className=' flex  items-center w-full gap-2'>
+                                                                            {/* <div className=' flex  items-center w-full gap-2'>
                                                                                 <span>
                                                                                     Score
                                                                                 </span>
                                                                                 <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
                                                                                     {perc} %
                                                                                 </span>
-                                                                            </div>
+                                                                            </div> */}
                                                                         </div>
                                                                     }
                                                                 </div>
@@ -942,7 +945,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                         <div className={`${curr_model === "audioAnalysis" ? "opacity-100 z-20" : "opacity-0 z-0"} absolute top-[77vh] max-w-[83vw]  overflow-hidden duration-300 transition-all`}>
                             <div className={` overflow-hidden bg-primary w-full rounded-3xl border-8 border-primary flex my-5 `}>
                                 <div className="w-52  border-8 border-primary rounded-3xl flex flex-col gap-3 items-center justify-center text-white ">
-                                    <div className=' flex  items-center w-full gap-2'>
+                                    <div className=' flex flex-col  items-center w-full gap-2'>
                                         <span>
                                             Result
                                         </span>
@@ -950,14 +953,14 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                             {result_values["audioAnalysis"]["prediction"] ? "Real" : "Fake"}
                                         </span>
                                     </div>
-                                    <div className=' flex  items-center w-full gap-2'>
+                                    {/* <div className=' flex  items-center w-full gap-2'>
                                         <span>
                                             Score
                                         </span>
                                         <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${result_values["audioAnalysis"]["prediction"] ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
                                             {result_values["audioAnalysis"]["percentage"]} %
                                         </span>
-                                    </div>
+                                    </div> */}
                                 </div>
                                 <div className=" h-[360px] flex flex-col justify-evenly bg-white rounded-2xl px-2 overflow-hidden transition-all w-full">
                                     <div className=" max-w-[1200px]  overflow-hidden py-3">

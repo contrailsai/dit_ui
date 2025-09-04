@@ -20,10 +20,21 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
 
     const setup_frame_index = () => {
         let temp_frame_index = null;
+        let max_points = 0;
+        let current_prediction = true;
+
         for (let label in model_results["frameCheck"]) {
+
+            if( model_results["frameCheck"][label]["data_points"] > max_points){
+                temp_frame_index = label;
+
+            }
+
+
+            console.log( "results = = = ", model_results["frameCheck"])
             if (!model_results["frameCheck"][label]["prediction"] && !isNaN(model_results["frameCheck"][label]["percentage"])) {
                 temp_frame_index = label;
-                break;
+                // break;
             }
         }
         if (temp_frame_index === null) {
@@ -439,10 +450,10 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                                                             </span>
                                                             <div className=' flex  items-center w-full gap-2'>
                                                                 <span>
-                                                                    Score:
+                                                                    Confidence:
                                                                 </span>
                                                                 <span className={` mx-auto text-2xl px-3 py-1 rounded-full  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                                                    {isNaN(perc) ? "-" : perc} %
+                                                                    {isNaN(perc) ? "-" : pred? perc : (100-perc).toFixed(2) } %
                                                                 </span>
                                                             </div>
                                                             <div className="relative left-0 top-0 h-3 my-3 ml-16 w-[236px] " >
@@ -455,9 +466,9 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                                                                     readOnly
                                                                 />
                                                             </div>
-                                                            <span className=' text-xs'>
-                                                                confidence on real
-                                                            </span>
+                                                            {/* <span className=' text-xs'>
+                                                                confidence on {pred? "real": "fake"}
+                                                            </span> */}
 
                                                         </div>
                                                     )
