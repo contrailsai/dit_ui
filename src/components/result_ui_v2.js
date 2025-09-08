@@ -451,24 +451,23 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             doc.setFont("Outfit", "normal");
             curr_x = mx;
             curr_y += fontSize / 72 + 16 / 72;
-            doc.text("Real Score: ", curr_x, curr_y);
+            doc.text("Confidence: ", curr_x, curr_y);
 
             curr_x += 120 / 72;
             doc.setFont("Outfit", "bold");
             audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${audio_result * 100} %`, curr_x, curr_y);
+            doc.text(` ${audio_result >= threshold? (audio_result * 100): (1-audio_result)*100} %`, curr_x, curr_y);
 
             curr_x = mx;
-            curr_y += fontSize / 72 + 10 / 72;
-
-            fontSize = 11;
-            doc.setFontSize(fontSize);
-            doc.setTextColor(0, 0, 0);
-            doc.setFont("Outfit", "normal");
-
-            doc.text("(confidence of audio being real)", curr_x, curr_y);
             curr_y += fontSize / 72 + 40 / 72;
+            // curr_y += fontSize / 72 + 10 / 72;
+            doc.setTextColor(0, 0, 0);
 
+            // fontSize = 11;
+            // doc.setFontSize(fontSize);
+            // doc.setFont("Outfit", "normal");
+            // doc.text("(confidence of audio being real)", curr_x, curr_y);
+            
             fontSize = 18;
             doc.setFontSize(fontSize);
             doc.setFont("Outfit", "bold");
@@ -527,29 +526,23 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             doc.setFontSize(fontSize);
 
             // console.log((result_values["frameCheck"]));
-            let sorted_labels = Object.keys(result_values["frameCheck"]).sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"]);
+            let sorted_labels = Object.keys(result_values["frameCheck"])
+            .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"]);
 
             // let frame_result = (results["frameCheck"].result).toFixed(4);
-            let frame_prediction = 0;
-            let frame_result = true;
+            const threshold = results["frameCheck"].threshold * 100;
+            const frame_prediction = Number(result_values["frameCheck"][sorted_labels[0]]["percentage"]).toFixed(2);
+            const frame_result = frame_prediction > threshold;
             let labels_count = 0;
+
             for (let label of sorted_labels) {
-                if (!result_values["frameCheck"][label]["prediction"]) {
-                    frame_prediction = Number(result_values["frameCheck"][label]["percentage"]).toFixed(2);
-                    frame_result = false;
-                    break;
-                }
                 if (labels_count > 3)
                     break;
                 labels_count++;
             }
+
+
             if (frame_result) {
-                frame_prediction = Number(result_values["frameCheck"][sorted_labels[0]]["percentage"]).toFixed(2);
-            }
-
-            const threshold = results["frameCheck"].threshold;
-
-            if (frame_result >= threshold) {
                 doc.text("The video frames analysis detected no manipulation", curr_x, curr_y);
             }
             else {
@@ -565,19 +558,20 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             curr_x += 120 / 72;
             doc.setFont("Outfit", "bold");
 
-            frame_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${frame_result >= threshold ? "Real" : "Fake"} `, curr_x, curr_y);
+            frame_result ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
+            doc.text(` ${frame_result? "Real" : "Fake"} `, curr_x, curr_y);
 
             doc.setTextColor(0, 0, 0);
             doc.setFont("Outfit", "normal");
             curr_x = mx;
             curr_y += fontSize / 72 + 16 / 72;
-            doc.text("Real Score: ", curr_x, curr_y);
+
+            doc.text("Confidence: ", curr_x, curr_y);
 
             curr_x += 120 / 72;
             doc.setFont("Outfit", "bold");
-            frame_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${frame_prediction} %`, curr_x, curr_y);
+            frame_result ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
+            doc.text(` ${(frame_result? (frame_prediction): (100-frame_prediction))} %`, curr_x, curr_y);
 
             curr_x = mx;
             curr_y += fontSize / 72 + 10 / 72;
@@ -587,7 +581,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             doc.setTextColor(0, 0, 0);
             doc.setFont("Outfit", "normal");
 
-            doc.text("(confidence of video frames being real)", curr_x, curr_y);
+            // doc.text("(confidence of video frames being real)", curr_x, curr_y);
             curr_y += fontSize / 72 + 40 / 72;
 
             fontSize = 18;

@@ -21,20 +21,12 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
     const setup_frame_index = () => {
         let temp_frame_index = null;
         let max_points = 0;
-        let current_prediction = true;
 
         for (let label in model_results["frameCheck"]) {
 
             if( model_results["frameCheck"][label]["data_points"] > max_points){
                 temp_frame_index = label;
-
-            }
-
-
-            console.log( "results = = = ", model_results["frameCheck"])
-            if (!model_results["frameCheck"][label]["prediction"] && !isNaN(model_results["frameCheck"][label]["percentage"])) {
-                temp_frame_index = label;
-                // break;
+                max_points = model_results["frameCheck"][label]["data_points"];
             }
         }
         if (temp_frame_index === null) {
@@ -462,7 +454,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                                                                     className={`result-seperate-slider absolute w-[168px] outline-none transition-all duration-300 cursor-default`}
                                                                     min="0"
                                                                     max="100"
-                                                                    value={perc}
+                                                                    value={isNaN(perc) ? 0 : pred? perc : (100-perc).toFixed(2) }
                                                                     readOnly
                                                                 />
                                                             </div>
