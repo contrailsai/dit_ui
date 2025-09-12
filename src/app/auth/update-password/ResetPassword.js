@@ -1,6 +1,6 @@
 'use client'
 import Image from "next/image";
-import { password_update } from "@/utils/login_calls"
+import { password_update } from "@/utils/user_functions"
 import { useState } from "react";
 
 const ResetPasswordBlock = ({user, eventInfo }) => {

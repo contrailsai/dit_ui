@@ -2,7 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import ResetPasswordBlock from "./ResetPassword";
 // import { headers } from "next/headers";
-import { check_login } from "@/utils/login_calls"
+// import { check_login } from "@/utils/login_calls"
+import { check_login } from "@/utils/user_functions"
 
 export default async function Login({ searchParams }) {
 

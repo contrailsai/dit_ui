@@ -6,7 +6,7 @@ import ResultImageUI from '@/components/ResultImageUI';
 import Result_UI from '@/components/result_ui_v2';
 import Assets_Upload from '@/components/Assets_Upload';
 import { useState, useEffect } from 'react';
-import { verify_case } from '@/utils/data_fetch';
+import { verify_case } from '@/utils/cases_functions';
 import { useParams } from 'next/navigation';
 import { Video, Audio, Image } from '@/components/SVGs';
 

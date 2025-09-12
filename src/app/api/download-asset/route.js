@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from "@/utils/supabase/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server"
 
 // Function to sanitize filename for HTTP headers
 function sanitizeFilename(filename) {

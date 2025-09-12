@@ -1,13 +1,12 @@
-import { get_user_data } from '@/utils/data_fetch';
-// import Navbar from '@/components/Navbar';
+import { get_user_data } from '@/utils/user_functions';
 import Footer from '@/components/Footer';
 import Result_container from "@/app/view/[id]/show_result";
 import Verifier_results_container from "@/app/view/[id]/verifier_show_results";
-import { get_result_for_id, get_assets_for_id, get_user_email_by_id } from "@/utils/data_fetch";
+import { get_result_for_id, get_assets_for_id, get_user_email_by_id } from "@/utils/cases_functions";
 import { redirect } from 'next/navigation';
-import { Sidebar } from '@/components/Sidebar';
+import Sidebar from '@/components/Sidebar';
 
-const page = async ({ params }) => {
+const Page = async ({ params }) => {
   // Ensure params is resolved
   const { id } = await Promise.resolve(params);
 
@@ -60,4 +59,4 @@ const page = async ({ params }) => {
   );
 }
 
-export default page;
+export default Page;

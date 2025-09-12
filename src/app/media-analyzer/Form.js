@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
-import { db_updates } from "@/utils/data_fetch";
+// import { db_updates } from "@/utils/data_fetch";
 
 import { PhotoVideo, Waveform, ImageSearch, UploadFile, LoadingCircle, RemoveBin, InfoCircle } from '@/components/SVGs';
 

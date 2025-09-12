@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useRef } from 'react';
-import { user_logout } from '@/utils/data_fetch';
+import { user_logout } from '@/utils/user_functions';
 import { PersonCircle } from './SVGs';
 
 const Navbar = ({user_data}) => {

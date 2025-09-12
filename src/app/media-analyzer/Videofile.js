@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 
 import { createClient } from '@/utils/supabase/client';
-import { get_result_for_id } from '@/utils/data_fetch';
+import { get_result_for_id } from '@/utils/cases_functions';
 
-import Navbar from '@/components/Navbar';
+// import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Form from './Form';
 import Result_container from './Result_container';
