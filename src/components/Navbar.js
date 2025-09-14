@@ -45,7 +45,7 @@ const Navbar = ({user_data}) => {
                                         Direct Checker
                                     </Link>
                                 }
-                                <Link href={"/fact-checker"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
+                                <Link href={"/media-checker"} className='px-2 py-1 hover:bg-slate-200 transition-all '>
                                     Fact Checker
                                 </Link>
                                 <Link href={"/user/case-list"} className='px-2 py-1 hover:bg-slate-200 transition-all '>

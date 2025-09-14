@@ -13,7 +13,7 @@ export default async function ProtectedPage() {
         return redirect("/login");
     }
     if (!user.verifier){
-        return redirect("/fact-checker");
+        return redirect("/media-checker");
     }
 
     return (

@@ -31,13 +31,13 @@ const Sidebar = ({ user }) => {
                         </span>
                     </Link>
                 } */}
-                <Link href={"/fact-checker"} className='w-fit pl-2 pr-4 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-primary transition-all flex items-center gap-1 '>
+                <Link href={"/media-checker"} className='w-fit pl-2 pr-2 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-primary transition-all flex items-center gap-1 '>
                     <LucideChartArea className="size-6" />
                     <span>
-                        Fact Checker
+                        Media Checker
                     </span>
                 </Link>
-                <Link href={"/fact-checker/case-list"} className='w-fit pl-2 pr-4 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-primary transition-all flex items-center gap-1 '>
+                <Link href={"/media-checker/case-list"} className='w-fit pl-2 pr-4 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-primary transition-all flex items-center gap-1 '>
                     <List className="size-6" />
                     <span>
                         {user.verifier ? "Verify Cases" : "Case List"}

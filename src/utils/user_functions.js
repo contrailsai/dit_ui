@@ -17,7 +17,7 @@ export const get_user_data = async () => {
     //FETCH TOKENS
     const { data: [token_data], error } = await supabase
         .from('Tokens')
-        .select('token_amount,verifier')
+        .select('token_amount,verifier,user_type')
         .eq('id', user_id);
 
     // data =  [ { token_amount: 500 } ]
@@ -28,7 +28,7 @@ export const get_user_data = async () => {
         return { error: "error in getting user tokens" }
     }
 
-    const user_data = { ...user.user_metadata, "id": user_id, tokens: token_data.token_amount, verifier: token_data.verifier }
+    const user_data = { ...user.user_metadata, "id": user_id, tokens: token_data.token_amount, verifier: token_data.verifier, user_type: token_data.user_type };
 
     return user_data;
 }
@@ -74,7 +74,7 @@ export const check_login = async () => {
 
     if (user) {
         console.log("User logged in but went to login page");
-        return redirect("/fact-checker");
+        return redirect("/media-checker");
     }
 }
 
@@ -97,7 +97,7 @@ export const signIn = async ({ email, password }) => {
         console.error("User SignIn Error: ", e);
         return redirect("/login?message=Could not authenticate user");
     }
-    return redirect("/fact-checker");
+    return redirect("/media-checker");
 };
 
 export const handleGoogleSignIn = async () => {

@@ -94,7 +94,7 @@ const Form = ({ response_data, set_res_data, set_id }) => {
                             size: humanFileSize(file.size),
                             type: file.type
                         },
-                        method: "verification"
+                        method: "direct"
                     }
                 ),
             });
@@ -116,7 +116,7 @@ const Form = ({ response_data, set_res_data, set_id }) => {
                 body: JSON.stringify(
                     {
                         task_id: id,
-                        method: "admin_demo"
+                        method: "direct"
                     }
                 ),
             });

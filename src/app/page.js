@@ -10,6 +10,6 @@ export default async function Index() {
     return redirect("/login");
   }
   else {
-    return redirect('/fact-checker');
+    return redirect('/media-checker');
   }
 }

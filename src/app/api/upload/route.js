@@ -3,7 +3,7 @@ import { PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { s3Client } from "@/utils/s3";
 import { sqsClient } from '@/utils/sqs';
-import { createServerSupabaseClient } from "@/utils/supabase/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import { publishSNSMessage } from '@/utils/sns';
 

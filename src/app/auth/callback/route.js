@@ -35,5 +35,5 @@ export async function GET(request) {
   }
 
   // URL to redirect to after sign up process completes
-  return NextResponse.redirect(`${origin}/fact-checker`);
+  return NextResponse.redirect(`${origin}/media-checker`);
 }

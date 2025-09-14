@@ -43,16 +43,16 @@ export const get_user_transactions = async () => {
         return -(timex - timey)
     })
 
-    let t_list = transactions_list.data.filter((val, idx) => {
-        if (!val.method)
-            return true
-        if (val.method == 'verification')
-            return true
-        else
-            return false
-    })
+    // let t_list = transactions_list.data.filter((val, idx) => {
+    //     if (!val.method)
+    //         return true
+    //     if (val.method == 'verification')
+    //         return true
+    //     else
+    //         return false
+    // })
 
-    return { user, t_list }; //transactions_list.data;
+    return { user, t_list: transactions_list.data }; //transactions_list.data;
 }
 
 export const get_demo_transactions = async () => {

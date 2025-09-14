@@ -13,7 +13,7 @@ const Result_container = ({ res_data, assets }) => {
 
     const handle_newCheck = () => {
         if (typeof window !== 'undefined') {
-            window.location.href = '/fact-checker';
+            window.location.href = '/media-checker';
         }
     }
 
@@ -25,45 +25,70 @@ const Result_container = ({ res_data, assets }) => {
             "aigcCheck": false
         }
     };
-    const verifier_metadata = res_data["verifier_metadata"];
-    if (upload_type === 'image') {
-        //IMAGE
-        if (verifier_metadata["showAigcCheck"]) {
-            results_data["analysis_types"]["aigcCheck"] = true;
 
-            if (verifier_metadata["AigcCheckModelUse"] !== null)
-                results_data["results"]["aigcCheck"] = model_responses["results"]["image"]["models_results"][verifier_metadata["AigcCheckModelUse"]];
-        }
-        else
-            results_data["results"]["aigcCheck"] = undefined;
-    }
-    else {
-        // AUDIO
-        if (verifier_metadata["showAudioCheck"]) {
-            results_data["analysis_types"]["audioAnalysis"] = true;
+    // console.log( Object.keys(res_data["models_responses"]))
+    
+    if (res_data["method"] === "direct") {
+        const analysis_types = res_data["input_request"]["analysis_types"];
+        results_data["analysis_types"] = analysis_types;
 
-            if (verifier_metadata["AudioCheckModelUse"] !== null)
-                results_data["results"]["audioAnalysis"] = model_responses["results"]["audio"]["models_results"][verifier_metadata["AudioCheckModelUse"]];
-        }
-        else
-            results_data["results"]["audioAnalysis"] = undefined;
-
+        // IMAGE
+        if (analysis_types["aigcCheck"]) 
+            results_data["results"]["aigcCheck"] = model_responses["results"]["image"]["models_results"][0];
+        // AUDIO    
+        if (analysis_types["audioAnalysis"])
+            results_data["results"]["audioAnalysis"] = model_responses["results"]["audio"]["models_results"][0];
         // FRAME
-        if (verifier_metadata["showFrameCheck"]) {
-            results_data["analysis_types"]["frameCheck"] = true;
-
-            if (verifier_metadata["FrameCheckModelUse"] !== null)
-                results_data["results"]["frameCheck"] = model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]];
+        if (analysis_types["frameCheck"]){
+            results_data["results"]["frameCheck"] = model_responses["results"]["frame"]["models_results"][0];
+            results_data["results"]["face_labels"] = [];
         }
-        else
-            results_data["results"]["frameCheck"] = undefined;
+        
     }
 
-    if (res_data["verifier_metadata"]["ShowCommentToUser"]) {
-        res_data["file_metadata"]["verifier_comment"] = res_data["verifier_metadata"]["verifierComment"];
-    }
+    // VERIFIED RESULTS
+    else {
+        const verifier_metadata = res_data["verifier_metadata"];
 
-    // console.log(results_data);
+        if (upload_type === 'image') {
+            //IMAGE
+            if (verifier_metadata["showAigcCheck"]) {
+                results_data["analysis_types"]["aigcCheck"] = true;
+
+                if (verifier_metadata["AigcCheckModelUse"] !== null)
+                    results_data["results"]["aigcCheck"] = model_responses["results"]["image"]["models_results"][verifier_metadata["AigcCheckModelUse"]];
+            }
+            else
+                results_data["results"]["aigcCheck"] = undefined;
+        }
+        else {
+            // AUDIO
+            if (verifier_metadata["showAudioCheck"]) {
+                results_data["analysis_types"]["audioAnalysis"] = true;
+
+                if (verifier_metadata["AudioCheckModelUse"] !== null)
+                    results_data["results"]["audioAnalysis"] = model_responses["results"]["audio"]["models_results"][verifier_metadata["AudioCheckModelUse"]];
+            }
+            else
+                results_data["results"]["audioAnalysis"] = undefined;
+
+            // FRAME
+            if (verifier_metadata["showFrameCheck"]) {
+                results_data["analysis_types"]["frameCheck"] = true;
+
+                if (verifier_metadata["FrameCheckModelUse"] !== null)
+                    results_data["results"]["frameCheck"] = model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]];
+                
+                // WHICH FACES TO SHOW IN RESULT (empty for no face)
+                results_data["results"]["face_labels"] = verifier_metadata["face_labels"] !== undefined ? verifier_metadata["face_labels"] : [];  
+            }
+            else
+                results_data["results"]["frameCheck"] = undefined;
+        }
+        if (res_data["verifier_metadata"]["ShowCommentToUser"]) {
+            res_data["file_metadata"]["verifier_comment"] = res_data["verifier_metadata"]["verifierComment"];
+        }
+    }
 
     return (<>
         <div className=' pt-16 pb-10 px-12'>
