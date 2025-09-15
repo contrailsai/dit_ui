@@ -300,6 +300,20 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
             alert("Sent the case for Re-run")
     }
 
+    const handle_download_media = () => {
+        const url = res_data["signedUrl"];
+        const filename = res_data["file_metadata"]["name"];
+        try {
+            const encodedUrl = encodeURIComponent(url);
+            window.location.href = `/api/download-asset?url=${encodedUrl}&&filename=${filename}`;
+        } catch (err) {
+            console.error('Download failed:', err);
+            setError(err.message);
+            setStatus('error');
+        }
+
+    }
+
     // console.log( "SHOW: ", model_responses["results"]["frame"]["models_results"][ verifier_metadata["FrameCheckModelUse"] ]["labels_result"])
 
     return (<>
@@ -494,6 +508,13 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                                 {res_data["input_request"]["analysis_types"]["aigcCheck"] ? "True" : "False"}
                             </div>
                         </div>
+
+                        <div className='pt-2 px-2'>
+                            <div onClick={handle_download_media} className=' cursor-pointer text-white p-2 rounded-xl bg-primary text-center'>
+                                Download Media
+                            </div>
+                        </div>
+
 
                         <div className='pt-2 px-2'>
                             <div onClick={handle_rerun_case} className=' cursor-pointer text-white p-2 rounded-xl bg-primary text-center'>

@@ -90,6 +90,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             if (results["face_labels"].length > 0 && !results["face_labels"].includes(label)) {
                 continue;
             }
+            // console.log("frame chart pass: ", label);
             const person = results["frameCheck"]["labels_result"][label];
             const { person_prediction_data, mean_result } = get_chart_data(duration, person, threshold);
 
@@ -139,7 +140,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                 ]
             };
         }
-        console.log("final frame values data = ", temp_frame_values)
+        // console.log("final frame values data = ", temp_frame_values)
         frame_charts = temp_chart_data;
         // setframecharts(temp_chart_data);
         return temp_frame_values;
@@ -226,7 +227,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     // LOAD CHART AND RESULTS
     if (results["frameCheck"] || results["audioAnalysis"]) {
         console.log("creating graphs, results");
-        console.log("frameCheck", results["frameCheck"]);
+        // console.log("frameCheck", results["frameCheck"]);
 
         let temp_result_values = {
             "frameCheck": undefined,
@@ -715,7 +716,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                             <div ref={frame_graph_Ref} className={` h-full flex flex-col gap-2 py-5 rounded-3xl overflow-hidden`}>
                                 {
                                     Object.keys(results["frameCheck"].labels_result)
-                                        .filter((v) => { return results["face_labels"].includes(v) })
+                                        .filter((v) => { return results["face_labels"].length==0 || results["face_labels"].includes(v) })
                                         .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
                                         .slice(0, 3)
                                         .map((label, idx) => {
