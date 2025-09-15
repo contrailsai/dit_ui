@@ -36,13 +36,14 @@ const Result_container = ({ res_data, set_res_data }) => {
     }
     // VIDEO
     else if (upload_type === "video") {
-        if( res_data["input_request"]["analysis_types"]["audioAnalysis"] ){
+        if (res_data["input_request"]["analysis_types"]["audioAnalysis"]) {
             results_data["analysis_types"]["audioAnalysis"] = true;
             results_data["results"]["audioAnalysis"] = model_responses["results"]["audio"]["models_results"][0];
         }
-        if( res_data["input_request"]["analysis_types"]["frameCheck"] ){
+        if (res_data["input_request"]["analysis_types"]["frameCheck"]) {
             results_data["analysis_types"]["frameCheck"] = true;
             results_data["results"]["frameCheck"] = model_responses["results"]["frame"]["models_results"][0];
+            results_data["results"]["face_labels"] = [];
         }
     }
 
