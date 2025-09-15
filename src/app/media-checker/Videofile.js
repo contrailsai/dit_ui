@@ -79,7 +79,7 @@ const VideoAnalysisForm = ({ user }) => {
 
                                                         {/* GOTO CASELIST */}
                                                         <Link
-                                                            href={'/user/case-list'}
+                                                            href={'/media-checker/case-list'}
                                                             className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow '
                                                         >
                                                             Goto CaseList
