@@ -7,7 +7,7 @@ const outfit = Outfit({ subsets: ["latin"] });
 
 export const metadata = {
   title: "DIT | Contrails",
-  description: "a media checker for detecting deepfakes",
+  description: "a media checker for detecting fake media",
 };
 
 export default function RootLayout({ children }) {

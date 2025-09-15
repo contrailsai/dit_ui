@@ -1,10 +1,13 @@
+"use client"
+
 import React, { useState, useRef } from 'react';
 import Image from 'next/image';
-import { db_updates } from "@/utils/data_fetch";
+import { update_user_tokens } from "@/utils/user_functions";
+import { Clapperboard, AudioLines, FileImage, UploadCloud, Loader2, Trash2, Info } from "lucide-react"
 
-import { PhotoVideo, Waveform, ImageSearch, UploadFile, LoadingCircle, RemoveBin, InfoCircle } from '@/components/SVGs';
+// import { PhotoVideo, Waveform, ImageSearch, UploadFile, LoadingCircle, RemoveBin, InfoCircle } from '@/components/SVGs';
 
-const Form = ({ user_data, set_user_data, set_res_data }) => {
+const Form = ({ user_data, update_user_data, set_res_data }) => {
 
     const fileInputRef = useRef(null);
 
@@ -144,8 +147,8 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
             let res_data = { "uploaded": true };
 
             // update db with new token amount
-            const db_update_res = await db_updates({ new_token_amount, user_id });
-            if (db_update_res !== null) {
+            const db_update_res = await update_user_tokens(user_id, new_token_amount);
+            if (db_update_res.success !== true) {
                 res_data = { message: db_update_res.error };
                 set_res_data(res_data);
                 setLoading(false);
@@ -153,7 +156,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
             }
 
             // setup the data if no issue occured
-            set_user_data({ ...user_data, tokens: new_token_amount });
+            update_user_data({ tokens: new_token_amount });
             set_res_data(res_data);
         }
         catch (error) {
@@ -277,7 +280,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                                 onDragOver={handleDragOver}
                                 onClick={() => { fileInputRef.current.click() }}
                             >
-                                <UploadFile className="size-8" strokeWidth={1} />
+                                <UploadCloud className="size-8" strokeWidth={1} />
                                 <p>Drag and drop a file here, or click to select a file</p>
 
                                 <p className="text-gray-500 text-sm">Max file size: 50MB</p>
@@ -314,7 +317,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                             // aria-disabled={loading || (cost>user_data.tokens)}
                             disabled={(loading || (user_data.tokens == 0))}
                             type="submit"
-                            className=" disabled:cursor-no-drop disabled:bg-primary/70 outline-none bg-primary hover:bg-primary/90 hover:shadow-md text-white font-semibold py-3 px-12 rounded-3xl w-fit text-xl transition-all duration-300"
+                            className=" cursor-pointer disabled:cursor-no-drop disabled:bg-primary/70 outline-none bg-primary hover:bg-primary/90 shadow hover:shadow-lg text-white font-semibold py-3 px-12 rounded-3xl w-fit text-xl transition-all duration-300"
                         >
                             Submit
                         </button>
@@ -327,7 +330,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                                         Uploading File
                                     </div>
                                     <div role="status">
-                                        <LoadingCircle className="w-8 h-8 text-primary/60 animate-spin fill-primary" />
+                                        <Loader2 className="w-8 h-8 text-primary/60 animate-spin fill-primary" />
                                     </div>
 
                                 </div>
@@ -365,8 +368,8 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                                         {humanFileSize(file.size)}
                                     </div>
                                 </div>
-                                <button onClick={removeFile} className=' relative group flex gap-3 bg-red-200 hover:bg-red-300 px-4 py-2 rounded-full transition-all duration-300'>
-                                    <RemoveBin className="size-6" strokeWidth={2} />
+                                <button onClick={removeFile} className=' cursor-pointer relative group flex gap-3 bg-red-200 hover:bg-red-300 px-4 py-2 rounded-full transition-all duration-300'>
+                                    <Trash2 className="size-6" strokeWidth={2} />
 
                                     {/* <div className=' absolute group-hover:opacity-100 opacity-0 bg-black/70 text-white py-2 w-24 -top-10 left-7 rounded-lg duration-500'>
                                         remove file
@@ -392,7 +395,7 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                             {/* FRAME ANALYSIS SELECT */}
                             <div
                                 onClick={() => { handleAnalysisTypeChange("frameCheck") }}
-                                className={` flex flex-col justify-evenly items-center z-10 text-primary text-lg font-medium shadow shadow-primary ${uploadType === 'audio' ? 'hidden' : ''} relative px-3 py-2 cursor-pointer rounded-2xl w-full bg-white/50 backdrop-blur h-64 transition-all `}
+                                className={` overflow-hidden flex flex-col justify-evenly items-center z-10 text-primary text-lg font-medium shadow shadow-primary ${uploadType === 'audio' ? 'hidden' : ''} relative px-3 py-2 cursor-pointer rounded-2xl w-full bg-white/50 backdrop-blur h-64 transition-all `}
                             >
                                 <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
                                     {/* SELECT BUTTON */}
@@ -406,30 +409,30 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                                     </div>
 
                                     {/* TEXT AND (i) */}
-                                    <span className='font-semibold'>
+                                    <span className='font-semibold w-full'>
                                         Video Deepfake
                                     </span>
-                                    <span className=' relative group text-xs ' >
-                                        <InfoCircle className="size-6" strokeWidth={2} />
+                                    {/* <span className=' relative group text-xs ' >
+                                        <Info className="size-6" strokeWidth={2} />
 
                                         <div className='w-fit min-w-32 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
                                             <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
                                                 Analyze frames in the video
                                             </div>
                                         </div>
-                                    </span>
+                                    </span> */}
                                 </div>
-
-                                <div className={` ${analysisTypes["frameCheck"] ? " text-primary" : " text-primary/40"} select-none transition-all `}>
-                                    {/* <FaPhotoVideo className=' h-40 w-40' /> */}
-                                    <PhotoVideo className="h-40 w-40" />
+                                
+                                <div className={` relative select-none transition-all `}>
+                                    <div className={` absolute rounded-full -top-2 h-64 w-96 ${analysisTypes["frameCheck"] ? "-right-12 " : "right-96"} bg-primary transition-all duration-300 `} />
+                                    <Clapperboard className={`relative z-10 h-40 w-40 ${analysisTypes["frameCheck"] ? "stroke-white" : "stroke-primary"} transition-all duration-500 `} />
                                 </div>
                             </div>
 
                             {/* AUDIO ANALYSIS SELECT */}
                             <div
                                 onClick={() => { handleAnalysisTypeChange("audioAnalysis") }}
-                                className={` flex flex-col justify-evenly items-center text-primary text-lg font-medium cursor-pointer shadow shadow-primary relative  px-3 py-2  rounded-2xl w-full bg-white/50 backdrop-blur h-64 transition-all `}
+                                className={` overflow-hidden flex flex-col justify-evenly items-center text-primary text-lg font-medium cursor-pointer shadow shadow-primary relative  px-3 py-2  rounded-2xl w-full bg-white/50 backdrop-blur h-64 transition-all `}
                             >
                                 <div className=' text-xl text-center flex items-center w-full justify-between gap-2'>
                                     {/* SELECT BUTTON */}
@@ -442,29 +445,30 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                                         }
                                     </div>
                                     {/* TEXT AND (i) */}
-                                    <span className='font-semibold'>
+                                    <span className='font-semibold w-full'>
                                         Audio Spoof
                                     </span>
-                                    <span className=' relative group text-xs ' >
-                                        <InfoCircle className="size-6" strokeWidth={2} />
+                                    {/* <span className=' relative group text-xs ' >
+                                        <Info className="size-6" strokeWidth={2} />
 
                                         <div className='w-fit min-w-20 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
                                             <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
                                                 Analyze audio in the file
                                             </div>
                                         </div>
-                                    </span>
+                                    </span> */}
                                 </div>
 
-                                <div className={` ${analysisTypes["audioAnalysis"] ? " text-primary" : " text-primary/40"} select-none transition-all `}>
-                                    {/* <PiWaveformBold className=' h-40 w-40' /> */}
-                                    <Waveform className=' h-40 w-40' />
+                                <div className={` relative select-none transition-all `}>
+                                    <div className={` absolute rounded-full -left-12 h-64 w-64 ${analysisTypes["audioAnalysis"] ? "top-0 " : "top-96"} bg-primary blur-3xld  transition-all duration-300 `} />
+                                    <AudioLines className={`relative z-10 h-40 w-40 ${analysisTypes["audioAnalysis"] ? "stroke-white" : "stroke-primary"} transition-all duration-500 `} />
                                 </div>
+
                             </div>
                         </div>
                         {/* IMAGE ANALYSIS SELECT */}
                         <div
-                            className={` w-full ${uploadType === "audio" || uploadType === 'video' ? "hidden" : ""} flex z-10 text-primary text-xl text-center font-medium shadow shadow-primary relative px-3 py-2 cursor-pointer rounded-2xl bg-white/50 backdrop-blur transition-all `}
+                            className={` overflow-hidden w-full ${uploadType === "audio" || uploadType === 'video' ? "hidden" : ""} flex z-10 text-primary text-xl text-center font-medium shadow shadow-primary relative px-3 py-2 cursor-pointer rounded-2xl bg-white/50 backdrop-blur transition-all `}
                             onClick={() => { handleAnalysisTypeChange("aigcCheck") }}
                         >
                             {/* TEXT, IMAGE AND (i) */}
@@ -481,27 +485,28 @@ const Form = ({ user_data, set_user_data, set_res_data }) => {
                                         }
                                     </div>
                                 </div>
-                                <div className=' flex gap-3'>
+                                <div className=' flex gap-3 w-full '>
                                     <span className=' font-semibold'>
                                         Image AIGC
                                     </span>
                                     {/* INFO */}
-                                    <span className=' relative group text-xs ' >
-                                        <InfoCircle className="size-6" strokeWidth={2} />
+                                    {/* <span className=' relative group text-xs ' >
+                                        <Info className="size-6" strokeWidth={2} />
 
                                         <div className=' min-w-24 absolute z-50 -translate-y-1/2 left-4 -top-5 hover:block group-hover:block hidden overflow-hidden p-1 transition-all '>
                                             <div className=' bg-black/70 text-white  px-4 py-2  rounded-xl rounded-bl-none  backdrop-blur-lg'>
                                                 Analyze a image for forgery
                                             </div>
                                         </div>
-                                    </span>
+                                    </span> */}
                                 </div>
                             </div>
 
-                            <div className={` ${analysisTypes["aigcCheck"] ? " text-primary" : " text-primary/40"} w-full select-none transition-all `}>
-                                {/* <MdOutlineImageSearch className=' h-40 w-40' /> */}
-                                <ImageSearch className=' h-40 w-40' />
+                            <div className={` relative select-none transition-all `}>
+                                <div className={` absolute rounded-full -top-5  h-48 w-96   ${analysisTypes["aigcCheck"] ? "-left-24 " : "left-96"} bg-primary blur-3xld  transition-all duration-300 `} />
+                                <FileImage className={`relative z-10 h-40 w-40 ${analysisTypes["aigcCheck"] ? "stroke-white" : "stroke-primary"} transition-all duration-500 `} />
                             </div>
+
                         </div>
                     </div>
                 </div>

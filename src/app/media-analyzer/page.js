@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 import VideoAnalysisForm from "./Videofile";
 
-import { get_user_data } from "@/utils/data_fetch";
+import { get_user_data } from "@/utils/user_functions";
 
 
 export default async function ProtectedPage() {
@@ -13,7 +13,7 @@ export default async function ProtectedPage() {
         return redirect("/login");
     }
     if (!user.verifier){
-        return redirect("/fact-checker");
+        return redirect("/media-checker");
     }
 
     return (

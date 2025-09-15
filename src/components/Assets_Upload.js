@@ -1,6 +1,6 @@
 import { useState, useRef } from "react"
-import { UploadFile, PlusCircle, Video, Audio, Image } from "./SVGs";
-import { delete_asset_by_id } from "@/utils/data_fetch";
+import { UploadFile, PlusCircle, Video, Audio, ImageIcon } from "./SVGs";
+import { delete_asset_by_id } from "@/utils/cases_functions";
 const Assets_Upload = ({ SavedAssets, CurrAssets, SetCurrAssets }) => {
 
     const [tempSavedAssets, SetTempSavedAssets] = useState(SavedAssets);
@@ -157,7 +157,7 @@ const Assets_Upload = ({ SavedAssets, CurrAssets, SetCurrAssets }) => {
                                                         asset.type === 'audio' ?
                                                             <Audio className="size-10" strokeWidth={1.5} />
                                                             :
-                                                            <Image className="size-10" strokeWidth={1.5} />
+                                                            <ImageIcon className="size-10" strokeWidth={1.5} />
                                                 }
                                                 <span className="text-xs">
                                                     {asset.type}

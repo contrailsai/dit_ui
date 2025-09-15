@@ -1,4 +1,4 @@
-import { createServerSupabaseClient } from "@/utils/supabase/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 export async function GET(request) {
@@ -35,5 +35,5 @@ export async function GET(request) {
   }
 
   // URL to redirect to after sign up process completes
-  return NextResponse.redirect(`${origin}/fact-checker`);
+  return NextResponse.redirect(`${origin}/media-checker`);
 }

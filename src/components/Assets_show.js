@@ -1,5 +1,5 @@
 import { useState, useRef } from "react"
-import { PlusCircle, Video, Audio, Image } from "./SVGs";
+import { PlusCircle, Video, Audio, ImageIcon } from "./SVGs";
 
 const Assets_Show = ({ CurrAssets }) => {
 
@@ -89,7 +89,7 @@ const Assets_Show = ({ CurrAssets }) => {
                                                     asset.type === 'audio' ?
                                                         <Audio className="size-10" strokeWidth={1.5} />
                                                         :
-                                                        <Image className="size-10" strokeWidth={1.5} />
+                                                        <ImageIcon className="size-10" strokeWidth={1.5} />
                                             }
                                             <span className="text-xs">
                                                 {asset.type}

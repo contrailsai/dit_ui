@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 
-import { createClient } from '@/utils/supabase/client';
-import { get_result_for_id } from '@/utils/data_fetch';
+import { createClient } from '@/lib/supabase/client';
+import { get_result_for_id } from '@/utils/cases_functions';
 
-import Navbar from '@/components/Navbar';
+// import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Form from './Form';
 import Result_container from './Result_container';
-import { Sidebar } from '@/components/Sidebar';
+import Sidebar from '@/components/Sidebar';
 
 const VideoAnalysisForm = ({ user }) => {
     // const [user_data, set_user_data] = useState(user);
@@ -73,9 +73,7 @@ const VideoAnalysisForm = ({ user }) => {
 
     return (
         <>
-            <Sidebar user={user} />
-            {/* <Navbar user_data={user} /> */}
-            <div className="pl-40 h-screen">
+            <div className="h-screen">
 
 
                 {/* ERROR OCCURED IN GETTING USER */}
@@ -96,7 +94,7 @@ const VideoAnalysisForm = ({ user }) => {
                 }
                 {
                     user.error === undefined &&
-                    < div className=" bg-primary/5 px-10 min-h-[95vh] pt-16 pb-10 ">
+                    < div className=" bg-primary/5 px-10 min-h-[95vh] pt-5 pb-10 ">
                         {/* SHOW FORM */}
                         {
                             !response_data.got_result &&

@@ -1,10 +1,10 @@
-import LineChart from './LineChart';
+// import LineChart from './LineChart';
 import React, { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
+// import Image from 'next/image';
 
 import { PlusCircle, DownloadFile, LoadingCircle } from './SVGs';
 import jsPDF from "jspdf";
-import html2canvas from 'html2canvas';
+// import html2canvas from 'html2canvas';
 import { Outfit_bold_font } from './outfit-bold-font';
 import { Outfit_normal_font } from './outfit-normal-font';
 import { logo_base64 } from './logo_base64';

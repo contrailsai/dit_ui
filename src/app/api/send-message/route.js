@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { sqsClient } from '@/utils/sqs';
-import { createServerSupabaseClient } from "@/utils/supabase/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import { publishSNSMessage } from '@/utils/sns';
 
@@ -24,10 +24,10 @@ export async function POST(request) {
         "models": []
       };
     }
-    else if (method === "admin_demo") {
+    else if (method === "direct") {
       message_body = {
         "task_id": task_id,
-        "models": ["sta_exp_1", "ssl_w2", "fatformer"]
+        "models": ["sta_exp_1", "mmb_w1", "fatformer"]
       };
     }
 

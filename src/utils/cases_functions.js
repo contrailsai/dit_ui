@@ -1,82 +1,21 @@
 "use server"
-import { redirect } from "next/navigation";
-import { createServerSupabaseClient, createAdminClient } from "@/utils/supabase/server";
-import { publishSNSMessage } from "./sns";
-// import { s3Client } from "@/utils/s3";
-// import { GetObjectCommand } from "@aws-sdk/client-s3";
-// import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-
+import { createServerSupabaseClient, createAdminClient } from "@/lib/supabase/server";
+// import { redirect } from "next/navigation";
+// import { headers } from "next/headers";
+import { get_user_data } from "@/utils/user_functions";
 import { getSignedUrl } from '@aws-sdk/cloudfront-signer';
 
-// get model response
-export const db_updates = async ({ new_token_amount, user_id }) => {
+// get cases list based on user's role 
+export const get_user_transactions = async () => {
 
     const supabase = await createServerSupabaseClient();
-    //update user tokens
-    const { token_data, token_error } = await supabase
-        .from('Tokens')
-        .update({ "token_amount": new_token_amount })
-        .eq('id', user_id)
-        .select()
-    if (token_error) {
-        console.error("ERROR: ", token_error)
-        return { error: "error in updating tokens" }
-    }
-    return null;
-}
-
-// get user data
-export const get_user_data = async () => {
-
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    //IF NO USER LOGIN RETURN UNDEFINED 
-    if (user === null) {
-        return;
-    }
-    const user_id = user.id;
-    //FETCH TOKENS
-
-    const { data: [token_data], error } = await supabase
-        .from('Tokens')
-        .select('token_amount,verifier')
-        .eq('id', user_id);
-
-    // data =  [ { token_amount: 500 } ]
-    // console.log(token_data, error, user_id)
-    if (error || token_data === undefined) {
-
-        error !== null ? console.error("ERROR IN GETTING USER'S TOKENS: ", error) : console.error("error in getting user tokens: user not defined in tokens db");
-        return { error: "error in getting user tokens" }
-    }
-
-    const user_data = { ...user.user_metadata, "id": user_id, tokens: token_data.token_amount, verifier: token_data.verifier }
-
-    return user_data;
-}
-
-// logout user
-export const user_logout = async () => {
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (user === null)
-        return;
-
-    await supabase.auth.signOut();
-    return redirect("/login");
-}
-
-export const get_user_transactions = async (verifier) => {
-
-    const supabase = await createServerSupabaseClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await get_user_data();
 
     if (user === null)
         return;
 
     let transactions_list = {}
-    if (verifier) {
+    if (user.verifier) {
         //get data from db and return it 
         transactions_list = await supabase
             .from('Transactions')
@@ -104,16 +43,48 @@ export const get_user_transactions = async (verifier) => {
         return -(timex - timey)
     })
 
-    let t_list = transactions_list.data.filter((val, idx) => {
-        if (!val.method)
-            return true
-        if (val.method == 'verification')
-            return true
-        else
-            return false
-    })
+    // let t_list = transactions_list.data.filter((val, idx) => {
+    //     if (!val.method)
+    //         return true
+    //     if (val.method == 'verification')
+    //         return true
+    //     else
+    //         return false
+    // })
 
-    return t_list; //transactions_list.data;
+    return { user, t_list: transactions_list.data }; //transactions_list.data;
+}
+
+export const get_demo_transactions = async () => {
+
+    const supabase = await createServerSupabaseClient();
+    const user = await get_user_data();
+
+    if (user === null || !user.verifier)
+        return;
+
+    let transactions_list = {}
+    if (user.verifier) {
+        //get data from db and return it 
+        transactions_list = await supabase
+            .from('Transactions')
+            .select('id,created_at,input_request,file_metadata,status,prediction,method')
+            .eq('method', "demo")
+    }
+
+    if (transactions_list.error) {
+        console.error(transactions_list.error)
+        return {
+            "error": "error in getting user history"
+        }
+    }
+    // SORT DATA BY DATE REVERSE ORDER
+    transactions_list.data.sort((x, y) => {
+        const timex = new Date(x.created_at).getTime()
+        const timey = new Date(y.created_at).getTime()
+        return -(timex - timey)
+    })
+    return { user, t_list: transactions_list.data }; //transactions_list.data;
 }
 
 export const get_result_for_id = async (transaction_id) => {

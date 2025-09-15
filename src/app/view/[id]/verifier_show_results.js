@@ -6,9 +6,11 @@ import ResultImageUI from '@/components/ResultImageUI';
 import Result_UI from '@/components/result_ui_v2';
 import Assets_Upload from '@/components/Assets_Upload';
 import { useState, useEffect } from 'react';
-import { verify_case } from '@/utils/data_fetch';
+import { verify_case } from '@/utils/cases_functions';
 import { useParams } from 'next/navigation';
-import { Video, Audio, Image } from '@/components/SVGs';
+import { Video, Audio, ImageIcon, PersonCircle } from '@/components/SVGs';
+import { Minus, Plus } from "lucide-react"
+import Image from 'next/image';
 
 const Verifier_results_container = ({ client_email, res_data, saved_assets }) => {
     const { id } = useParams();
@@ -93,6 +95,10 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
     const model_responses = typeof (res_data["models_responses"]) === "string" ? JSON.parse(res_data["models_responses"]) : res_data["models_responses"];
     const upload_type = res_data["input_request"]["upload_type"];
 
+    const [faces, set_faces] = useState({
+        "selected": [],
+        "removed": []
+    })
     const [verifier_metadata, set_verifier_metadata] = useState(
         res_data["verifier_metadata"] !== null ?
             res_data["verifier_metadata"]
@@ -104,7 +110,8 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                 "AudioCheckModelUse": 0,
                 "AigcCheckModelUse": 0,
                 "verifierComment": "",
-                "ShowCommentToUser": true
+                "ShowCommentToUser": true,
+                "face_labels": []
             }
     );
     const [data_resultsUI, setdata_resultsUI] = useState(null);
@@ -113,12 +120,22 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
 
     const handle_newCheck = () => {
         if (typeof window !== 'undefined') {
-            window.location.href = '/fact-checker';
+            window.location.href = '/media-checker';
         }
     }
 
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
+
+        if (name === "FrameCheckModelUse") {
+            // SET THE NEW FACE LABES BASED ON RESULT
+            const faces_list = Object.keys(model_responses["results"]["frame"]["models_results"][value]["labels_result"])
+            set_faces({
+                "selected": faces_list,
+                "removed": []
+            })
+        }
+
         set_verifier_metadata(prevState => ({
             ...prevState,
             [name]: type === 'checkbox' ? checked : type === 'radio' ? parseInt(value) : value
@@ -162,24 +179,43 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
             if (verifier_metadata["showFrameCheck"]) {
                 results_data["analysis_types"]["frameCheck"] = true;
 
-                if (verifier_metadata["FrameCheckModelUse"] !== null)
+                if (verifier_metadata["FrameCheckModelUse"] !== null) {
                     results_data["results"]["frameCheck"] = model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]];
+
+                    // WHICH FACES TO SHOW IN RESULT
+                    results_data["results"]["face_labels"] = verifier_metadata["face_labels"] !== undefined ? verifier_metadata["face_labels"] : [];
+                }
             }
             else
                 results_data["results"]["frameCheck"] = undefined;
         }
 
-
         if (verifier_metadata["ShowCommentToUser"]) {
             res_data["file_metadata"]["verifier_comment"] = verifier_metadata["verifierComment"];
         }
         else {
-            res_data["file_metadata"]["verifier_comment"] = undefined;
+            res_data["file_metadata"]["verifier_comment"] = undefzined;
+        }
+
+        if (verifier_metadata["showFrameCheck"]) {
+            const faces_list = Object.keys(model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["labels_result"])
+            if (verifier_metadata["face_labels"]) {
+                set_faces({
+                    "selected": verifier_metadata["face_labels"],
+                    "removed": faces_list.filter(val => !verifier_metadata["face_labels"].includes(val))
+                })
+            }
+            else {
+                set_faces({
+                    "selected": faces_list,
+                    "removed": []
+                })
+            }
         }
 
         setdata_resultsUI(results_data);
 
-    }, [verifier_metadata["ShowCommentToUser"], verifier_metadata["AigcCheckModelUse"], verifier_metadata["AudioCheckModelUse"], verifier_metadata["FrameCheckModelUse"], verifier_metadata["showAigcCheck"], verifier_metadata["showAudioCheck"], verifier_metadata["showFrameCheck"],])
+    }, [verifier_metadata])
 
     const handle_submit = async () => {
 
@@ -236,7 +272,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
             let audio_prediciton = data_resultsUI["results"]["audioAnalysis"]["result"] > data_resultsUI["results"]["audioAnalysis"]["threshold"];
             prediciton = prediciton && audio_prediciton;
         }
-        if (data_resultsUI["analysis_types"]["aigcCheck"]){
+        if (data_resultsUI["analysis_types"]["aigcCheck"]) {
             let image_prediciton = data_resultsUI["results"]["aigcCheck"]["result"] > data_resultsUI["results"]["aigcCheck"]["threshold"];
             prediciton = prediciton && image_prediciton;
         }
@@ -264,9 +300,26 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
             alert("Sent the case for Re-run")
     }
 
+    const handle_download_media = () => {
+        const url = res_data["signedUrl"];
+        const filename = res_data["file_metadata"]["name"];
+        try {
+            const encodedUrl = encodeURIComponent(url);
+            window.location.href = `/api/download-asset?url=${encodedUrl}&&filename=${filename}`;
+        } catch (err) {
+            console.error('Download failed:', err);
+            setError(err.message);
+            setStatus('error');
+        }
+
+    }
+
+    // console.log( "SHOW: ", model_responses["results"]["frame"]["models_results"][ verifier_metadata["FrameCheckModelUse"] ]["labels_result"])
+
     return (<>
         <div className=' pt-16 bg-primary/5'>
 
+            {/* NOTIF ON CASE VERIFIED */}
             <div className=' px-6'>
                 {
                     res_data["status"] &&
@@ -435,7 +488,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                                     }
                                     {/* IMAGE */}
                                     {res_data["input_request"]["upload_type"] === "image" &&
-                                        <Image className="size-6" strokeWidth={1.5} />
+                                        <ImageIcon className="size-6" strokeWidth={1.5} />
                                     }
 
                                     {res_data["input_request"]["upload_type"]}
@@ -457,12 +510,216 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                         </div>
 
                         <div className='pt-2 px-2'>
+                            <div onClick={handle_download_media} className=' cursor-pointer text-white p-2 rounded-xl bg-primary text-center'>
+                                Download Media
+                            </div>
+                        </div>
+
+
+                        <div className='pt-2 px-2'>
                             <div onClick={handle_rerun_case} className=' cursor-pointer text-white p-2 rounded-xl bg-primary text-center'>
                                 Re - Run Case
                             </div>
                         </div>
                     </div>
                 </div>
+
+                {/* FACES SELECTION */}
+                <div className={` ${verifier_metadata["showFrameCheck"] ? " max-h-[5000px] " : " max-h-0"} overflow-hidden transition-all duration-200  w-full mt-5 `}>
+                    {verifier_metadata["showFrameCheck"] &&
+                        <div className=' p-4 flex flex-col border border-primary rounded-3xl'>
+                            <div className='text-xl'>Select and Remove Faces</div>
+                            <div className='text-sm'>(at max only 9 faces will be shown)</div>
+                            <div className='flex justify-between border-b border-primary py-3'>
+                                <div
+                                    onClick={() => {
+                                        set_verifier_metadata(prevState => ({
+                                            ...prevState,
+                                            ["face_labels"]: faces["selected"]
+                                        }));
+                                    }}
+                                    className='bg-primary w-fit py-2 px-6 rounded-3xl text-white cursor-pointer'
+                                >
+                                    Save for preview
+                                </div>
+                                <div className='flex gap-3'>
+                                    <div
+                                        onClick={() => {
+                                            set_faces(prevState => ({
+                                                "selected": [...prevState["selected"], ...prevState["removed"]],
+                                                "removed": []
+                                            }));
+                                        }}
+                                        className='bg-primary w-fit py-2 px-6 rounded-3xl text-white cursor-pointer'
+                                    >
+                                        Select All
+                                    </div>
+                                    <div
+                                        onClick={() => {
+                                            set_faces(prevState => ({
+                                                "selected": [],
+                                                "removed": [...prevState["selected"], ...prevState["removed"]]
+                                            }));
+                                        }}
+                                        className='bg-primary w-fit py-2 px-6 rounded-3xl text-white cursor-pointer'
+                                    >
+                                        Remove All
+                                    </div>
+                                </div>
+                            </div>
+                            <div className='flex divide-x divide-primary '>
+
+                                {/* SELECTED FACES */}
+                                <div className='w-full h-full flex flex-wrap gap-3 pr-10'>
+                                    <div className='min-w-24 w-full py-3'>
+                                        Selected Faces:
+                                    </div>
+                                    {
+                                        Object.entries(model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["labels_result"])
+                                            .sort((a, b) => (b[1].length - a[1].length))
+                                            .filter((val) => {
+                                                const label = val[0];
+                                                if (faces["selected"].includes(label))
+                                                    return true
+                                            })
+                                            .map((val, idx) => {
+                                                const label_name = val[0];
+                                                const data_pts = val[1].length;
+                                                // console.log(val);
+                                                let img = true;
+                                                if (model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["label_faces"])
+                                                    img = model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["label_faces"][`${label_name}`]
+                                                else
+                                                    img = false;
+
+                                                return (
+                                                    <div key={idx} className=' relative w-20 h-30 flex flex-col justify-evenly gap-1 bg-primary p-2 rounded-2xl text-white'>
+                                                        <div
+                                                            onClick={() => {
+                                                                set_faces(prevState => ({
+                                                                    "selected": prevState["selected"].filter((val) => val !== label_name),
+                                                                    "removed": [...prevState["removed"], label_name]
+                                                                }));
+                                                            }}
+                                                            className='absolute -top-2 left-1/2 -translate-x-1/2  bg-rose-400 rounded-full cursor-pointer hover:bg-rose-500 transition-all'
+                                                        >
+                                                            <Minus className='size-4 ' />
+                                                        </div>
+                                                        <div className='font-light text-xs w-full flex justify-between'>
+                                                            <span>
+                                                                id: &nbsp;
+                                                            </span>
+                                                            <span className='font-bold'>
+                                                                {label_name}
+                                                            </span>
+                                                        </div>
+                                                        <div className='font-light text-xs w-full flex justify-between'>
+                                                            <span>
+                                                                Points: &nbsp;
+                                                            </span>
+                                                            <span className='font-bold bg-slate-800 px-1 h-fit w-fit rounded-3xl'>
+                                                                {data_pts}
+                                                            </span>
+                                                        </div>
+                                                        <div className='rounded-full overflow-hidden'>
+                                                            {
+                                                                img ?
+                                                                    <Image
+                                                                        src={img}
+                                                                        width={56}
+                                                                        height={56}
+                                                                        alt={`person - ${Number(label_name) + 1} `}
+                                                                    />
+                                                                    :
+                                                                    (
+                                                                        <PersonCircle className="size-14" strokeWidth={1} />
+                                                                    )
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })
+                                    }
+                                </div>
+
+                                {/* //REMOVED FACES */}
+                                <div className='w-full h-full flex flex-wrap gap-3 pl-10'>
+                                    <div className='min-w-24 w-full py-3'>
+                                        Removed Faces:
+                                    </div>
+                                    {
+                                        Object.entries(model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["labels_result"])
+                                            .sort((a, b) => (b[1].length - a[1].length))
+                                            .filter((val) => {
+                                                const label = val[0];
+                                                if (faces["removed"].includes(label))
+                                                    return true
+                                            })
+                                            .map((val, idx) => {
+                                                const label_name = val[0];
+                                                const data_pts = val[1].length;
+                                                // console.log(val);
+                                                let img = true;
+                                                if (model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["label_faces"])
+                                                    img = model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["label_faces"][`${label_name}`]
+                                                else
+                                                    img = false;
+
+                                                return (
+                                                    <div key={idx} className=' relative w-20 h-30 flex flex-col justify-evenly gap-1 bg-primary p-2 rounded-2xl text-white'>
+                                                        <div
+                                                            onClick={() => {
+                                                                set_faces(prevState => ({
+                                                                    "selected": [...prevState["selected"], label_name],
+                                                                    "removed": prevState["removed"].filter((val) => val !== label_name),
+                                                                }));
+                                                            }}
+                                                            className='absolute -top-2 left-1/2 -translate-x-1/2  bg-emerald-400 rounded-full cursor-pointer hover:bg-emerald-500 transition-all'
+                                                        >
+                                                            <Plus className='size-4 ' />
+                                                        </div>
+                                                        <div className='font-light text-xs w-full flex justify-between'>
+                                                            <span>
+                                                                id: &nbsp;
+                                                            </span>
+                                                            <span className='font-bold'>
+                                                                {label_name}
+                                                            </span>
+                                                        </div>
+                                                        <div className='font-light text-xs w-full flex justify-between'>
+                                                            <span>
+                                                                Points: &nbsp;
+                                                            </span>
+                                                            <span className='font-bold bg-slate-800 px-1 h-fit w-fit rounded-3xl'>
+                                                                {data_pts}
+                                                            </span>
+                                                        </div>
+                                                        <div className='rounded-full overflow-hidden'>
+                                                            {
+                                                                img ?
+                                                                    <Image
+                                                                        src={img}
+                                                                        width={56}
+                                                                        height={56}
+                                                                        alt={`person - ${Number(label_name) + 1} `}
+                                                                    />
+                                                                    :
+                                                                    (
+                                                                        <PersonCircle className="size-14" strokeWidth={1} />
+                                                                    )
+                                                            }
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })
+                                    }
+                                </div>
+
+                            </div>
+                        </div>
+                    }
+                </div>
+
                 {/* COMMENTS AND SUBMISSION */}
                 <div className=' py-4 relative flex gap-5 mt-2'>
                     <div className='w-full min-w-[450px]'>

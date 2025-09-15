@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
 // The client you created from the Server-Side Auth instructions
-import { createServerSupabaseClient } from "@/utils/supabase/server";
+import { createServerSupabaseClient } from "@/lib/supabase/server"
 import { redirect } from 'next/navigation'
 
 export async function GET(request) {

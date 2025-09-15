@@ -13,6 +13,7 @@ import Image from "next/image";
 
 export default function Result_UI({ results, analysisTypes, file_metadata, fileUrl, handle_new_analysis = null }) {
 
+    console.log("face labels = ", results["face_labels"])
     const videoRef = useRef();
     const audio_graph_Ref = useRef();
     const frame_graph_Ref = useRef();
@@ -28,7 +29,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     let audio_chart = null;
     let fps = results["frameCheck"] ? results["frameCheck"]["video_fps"] : 25;
 
-    console.log(results)
+    // console.log("res = ",results)
 
     useEffect(() => {
         set_curr_model(analysisTypes["frameCheck"] ? "frameCheck" : analysisTypes["audioAnalysis"] ? "audioAnalysis" : "");
@@ -86,7 +87,10 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         const threshold = results["frameCheck"]["threshold"];
 
         for (let label in results["frameCheck"]["labels_result"]) {
-
+            if (results["face_labels"].length > 0 && !results["face_labels"].includes(label)) {
+                continue;
+            }
+            // console.log("frame chart pass: ", label);
             const person = results["frameCheck"]["labels_result"][label];
             const { person_prediction_data, mean_result } = get_chart_data(duration, person, threshold);
 
@@ -136,6 +140,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                 ]
             };
         }
+        // console.log("final frame values data = ", temp_frame_values)
         frame_charts = temp_chart_data;
         // setframecharts(temp_chart_data);
         return temp_frame_values;
@@ -199,6 +204,9 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             temp_bbox_data[i] = [];
         }
         for (let label in results["frameCheck"]["labels_result"]) {
+            if (results["face_labels"].length > 0 && !results["face_labels"].includes(label)) {
+                continue;
+            }
             const person = results["frameCheck"]["labels_result"][label];
 
             let label_bboxes = {};
@@ -219,7 +227,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     // LOAD CHART AND RESULTS
     if (results["frameCheck"] || results["audioAnalysis"]) {
         console.log("creating graphs, results");
-        console.log("frameCheck", results["frameCheck"]);
+        // console.log("frameCheck", results["frameCheck"]);
 
         let temp_result_values = {
             "frameCheck": undefined,
@@ -456,7 +464,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             curr_x += 120 / 72;
             doc.setFont("Outfit", "bold");
             audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${audio_result >= threshold? (audio_result * 100): (1-audio_result)*100} %`, curr_x, curr_y);
+            doc.text(` ${audio_result >= threshold ? (audio_result * 100) : (1 - audio_result) * 100} %`, curr_x, curr_y);
 
             curr_x = mx;
             curr_y += fontSize / 72 + 40 / 72;
@@ -467,7 +475,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             // doc.setFontSize(fontSize);
             // doc.setFont("Outfit", "normal");
             // doc.text("(confidence of audio being real)", curr_x, curr_y);
-            
+
             fontSize = 18;
             doc.setFontSize(fontSize);
             doc.setFont("Outfit", "bold");
@@ -527,7 +535,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
             // console.log((result_values["frameCheck"]));
             let sorted_labels = Object.keys(result_values["frameCheck"])
-            .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"]);
+                .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"]);
 
             // let frame_result = (results["frameCheck"].result).toFixed(4);
             const threshold = results["frameCheck"].threshold * 100;
@@ -559,7 +567,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             doc.setFont("Outfit", "bold");
 
             frame_result ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${frame_result? "Real" : "Fake"} `, curr_x, curr_y);
+            doc.text(` ${frame_result ? "Real" : "Fake"} `, curr_x, curr_y);
 
             doc.setTextColor(0, 0, 0);
             doc.setFont("Outfit", "normal");
@@ -571,7 +579,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             curr_x += 120 / 72;
             doc.setFont("Outfit", "bold");
             frame_result ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${(frame_result? (frame_prediction): (100-frame_prediction))} %`, curr_x, curr_y);
+            doc.text(` ${(frame_result ? (frame_prediction) : (100 - frame_prediction))} %`, curr_x, curr_y);
 
             curr_x = mx;
             curr_y += fontSize / 72 + 10 / 72;
@@ -642,7 +650,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         if (handle_new_analysis)
             handle_new_analysis();
         else
-            window.location.href = "/fact-checker"
+            window.location.href = "/media-checker"
     }
 
     return (
@@ -708,6 +716,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                             <div ref={frame_graph_Ref} className={` h-full flex flex-col gap-2 py-5 rounded-3xl overflow-hidden`}>
                                 {
                                     Object.keys(results["frameCheck"].labels_result)
+                                        .filter((v) => { return results["face_labels"].length == 0 || results["face_labels"].includes(v) })
                                         .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
                                         .slice(0, 3)
                                         .map((label, idx) => {
@@ -832,6 +841,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                     {
                                         Object.keys(results["frameCheck"].labels_result).length > 3 &&
                                         Object.keys(results["frameCheck"].labels_result)
+                                            .filter((v) => { return results["face_labels"].length == 0 || results["face_labels"].includes(v) })
                                             .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
                                             .slice(4, 10)
                                             .map((label, index) => {

@@ -4,7 +4,7 @@ import ResultsVideoUI from '@/components/ResultVideoUI_v1';
 import ResultsAudioUI from '@/components/ResultAudioUI';
 import ResultsImageUI from '@/components/ResultImageUI';
 import Result_UI from '@/components/result_ui_v2';
-import Assets_Show from '@/components/Assets_show'
+// import Assets_Show from '@/components/Assets_show'
 // import { useState, useEffect } from 'react';
 
 const Result_container = ({ res_data, set_res_data }) => {
