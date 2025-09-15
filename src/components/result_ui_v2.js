@@ -716,7 +716,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                             <div ref={frame_graph_Ref} className={` h-full flex flex-col gap-2 py-5 rounded-3xl overflow-hidden`}>
                                 {
                                     Object.keys(results["frameCheck"].labels_result)
-                                        .filter((v) => { return results["face_labels"].length==0 || results["face_labels"].includes(v) })
+                                        .filter((v) => { return results["face_labels"].length == 0 || results["face_labels"].includes(v) })
                                         .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
                                         .slice(0, 3)
                                         .map((label, idx) => {
@@ -841,7 +841,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                     {
                                         Object.keys(results["frameCheck"].labels_result).length > 3 &&
                                         Object.keys(results["frameCheck"].labels_result)
-                                            .filter((v) => results["face_labels"].includes(v))
+                                            .filter((v) => { return results["face_labels"].length == 0 || results["face_labels"].includes(v) })
                                             .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
                                             .slice(4, 10)
                                             .map((label, index) => {
