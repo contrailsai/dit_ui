@@ -24,7 +24,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
 
         for (let label in model_results["frameCheck"]) {
 
-            if( model_results["frameCheck"][label]["data_points"] > max_points){
+            if (model_results["frameCheck"][label]["data_points"] > max_points) {
                 temp_frame_index = label;
                 max_points = model_results["frameCheck"][label]["data_points"];
             }
@@ -55,7 +55,6 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         }
     }, [retryCount, videoRef]);
 
-
     // Safe video operations with error handling
     const safeVideoOperation = useCallback(async (operation) => {
         if (!videoRef.current) return;
@@ -69,7 +68,6 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
             }
         }
     }, [videoRef]);
-
 
     useEffect(() => {
         const video = videoRef.current;
@@ -159,7 +157,6 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         }
     }, [duration, bbox_data, model_results]);
 
-
     const handleVideoLoadedMetadata = useCallback(() => {
         if (!videoRef.current) return;
 
@@ -189,7 +186,6 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
     const handleLoadedData = useCallback(() => {
         setIsLoading(false);
     }, []);
-
 
     // Main effect for video event listeners
     useEffect(() => {
@@ -272,105 +268,6 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                                 <>
                                     {/* RESULT DETAILS */}
                                     <div className=" flex flex-col items-center gap-2 bg-red-30 min-h-[59vh]">
-                                        {/* RESULT */}
-                                        <div className=' flex w-fit justify-center flex-wrap'>
-                                            {/* BOTH AUDIO AND VIDEO 4-CASES */}
-                                            {
-                                                frame_index !== undefined && model_results["frameCheck"] !== undefined && model_results["audioAnalysis"] !== undefined
-                                                &&
-                                                (
-                                                    <>
-                                                        <span className='flex flex-col items-center '>
-                                                            {
-                                                                model_results["frameCheck"][frame_index]["prediction"] ?
-                                                                    (
-                                                                        <span className='flex gap-1 items-center text-xl '>
-                                                                            <span className='font-medium bg-green-200 px-3 py-1 rounded-full w-fit'>No manipulation detected</span>
-                                                                            in <span className='font-medium'>Video</span>
-                                                                        </span>
-                                                                    )
-                                                                    :
-                                                                    (
-                                                                        <span className='flex gap-1 items-center text-xl '>
-                                                                            <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
-                                                                            in <span className='font-medium'>Video</span>
-                                                                        </span>
-                                                                    )
-                                                            }
-                                                            <span className=' text-sm py-3'>
-                                                                and
-                                                            </span>
-                                                            {
-                                                                model_results["audioAnalysis"]["prediction"] ?
-                                                                    (
-                                                                        <span className='flex gap-1 items-center text-xl '>
-                                                                            <span className='font-medium bg-green-200 px-3 py-1 rounded-full w-fit'>No manipulation detected</span>
-                                                                            in <span className='font-medium'>Audio</span>
-                                                                        </span>
-                                                                    )
-                                                                    :
-                                                                    (
-                                                                        <span className='flex gap-1 items-center text-xl '>
-                                                                            <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
-                                                                            in <span className='font-medium'>Audio</span>
-                                                                        </span>
-                                                                    )
-                                                            }
-                                                        </span>
-                                                    </>
-                                                )
-                                            }
-                                            {/* ONLY VIDEO 2-CASES */}
-                                            {
-                                                frame_index !== undefined && model_results["frameCheck"] !== undefined && model_results["audioAnalysis"] === undefined
-                                                &&
-                                                (
-                                                    <>
-                                                        {
-                                                            model_results["frameCheck"][frame_index]["prediction"] ?
-                                                                (
-                                                                    <span className='flex gap-1 items-center text-xl '>
-                                                                        <span className='font-medium bg-green-200 px-3 py-1 rounded-full w-fit'>No manipulation detected</span>
-                                                                        in <span className='font-medium'>Video</span>
-                                                                    </span>
-                                                                )
-                                                                :
-                                                                (
-                                                                    <span className='flex gap-1 items-center text-xl '>
-                                                                        <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
-                                                                        in <span className='font-medium'>Video</span>
-                                                                    </span>
-                                                                )
-                                                        }
-                                                    </>
-                                                )
-                                            }
-                                            {/* ONLY AUDIO 2-CASES */}
-                                            {
-                                                model_results["frameCheck"] === undefined && model_results["audioAnalysis"] !== undefined
-                                                &&
-                                                (
-                                                    <>
-                                                        {
-                                                            model_results["audioAnalysis"]["prediction"] ?
-                                                                (
-                                                                    <span className='flex gap-1 items-center text-xl '>
-                                                                        <span className='font-medium bg-green-200 px-3 py-1 rounded-full w-fit'>No manipulation detected</span>
-                                                                        in <span className='font-medium'>Audio</span>
-                                                                    </span>
-                                                                )
-                                                                :
-                                                                (
-                                                                    <span className='flex gap-1 items-center text-xl '>
-                                                                        <span className='font-medium bg-red-200 px-2 py-1 rounded-full w-fit'>Manipulation detected</span>
-                                                                        in <span className='font-medium'>Audio</span>
-                                                                    </span>
-                                                                )
-                                                        }
-                                                    </>
-                                                )
-                                            }
-                                        </div>
 
                                         {/* FRAME, AUDIO RESULTS BOXES */}
                                         <div className=' flex justify-evenly items-center py-4 w-full gap-4 '>
@@ -406,58 +303,84 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                                                     }
 
                                                     return (
-                                                        <div key={idx} className={` w-64 bg-white flex flex-col items-center gap-3 px-5 py-2 rounded-3xl shadow ${pred ? " shadow-green-700" : " shadow-red-700"}  `}>
-                                                            <span className=' text-xl'>
+                                                        <div key={idx} className={` w-72 relative -top-10 bg-white flex flex-col items-center gap-3 px-5 py-2 rounded-3xl shadow ${pred ? " shadow-green-700" : " shadow-red-700"}  `}>
+                                                            <span className=' text-xl mt-3'>
                                                                 {
                                                                     val === "frameCheck" &&
                                                                     (
-                                                                        <div className="flex flex-col gap-2">
-                                                                            <span className=''>
-                                                                                <span className=' pr-4'>
-                                                                                    Frame Result:
+                                                                        <div className="flex flex-col gap-2 w-full">
+                                                                            <div className=' flex items-center justify-between gap-3'>
+                                                                                <span className='text-base'>
+                                                                                    Frame
                                                                                 </span>
-                                                                                <span className={` w-full text-center font-semibold ${pred ? " text-green-700" : "text-red-700"}`}>
+                                                                                <span className={` w-full text-center px-3 py-1 rounded-full font-semibold ${pred ? " text-green-700 bg-emerald-200 " : "text-red-700 bg-rose-200 "}`}>
+                                                                                    {/* {pred ? "No manipulation" : "Manipulated"} */}
                                                                                     {pred ? "Real" : "Fake"}
                                                                                 </span>
-                                                                            </span>
+                                                                            </div>
                                                                         </div>
                                                                     )
                                                                 }
                                                                 {
                                                                     val === "audioAnalysis" &&
                                                                     (
-
-                                                                        <div className="flex flex-col gap-2">
-                                                                            <span className=''>
-                                                                                <span className=' pr-4'>
-                                                                                    Audio Result:
+                                                                        <div className="flex flex-col gap-2 w-full">
+                                                                            <div className=' flex items-center justify-between gap-3'>
+                                                                                <span className='text-base'>
+                                                                                    Audio
                                                                                 </span>
-                                                                                <span className={` w-full text-center font-semibold ${pred ? " text-green-700" : "text-red-700"}`}>
+                                                                                <span className={` w-full text-center px-3 py-1 rounded-full font-semibold ${pred ? " text-green-700 bg-emerald-200 " : "text-red-700 bg-rose-200 "}`}>
+                                                                                    {/* {pred ? "No manipulation" : "Manipulated"} */}
                                                                                     {pred ? "Real" : "Fake"}
                                                                                 </span>
-                                                                            </span>
+                                                                            </div>
                                                                         </div>
                                                                     )
                                                                 }
                                                             </span>
-                                                            <div className=' flex  items-center w-full gap-2'>
+                                                            <div className="flex divide-x w-full pt-5">
+                                                                <div className="flex flex-col gap-3 w-full">
+                                                                    {/* <div className=" h-56  bg-red-500 "> */}
+                                                                    <div className={` h-56 ${pred ? "bg-gray-400" : "bg-red-500"} `}>
+
+                                                                        {/* <div className={` h-56  bg-gradient-to-t ${pred ? "from-gray-100 to-gray-400" : "from-rose-100 to-red-600"} `}> */}
+                                                                        <div style={{ height: `${perc}%` }} className={` bg-white`} />
+                                                                        <div className={` w-full relative -top-4 bg-white/10 backdrop-blur-xl rounded-full  py-0.5 text-center text-xl font-extrabold ${pred ? " text-gray-200 " : "text-red-600 "}`} > {Number(100 - perc).toFixed(2)} &nbsp; % </div>
+                                                                    </div>
+                                                                    <div className="w-full text-center text-lg font-semibold ">
+                                                                        Spoof
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex flex-col gap-3 w-full">
+                                                                    {/* <div className={` h-56  bg-gradient-to-t ${!pred ? "from-gray-100 to-gray-400" : "from-emerald-100 to-green-600"} `}> */}
+                                                                    <div className={` h-56 ${!pred ? "bg-gray-400" : "bg-green-500"} `}>
+
+                                                                        <div style={{ height: `${100 - perc}%` }} className={` bg-white`} />
+                                                                        <div className={` w-full relative -top-4 bg-white/10 backdrop-blur-xl rounded-full  py-0.5 text-center text-xl font-extrabold ${!pred ? " text-gray-200 " : "text-green-600 "}`} > {Number(perc).toFixed(2)} &nbsp; % </div>
+                                                                    </div>
+                                                                    <div className="w-full text-center text-lg font-semibold ">
+                                                                        Original
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            {/* <div className=' flex  items-center w-full gap-2'>
                                                                 <span>
                                                                     Confidence:
                                                                 </span>
                                                                 <span className={` mx-auto text-2xl px-3 py-1 rounded-full  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                                                    {isNaN(perc) ? "-" : pred? perc : (100-perc).toFixed(2) } %
+                                                                    {isNaN(perc) ? "-" : pred ? perc : (100 - perc).toFixed(2)} %
                                                                 </span>
-                                                            </div>
-                                                            <div className="relative left-0 top-0 h-3 my-3 ml-16 w-[236px] " >
+                                                            </div> */}
+                                                            {/* <div className="relative left-0 top-0 h-3 my-3 ml-16 w-[236px] " >
                                                                 <input
                                                                     type="range"
                                                                     className={`result-seperate-slider absolute w-[168px] outline-none transition-all duration-300 cursor-default`}
                                                                     min="0"
                                                                     max="100"
-                                                                    value={isNaN(perc) ? 0 : pred? perc : (100-perc).toFixed(2) }
+                                                                    value={isNaN(perc) ? 0 : pred ? perc : (100 - perc).toFixed(2)}
                                                                     readOnly
                                                                 />
-                                                            </div>
+                                                            </div> */}
                                                             {/* <span className=' text-xs'>
                                                                 confidence on {pred? "real": "fake"}
                                                             </span> */}
