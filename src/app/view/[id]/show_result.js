@@ -43,7 +43,6 @@ const Result_container = ({ res_data, assets }) => {
             results_data["results"]["frameCheck"] = model_responses["results"]["frame"]["models_results"][0];
             results_data["results"]["face_labels"] = [];
         }
-        
     }
 
     // VERIFIED RESULTS
