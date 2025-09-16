@@ -78,9 +78,7 @@ const Result_container = ({ res_data, set_res_data }) => {
                 upload_type === "audio" &&
 
                 <ResultsAudioUI
-                    response_data={{
-                        "audioAnalysis": model_responses["results"]["audio"]["models_results"][res_data["verifier_metadata"]["AudioCheckModelUse"]],
-                    }}
+                    response_data={results_data["results"]}
                     fileUrl={res_data["signedUrl"]}
                     file_metadata={res_data["file_metadata"]}
                     handle_newCheck={handle_newCheck}
