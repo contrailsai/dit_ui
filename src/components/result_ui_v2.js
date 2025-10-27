@@ -41,6 +41,17 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
     };
 
+    const normalize_value = (prediction_value, threshold) => {
+        // NORMALIZE IT TO BE CORRECT   (0 - th) => (0, 0.5) and (th - 1) => (0.5 - 1) use y=mx+c to make the eqs
+        if (prediction_value > threshold) {
+            prediction_value = (0.5 * (prediction_value + 1) - threshold) / (1 - threshold);
+        }
+        else {
+            prediction_value = (0.5 * prediction_value) / (threshold);
+        }
+        return prediction_value;
+    }
+
     //-------------------------------------------------
     const get_chart_data = (duration, person_obj_list, threshold = 0.7) => {
         let person_prediction_data = []
@@ -58,10 +69,13 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             const time = Math.floor(person_data.start_index / fps);
             if (curr_processing_time !== time) {
                 // set the value to the average of all values in that second
-                person_prediction_data[curr_processing_time] = prediction_sum / count;
+                let prediciton_value = prediction_sum / count;
+
+                prediciton_value = normalize_value(prediciton_value, threshold);
+                person_prediction_data[curr_processing_time] = prediciton_value;
                 // reset values with the new time value
                 count = 1;
-                prediction_sum = person_data.prediction;
+                prediction_sum = 0;
                 curr_processing_time = time;
             }
             else {
@@ -72,7 +86,9 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         }
 
         const mean_result = used_values.reduce((accumulator, currentValue) => accumulator + currentValue, 0) / used_values.length;
-        return { person_prediction_data, mean_result };
+        let mean_prediction_value = normalize_value(mean_result, threshold);
+
+        return { person_prediction_data, mean_prediction_value };
     }
 
     // 3 cases
@@ -84,6 +100,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         let temp_frame_values = {};
 
         const duration = results["frameCheck"]["duration"];
+        const threshold_for_graph = 0.5; // since we normalize it
         const threshold = results["frameCheck"]["threshold"];
 
         for (let label in results["frameCheck"]["labels_result"]) {
@@ -92,14 +109,14 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             }
             // console.log("frame chart pass: ", label);
             const person = results["frameCheck"]["labels_result"][label];
-            const { person_prediction_data, mean_result } = get_chart_data(duration, person, threshold);
+            const { person_prediction_data, mean_prediction_value } = get_chart_data(duration, person, threshold);
 
             // console.log("label : ", label);
             // console.log("prediction table : ", person_prediction_data);
 
             temp_frame_values[label] = {
-                "prediction": mean_result > threshold,
-                "percentage": (mean_result * 100).toFixed(2),
+                "prediction": mean_prediction_value > 0.5, // threshold after normalization is 0.5
+                "percentage": (mean_prediction_value * 100).toFixed(2),
                 "data_points": person.length
             };
 
@@ -114,21 +131,21 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                         label: "Probablility of real",
                         data: Object.values(person_prediction_data),
                         backgroundColor: Object.values(person_prediction_data).map((pred) => {
-                            return pred >= threshold ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)"
+                            return pred >= threshold_for_graph ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)"
                         }),
                         // borderColor: person.map((val, idx) => { return val.prediciton >= 0 ? "rgba(0,255,0,0.3)" : "rgba(255,0,0,0.3)" }),
                         // borderWidth: 0.75,
                         barPercentage: 1,
                         borderRadius: 100,
                         inflateAmount: 1,
-                        base: threshold
+                        base: threshold_for_graph
                     },
                     {
                         type: 'line',
                         borderColor: "rgba(0,0,100, 0.3)",
                         pointRadius: 0,
                         fill: {
-                            target: { value: threshold },
+                            target: { value: threshold_for_graph },
                             above: "rgba(0,255,0,0.3)",   // Area above the origin
                             below: "rgba(255,0,0,0.3)"    // below the origin
                         },
@@ -148,6 +165,8 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
     const update_audio_chart = () => {
         let temp_chart_data = {};
+        // const threshold = results["audioAnalysis"]["threshold"];
+        const threshold_for_graph = 0.5; // since we normalize it
         const threshold = results["audioAnalysis"]["threshold"];
 
         temp_chart_data = {
@@ -158,28 +177,28 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             datasets: [
                 {
                     label: "Probablility of real",
-                    data: results["audioAnalysis"]["table_data"].map((data_pt) => data_pt["prediction"]),
+                    data: results["audioAnalysis"]["table_data"].map((data_pt) => normalize_value(data_pt["prediction"], threshold)),
                     backgroundColor: results["audioAnalysis"]["table_data"].map((data_pt) => {
-                        return data_pt["prediction"] >= threshold ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)"
+                        return normalize_value(data_pt["prediction"], threshold) >= threshold_for_graph ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)"
                     }),
                     // borderColor: person.map((val, idx) => { return val.prediciton >= 0 ? "rgba(0,255,0,0.3)" : "rgba(255,0,0,0.3)" }),
                     // borderWidth: 0.75,
                     barPercentage: 1,
                     borderRadius: 100,
                     inflateAmount: 1,
-                    base: threshold
+                    base: threshold_for_graph
                 },
                 {
                     type: 'line',
                     borderColor: "rgba(0,0,100, 0.3)",
                     pointRadius: 0,
                     fill: {
-                        target: { value: threshold },
+                        target: { value: threshold_for_graph },
                         above: "rgba(0,255,0,0.3)",   // Area above the origin
                         below: "rgba(255,0,0,0.3)"    // below the origin
                     },
                     lineTension: 0.4,
-                    data: results["audioAnalysis"]["table_data"].map((data_pt) => data_pt["prediction"]),
+                    data: results["audioAnalysis"]["table_data"].map((data_pt) => normalize_value(data_pt["prediction"], threshold)),
                     borderWidth: 1,
                 },
             ]
@@ -187,9 +206,13 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         audio_chart = temp_chart_data;
         // setaudiocharts(temp_chart_data);
 
+        // NORMALIZE LIKE IN FRAME
+        const prediction_value = results["audioAnalysis"]["result"];
+        const normalized_prediction = normalize_value(prediction_value, threshold);
+
         return {
-            "prediction": results["audioAnalysis"]["result"] > results["audioAnalysis"]["threshold"],
-            "percentage": (results["audioAnalysis"]["result"] * 100).toFixed(2)
+            "prediction": normalized_prediction > threshold_for_graph,
+            "percentage": (normalized_prediction * 100).toFixed(2)
         }
 
     }
@@ -433,10 +456,12 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             fontSize = 20;
             doc.setFontSize(fontSize);
 
-            const audio_result = (results["audioAnalysis"].result).toFixed(4);
-            const threshold = results["audioAnalysis"].threshold
+            const threshold = results["audioAnalysis"].threshold;
+            const threshold_for_graph = 0.5; // since we normalize it
+            const audio_result = normalize_value(results["audioAnalysis"].result, threshold);
+            // const audio_result = (results["audioAnalysis"].result).toFixed(4);
 
-            if (audio_result >= threshold) {
+            if (audio_result >= threshold_for_graph) {
                 doc.text("The audio analysis detected no manipulation", curr_x, curr_y);
             }
             else {
@@ -452,8 +477,8 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             curr_x += 120 / 72;
             doc.setFont("Outfit", "bold");
 
-            audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${audio_result >= threshold ? "Real" : "Fake"} `, curr_x, curr_y);
+            audio_result >= threshold_for_graph ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
+            doc.text(` ${audio_result >= threshold_for_graph ? "Real" : "Fake"} `, curr_x, curr_y);
 
             doc.setTextColor(0, 0, 0);
             doc.setFont("Outfit", "normal");
@@ -463,8 +488,8 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
             curr_x += 120 / 72;
             doc.setFont("Outfit", "bold");
-            audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${audio_result >= threshold ? (audio_result * 100) : (1 - audio_result) * 100} %`, curr_x, curr_y);
+            audio_result >= threshold_for_graph ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
+            doc.text(` ${audio_result >= threshold_for_graph ? (audio_result * 100).toFixed(2) : ((1 - audio_result) * 100).toFixed(2)} %`, curr_x, curr_y);
 
             curr_x = mx;
             curr_y += fontSize / 72 + 40 / 72;
