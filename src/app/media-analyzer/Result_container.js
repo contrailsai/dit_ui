@@ -48,7 +48,7 @@ const Result_container = ({ res_data, set_res_data }) => {
     }
 
     return (<>
-        <div className=' pt-16 pb-10 px-12'>
+        <div className=''>
 
             {
                 upload_type === "video" &&
