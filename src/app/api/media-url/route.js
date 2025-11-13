@@ -1,4 +1,4 @@
-import { s3Client } from "@/utils/s3";
+import { s3ClientASIA, s3ClientUS } from "@/utils/s3";
 import { GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { NextResponse } from 'next/server';
@@ -13,17 +13,21 @@ const US_EAST_COUNTRIES = [
 export async function POST(request) {
     const countryCode = request.headers.get('x-vercel-ip-country')?.toUpperCase();
     let bucketName;
+    let S3Client;
 
     // Determine the nearest bucket based on the country codes (use US bucket for ameraicas and Europe)
     if (countryCode && US_EAST_COUNTRIES.includes(countryCode)) {
         bucketName = process.env.S3_BUCKET_NAME_US;
+        S3Client = s3ClientUS;
     } else {
         bucketName = process.env.S3_BUCKET_NAME_ASIA;
+        S3Client = s3ClientASIA;
     }
 
     // If the preferred bucket name is missing, fall back to the other one if available
     if (!bucketName) {
         bucketName = process.env.S3_BUCKET_NAME_US || process.env.S3_BUCKET_NAME_ASIA;
+        S3Client = (bucketName === process.env.S3_BUCKET_NAME_US) ? s3ClientUS : s3ClientASIA;
     }
     if (!bucketName) {
         console.error("Critical: Both US_BUCKET_NAME and ASIA_BUCKET_NAME are missing.");
@@ -39,7 +43,7 @@ export async function POST(request) {
     });
 
     try{
-        const signedUrl = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+        const signedUrl = await getSignedUrl(S3Client, command, { expiresIn: 3600 });
         return NextResponse.json({ signed_url: signedUrl });
     }
     catch (error){
