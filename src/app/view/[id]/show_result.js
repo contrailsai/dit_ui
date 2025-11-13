@@ -5,7 +5,7 @@ import ResultsAudioUI from '@/components/ResultAudioUI';
 import ResultsImageUI from '@/components/ResultImageUI';
 import Result_UI from '@/components/result_ui_v2';
 import Assets_Show from '@/components/Assets_show'
-// import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 const Result_container = ({ res_data, assets }) => {
     const model_responses = typeof (res_data["models_responses"]) === "string" ? JSON.parse(res_data["models_responses"]) : res_data["models_responses"];
@@ -27,19 +27,19 @@ const Result_container = ({ res_data, assets }) => {
     };
 
     // console.log( Object.keys(res_data["models_responses"]))
-    
+
     if (res_data["method"] === "direct") {
         const analysis_types = res_data["input_request"]["analysis_types"];
         results_data["analysis_types"] = analysis_types;
 
         // IMAGE
-        if (analysis_types["aigcCheck"]) 
+        if (analysis_types["aigcCheck"])
             results_data["results"]["aigcCheck"] = model_responses["results"]["image"]["models_results"][0];
         // AUDIO    
         if (analysis_types["audioAnalysis"])
             results_data["results"]["audioAnalysis"] = model_responses["results"]["audio"]["models_results"][0];
         // FRAME
-        if (analysis_types["frameCheck"]){
+        if (analysis_types["frameCheck"]) {
             results_data["results"]["frameCheck"] = model_responses["results"]["frame"]["models_results"][0];
             results_data["results"]["face_labels"] = [];
         }
@@ -77,9 +77,9 @@ const Result_container = ({ res_data, assets }) => {
 
                 if (verifier_metadata["FrameCheckModelUse"] !== null)
                     results_data["results"]["frameCheck"] = model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]];
-                
+
                 // WHICH FACES TO SHOW IN RESULT (empty for no face)
-                results_data["results"]["face_labels"] = verifier_metadata["face_labels"] !== undefined ? verifier_metadata["face_labels"] : [];  
+                results_data["results"]["face_labels"] = verifier_metadata["face_labels"] !== undefined ? verifier_metadata["face_labels"] : [];
             }
             else
                 results_data["results"]["frameCheck"] = undefined;
@@ -88,6 +88,36 @@ const Result_container = ({ res_data, assets }) => {
             res_data["file_metadata"]["verifier_comment"] = res_data["verifier_metadata"]["verifierComment"];
         }
     }
+
+    const [media_signed_url, set_media_signed_url] = useState(null);
+
+    const fetchMediaSignedUrl = async () => {
+        try {
+            const response = await fetch('/api/signed-url', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ media_key: res_data["media_key"] }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to get signed URL');
+            }
+
+            const data = await response.json();
+            set_media_signed_url(data.signed_url);
+            // Optional: Automatically trigger the download
+            // window.location.href = data.signed_url; 
+
+        } catch (error) {
+            console.error('Error:', error);
+            // Handle error in UI
+        }
+    };
+
+    useEffect(() => {
+        fetchMediaSignedUrl();
+    }, []);
+
 
     return (<>
         <div className=' pt-16 pb-10 px-12'>
@@ -102,13 +132,13 @@ const Result_container = ({ res_data, assets }) => {
                                 results={results_data["results"]}
                                 analysisTypes={results_data["analysis_types"]}
                                 file_metadata={res_data["file_metadata"]}
-                                fileUrl={res_data["signedUrl"]}
+                                fileUrl={media_signed_url}
                             />
                         </>
                         :
                         <ResultsVideoUI
                             response_data={results_data["results"]}
-                            fileUrl={res_data["signedUrl"]}
+                            fileUrl={media_signed_url}
                             file_metadata={res_data["file_metadata"]}
                             analysisTypes={results_data["analysis_types"]}
                             handle_newCheck={handle_newCheck}
@@ -122,7 +152,7 @@ const Result_container = ({ res_data, assets }) => {
                     response_data={{
                         "audioAnalysis": model_responses["results"]["audio"]["models_results"][res_data["verifier_metadata"]["AudioCheckModelUse"]],
                     }}
-                    fileUrl={res_data["signedUrl"]}
+                    fileUrl={media_signed_url}
                     file_metadata={res_data["file_metadata"]}
                     handle_newCheck={handle_newCheck}
                 />
@@ -132,7 +162,7 @@ const Result_container = ({ res_data, assets }) => {
 
                 <ResultsImageUI
                     response_data={results_data["results"]}
-                    fileUrl={res_data["signedUrl"]}
+                    fileUrl={media_signed_url}
                     file_metadata={res_data["file_metadata"]}
                     handle_newCheck={handle_newCheck}
                 />

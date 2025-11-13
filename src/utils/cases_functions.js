@@ -110,7 +110,7 @@ export const get_result_for_id = async (transaction_id) => {
     }
     //GET S3 media file here
     // Add the signed URL to the data object
-    data.signedUrl = await get_signed_url(data.media_key);
+    // data.signedUrl = await get_signed_url(data.media_key);
     return data;
 }
 

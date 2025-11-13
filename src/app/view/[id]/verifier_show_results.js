@@ -95,6 +95,8 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
     const model_responses = typeof (res_data["models_responses"]) === "string" ? JSON.parse(res_data["models_responses"]) : res_data["models_responses"];
     const upload_type = res_data["input_request"]["upload_type"];
 
+    const [media_signed_url, set_media_signed_url] = useState(null);
+
     const [faces, set_faces] = useState({
         "selected": [],
         "removed": []
@@ -142,8 +144,32 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
         }));
     }
 
+    const fetchMediaSignedUrl = async () => {
+        try {
+            const response = await fetch('/api/signed-url', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ media_key: res_data["media_key"] }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to get signed URL');
+            }
+
+            const data = await response.json();
+            set_media_signed_url(data.signed_url);
+            // Optional: Automatically trigger the download
+            // window.location.href = data.signed_url; 
+
+        } catch (error) {
+            console.error('Error:', error);
+            // Handle error in UI
+        }
+    };
+
     useEffect(() => {
         // console.log(model_responses)
+        fetchMediaSignedUrl();
 
         let results_data = { ...data_resultsUI };
         results_data["results"] = {}
@@ -301,7 +327,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
     }
 
     const handle_download_media = () => {
-        const url = res_data["signedUrl"];
+        const url = media_signed_url;
         const filename = res_data["file_metadata"]["name"];
         try {
             const encodedUrl = encodeURIComponent(url);
@@ -771,13 +797,13 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                                         results={data_resultsUI["results"]}
                                         analysisTypes={data_resultsUI["analysis_types"]}
                                         file_metadata={res_data["file_metadata"]}
-                                        fileUrl={res_data["signedUrl"]}
+                                        fileUrl={media_signed_url}
                                     />
                                 </>
                                 :
                                 <ResultsVideoUI
                                     response_data={data_resultsUI["results"]}
-                                    fileUrl={res_data["signedUrl"]}
+                                    fileUrl={media_signed_url}
                                     file_metadata={res_data["file_metadata"]}
                                     analysisTypes={data_resultsUI["analysis_types"]}
                                     handle_newCheck={handle_newCheck}
@@ -789,7 +815,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
 
                         <ResultsAudioUI
                             response_data={data_resultsUI["results"]}
-                            fileUrl={res_data["signedUrl"]}
+                            fileUrl={media_signed_url}
                             file_metadata={res_data["file_metadata"]}
                             handle_newCheck={handle_newCheck}
                         />
@@ -798,7 +824,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                         upload_type === "image" &&
                         <ResultImageUI
                             response_data={data_resultsUI["results"]}
-                            fileUrl={res_data["signedUrl"]}
+                            fileUrl={media_signed_url}
                             file_metadata={res_data["file_metadata"]}
                             analysisTypes={data_resultsUI["analysis_types"]}
                             handle_newCheck={handle_newCheck}
