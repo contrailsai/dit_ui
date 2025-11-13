@@ -146,7 +146,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
 
     const fetchMediaSignedUrl = async () => {
         try {
-            const response = await fetch('/api/signed-url', {
+            const response = await fetch('/api/media-url', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ media_key: res_data["media_key"] }),

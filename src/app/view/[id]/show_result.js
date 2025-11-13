@@ -93,7 +93,7 @@ const Result_container = ({ res_data, assets }) => {
 
     const fetchMediaSignedUrl = async () => {
         try {
-            const response = await fetch('/api/signed-url', {
+            const response = await fetch('/api/media-url', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ media_key: res_data["media_key"] }),
