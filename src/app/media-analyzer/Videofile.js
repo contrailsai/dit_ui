@@ -92,30 +92,32 @@ const VideoAnalysisForm = ({ user }) => {
                         </div>
                     </div>
                 }
-                {
-                    user.error === undefined &&
-                    < div className=" bg-primary/5 px-10 min-h-[95vh] pt-5 pb-10 ">
-                        {/* SHOW FORM */}
-                        {
-                            !response_data.got_result &&
-                            <>
-                                <h2 className=" w-full text-3xl font-semibold px-6 pb-6">Media Manipulation Detection</h2>
-                                <Form
-                                    response_data={response_data}
-                                    set_res_data={set_res_data}
-                                    set_id={set_id}
-                                />
-                            </>
-                        }
-                        {/* SHOW RESULT */}
-                        {
-                            response_data.got_result &&
-                            <>
-                                <Result_container res_data={response_data} set_res_data={set_res_data} />
-                            </>
-                        }
-                    </div>
-                }
+                <div className=' pt-10 pb-10 px-5'>
+                    {
+                        user.error === undefined &&
+                        < div className=" min-h-[95vh] ">
+                            {/* SHOW FORM */}
+                            {
+                                !response_data.got_result &&
+                                <>
+                                    <h2 className=" w-full text-3xl font-semibold px-6 pb-6">Media Manipulation Detection</h2>
+                                    <Form
+                                        response_data={response_data}
+                                        set_res_data={set_res_data}
+                                        set_id={set_id}
+                                    />
+                                </>
+                            }
+                            {/* SHOW RESULT */}
+                            {
+                                response_data.got_result &&
+                                <>
+                                    <Result_container res_data={response_data} set_res_data={set_res_data} />
+                                </>
+                            }
+                        </div>
+                    }
+                </div>
                 {/* SHOW ERROR related pop-up messages */}
                 {
                     response_data.message !== undefined
