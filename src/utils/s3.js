@@ -9,7 +9,7 @@ export const s3ClientUS = new S3Client({
 });
 
 export const s3ClientASIA = new S3Client({
-  region: process.env.AWS_REGION_US,
+  region: process.env.AWS_REGION_ASIA,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
