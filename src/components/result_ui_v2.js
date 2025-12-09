@@ -813,7 +813,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                         <div className={`w-full flex flex-col bg-white rounded-2xl overflow-hidden ${toggle_open === idx ? 'ml-0' : 'ml-8'} transition-all `}>
 
                                                             {/* PERSON's VIDEO SECTIONS */}
-                                                            < div className={` ${toggle_open === idx ? 'max-h-0' : 'max-h-72'} h-full border-4 border-black pr-2 bg-white flex items-center relative rounded-xl overflow-hidden transition-all `}>
+                                                            < div className={` ${toggle_open === idx ? 'max-h-0' : 'max-h-72'} h-full pr-2 bg-white flex items-center relative rounded-xl overflow-hidden transition-all `}>
                                                                 {/* REFERENCE LINE */}
                                                                 <div className="bg-gray-300 w-full h-[1px]" />
                                                                 {
@@ -830,7 +830,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                                                             <div
                                                                                 key={i}
                                                                                 style={{ width: `${width}%`, left: `${start}%` }}
-                                                                                className={` h-full border absolute ${v.prediction > threshold ? 'bg-green-400' : 'bg-red-400'} `}
+                                                                                className={` h-full absolute ${v.prediction > threshold ? 'bg-green-400' : 'bg-red-400'} `}
                                                                             />
                                                                         );
                                                                     })
