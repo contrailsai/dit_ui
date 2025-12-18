@@ -70,7 +70,7 @@ const Login_block = () => {
 
     return (
         <>
-            <div className=' shadow border border-primary/20 bg-white/70 backdrop-blur-sm mt-10 flex flex-col items-stretch w-fit py-10 px-10 rounded-3xl text-gray-800 '>
+            <div className=' shadow-sm shadow-primary border border-primary/30 bg-zinc-50/70 backdrop-blur-sm mt-[7vh] flex flex-col items-stretch w-fit min-w-[33vw] py-10  px-10 rounded-3xl text-zinc-800 '>
 
                 {/* LOGO */}
                 <div className=' text-primary w-full text-xl font-bold pb-7 flex justify-start items-center gap-3'>
@@ -81,107 +81,113 @@ const Login_block = () => {
                 </div>
 
                 <div className=" text-3xl font-semibold">
-                    {curr_shown === 'signup' && 'Create your Account'}
-                    {curr_shown === 'login' && 'Login to your Account'}
-                    {curr_shown === 'forgot' && 'Reset your Account Password'}
+                    {curr_shown === 'signup' && 'Create your account'}
+                    {curr_shown === 'login' && 'Login to your account'}
+                    {curr_shown === 'forgot' && 'Reset your account password'}
                 </div>
-                <div className=' font-light mb-2'>
-                    {curr_shown === 'signup' && 'Hello! select method of signup:'}
-                    {curr_shown === 'login' && 'Welcome back! select method to login:'}
-                    {curr_shown === 'forgot' && 'Enter email :'}
+                <div className=' font-light mt-1 mb-1'>
+                    {curr_shown === 'signup' && 'Select method of signup'}
+                    {curr_shown === 'login' && 'Enter your email below to login to your account'}
+                    {curr_shown === 'forgot' && 'Enter your email below to reset your account password'}
                 </div>
 
-
-                {
-                    curr_shown !== 'forgot' &&
-                    <>
-                        {/* OTHER PROVIDERS */}
-                        < button
-                            onClick={(e) => { e.preventDefault(); handleGoogleSignIn() }}
-                            className=' mt-5 flex items-center gap-2 border border-gray-300 px-4 py-3 min-w-80 rounded-full bg-gray-50 transition-all'
-                        >
-
-                            <span>
-                                <Google className="" />
-                            </span>
-
-                            Continue with Google
-                        </button>
-
-
-                        {/* OR */}
-                        <div className='flex items-center gap-3 pt-7  pb-5'>
-
-                            <div className='w-32 h-[1px] bg-gray-400' />
-                            <div className=" text-sm text-gray-600">
-                                or continue with email
-                            </div>
-                            <div className='w-32 h-[1px] bg-gray-400' />
-                        </div>
-                    </>
-                }
-
-                {/* FORM */}
-                <form onSubmit={handle_pass_signin} className=' flex flex-col gap-2'>
-                    <div className="flex flex-col gap-6">
-                        <div className="relative">
-                            <label className=' flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-gradient-to-t from-white to-transparent rounded-full ' htmlFor="email">
-                                <Mail strokeWidth={1} className="size-4" />
-                                Email
-                            </label>
-                            <input
-                                name='email'
-                                type="email"
-                                required
-                                value={email}
-                                className='border border-gray-300 bg-white focus:bg-white outline-none py-3 pl-6 pr-2 min-w-96 rounded-3xl w-full'
-                                onChange={(e) => setEmail(e.target.value)}
-                            />
-                        </div>
-                        {
-                            curr_shown !== 'forgot' &&
+                <div className="flex flex-col gap-5 py-3">
+                    {/* FORM */}
+                    <form onSubmit={handle_pass_signin} className=' flex flex-col gap-2'>
+                        <div className="flex flex-col gap-6">
                             <div className="relative">
-                                <label className=' flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-gradient-to-t from-white to-transparent rounded-full ' htmlFor="password">
-                                    <LockKeyhole className="size-4" strokeWidth={1} />
-                                    Password
+                                <label className=' pb-1 flex px-1 z-10 font-semibold text-zinc-700 text-sm rounded-full ' htmlFor="email">
+                                    {/* <Mail strokeWidth={1} className="size-4" /> */}
+                                    Email
                                 </label>
                                 <input
-                                    name='password'
-                                    type="password"
+                                    name='email'
+                                    type="email"
                                     required
-                                    value={password}
-                                    className='border border-gray-300 bg-white focus:bg-white outline-none py-3 pl-6 pr-2 min-w-96 rounded-3xl w-full'
-                                    onChange={(e) => setPassword(e.target.value)}
+                                    value={email}
+                                    placeholder="name@example.com"
+                                    className='border border-zinc-300 bg-white focus:bg-white outline-none py-3 pl-4 pr-2 min-w-96 rounded-2xl w-full'
+                                    onChange={(e) => setEmail(e.target.value)}
                                 />
                             </div>
+                            {
+                                curr_shown !== 'forgot' &&
+                                <div className="relative">
+                                    <div className="flex flex-row justify-between w-full pb-1">
+                                        <label className=' flex px-1 z-10 font-semibold text-zinc-700 text-sm rounded-full ' htmlFor="password">
+                                            {/* <LockKeyhole className="size-4" strokeWidth={1} /> */}
+                                            Password
+                                        </label>
+                                        {
+                                            (curr_shown === 'login') &&
+                                            <div onClick={() => { set_curr_shown('forgot') }} className=" hover:underline underline-offset-2 text-sm font-light font-zinc-900  cursor-pointer">
+                                                Forgot password?
+                                            </div>
+                                        }
+                                    </div>
+                                    <input
+                                        name='password'
+                                        type="password"
+                                        required
+                                        value={password}
+                                        placeholder="password"
+                                        className='border border-zinc-300 bg-white focus:bg-white outline-none py-3 pl-4 pr-2 min-w-96 rounded-2xl w-full'
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+                                </div>
+                            }
+                        </div>
+
+                        {/* SUBMIT BUTTON */}
+                        <button type="submit" className=' cursor-pointer mt-3 outline-none flex gap-3 items-center justify-center p-3 font-medium bg-primary hover:bg-primary/90 text-zinc-50 rounded-2xl transition-all'>
+                            <div>
+                                {curr_shown === 'signup' ? 'Create Account' : curr_shown === 'login' ? 'Log In' : 'Submit'}
+                            </div>
+                            {
+                                loading &&
+                                <div role="status">
+                                    <Loader2 className="size-6 text-sky-300 animate-spin stroke-white" />
+                                </div>
+                            }
+                        </button>
+                    </form>
+
+                    {/* PROVIDERS */}
+                    <div className=" w-full  ">
+                        {
+                            curr_shown !== 'forgot' &&
+                            <>
+                                <div className='flex items-center gap-3 '>
+                                    <div className='w-32 h-[1px] bg-gray-400' />
+                                    <div className=" text-sm text-gray-600">
+                                        Or continue with
+                                    </div>
+                                    <div className='w-32 h-[1px] bg-gray-400' />
+                                </div>
+                                {/* OTHER PROVIDERS */}
+                                < button
+                                    onClick={(e) => { e.preventDefault(); handleGoogleSignIn() }}
+                                    className=' mt-5 w-full flex items-center gap-2 border border-gray-300 px-4 py-3 min-w-80 rounded-2xl bg-zinc-50 hover:bg-white transition-all'
+                                >
+                                    <span>
+                                        <Google className="" />
+                                    </span>
+                                    Continue with Google
+                                </button>
+
+
+                                {/* OR */}
+                            </>
                         }
                     </div>
-                    {
-                        (curr_shown === 'login') &&
-                        <div onClick={() => { set_curr_shown('forgot') }} className=" w-full text-sm font-semibold text-end text-primary cursor-pointer">
-                            Forgot password?
-                        </div>
-                    }
 
-                    {/* SUBMIT BUTTON */}
-                    <button type="submit" className=' cursor-pointer mt-3 outline-none flex gap-3 items-center justify-center p-3 font-medium bg-primary hover:bg-primary/90 text-white rounded-3xl transition-all'>
-                        <div>
-                            {curr_shown === 'signup' ? 'Create Account' : curr_shown === 'login' ? 'Log In' : 'Submit'}
-                        </div>
-                        {
-                            loading &&
-                            <div role="status">
-                                <Loader2 className="size-6 text-sky-300 animate-spin stroke-white" />
-                            </div>
-                        }
-                    </button>
-
-                    <div className=' text-sm font-semibold text-center mt-5  '>
+                    {/* SIGNUP */}
+                    <div className='text-sm font-semibold text-center  '>
                         {
                             curr_shown === 'signup' &&
                             <>
                                 Already have an account?
-                                <span onClick={() => { set_curr_shown('login'); setEmail(''); setPassword('') }} className=' px-2 cursor-pointer text-primary'>
+                                <span onClick={() => { set_curr_shown('login'); setEmail(''); setPassword('') }} className=' px-2 underline cursor-pointer text-primary'>
                                     Login
                                 </span>
                             </>
@@ -190,14 +196,13 @@ const Login_block = () => {
                             (curr_shown === 'login' || curr_shown === 'forgot') &&
                             <>
                                 Don&apos;t have an account?
-                                <span onClick={() => { set_curr_shown('signup'); setEmail(''); setPassword('') }} className=' px-2 cursor-pointer text-primary'>
+                                <span onClick={() => { set_curr_shown('signup'); setEmail(''); setPassword('') }} className=' px-2 underline underline-offset-4 cursor-pointer text-primary'>
                                     Create an account
                                 </span>
                             </>
                         }
                     </div>
-
-                </form>
+                </div>
 
             </div >
 

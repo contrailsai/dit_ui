@@ -14,8 +14,8 @@ export default async function Login() {
                     <WavyBackground
                         colors={["#0253FF", "#0253FF", "#0253FF", "#0253FF", "#FFFFFF"]}
                         blur={20}
-                        waveWidth={100}
-                        backgroundFill={"#DDEEFF"}
+                        waveWidth={120}
+                        backgroundFill={"#F0F0F0"}
                         className={"h-full"} />
                 </div>
 
@@ -25,10 +25,10 @@ export default async function Login() {
 
                     <div className='flex justify-center pt-4 pb-4 text-black font-medium divide-x-2 divide-black'>
                         <div className='hover:underline underline-offset-4 text-center px-3'>
-                            <Link href={'/terms-of-service'}>Terms of Service</Link>
+                            <Link href={'https://www.contrails.ai/terms-of-use'} target="_blank" rel="noopener noreferrer" >Terms of Use</Link>
                         </div>
                         <div className='hover:underline underline-offset-4 px-3'>
-                            <Link href={'/privacy-policy'}>Privacy Policy</Link>
+                            <Link href={'https://www.contrails.ai/privacy-policy'} target="_blank" rel="noopener noreferrer" >Privacy Policy</Link>
                         </div>
                     </div>
 
