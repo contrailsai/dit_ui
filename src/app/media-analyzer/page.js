@@ -1,18 +1,18 @@
 
 import { redirect } from "next/navigation";
-import VideoAnalysisForm from "./Videofile";
+import VideoAnalysisForm from "../media-checker/File_direct";
 
 import { get_user_data } from "@/utils/user_functions";
 
 
 export default async function ProtectedPage() {
-    
+
     const user = await get_user_data();
 
     if (!user) {
         return redirect("/login");
     }
-    if (!user.verifier){
+    if (!user.verifier) {
         return redirect("/media-checker");
     }
 

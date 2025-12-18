@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { user_logout } from '@/utils/user_functions';
-import { BriefcaseBusiness, LucideChartArea, List} from "lucide-react";
+import { BriefcaseBusiness, LucideChartArea, List, LogOut, Sparkles } from "lucide-react";
 
 const Sidebar = ({ user }) => {
 
@@ -12,60 +12,77 @@ const Sidebar = ({ user }) => {
     }
 
     return (
-        <div className="fixed h-screen w-40 bg-white py-5 shadow-inner shadow-primary">
+        // Changed to w-64, added border-r instead of inner shadow, flex-col layout
+        <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-100 flex flex-col justify-between px-4 py-6 z-50">
 
-            <div className=' text-primary w-full text-xl font-bold flex justify-start items-center gap-2 pl-1.5 pr-1.5 '>
-                <Image src={'/logo.png'} width={27} height={20} alt="LOGO" />
-                Contrails AI
-            </div>
+            {/* --- TOP SECTION --- */}
+            <div>
+                {/* Logo Area */}
+                <div className='flex items-center gap-3 px-2 mb-10'>
+                    <div className="relative h-8 w-8">
+                        {/* Ensure your logo fits well here */}
+                        <Image
+                            src={'/logo.png'}
+                            fill
+                            className="object-contain"
+                            alt="LOGO"
+                        />
+                    </div>
+                    <span className="text-3xl font-bold tracking-tight text-primary">
+                        Contrails AI
+                    </span>
+                </div>
 
+                {/* Navigation Links */}
+                <nav className='flex flex-col gap-1.5 w-full'>
+                    {/* Kept logic for demo link if you uncomment it later */}
+                    {/* { user.verifier && ... } */}
 
-            <div className=' flex flex-col gap-2 divide-gray-300 w-full py-10  '>
-                {/* {
-                    user.verifier
-                    &&
-                    <Link href={"/demo"} className='  w-fit pl-2 pr-4 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-primary transition-all flex items-center gap-1 '>
-                        <BriefcaseBusiness className="size-5" />
-                        <span>
-                            Demo
-                        </span>
+                    <Link
+                        href={"/media-checker"}
+                        className='group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-all duration-200'
+                    >
+                        <LucideChartArea className="size-5 text-zinc-400 group-hover:text-primary transition-colors" />
+                        <span>Media Checker</span>
                     </Link>
-                } */}
-                <Link href={"/media-checker"} className='w-fit pl-2 pr-2 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-primary transition-all flex items-center gap-1 '>
-                    <LucideChartArea className="size-6" />
-                    <span>
-                        Media Checker
-                    </span>
-                </Link>
-                <Link href={"/media-checker/case-list"} className='w-fit pl-2 pr-4 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-primary transition-all flex items-center gap-1 '>
-                    <List className="size-6" />
-                    <span>
-                        {user.verifier ? "Verify Cases" : "Case List"}
-                    </span>
-                </Link>
 
+                    <Link
+                        href={"/media-checker/case-list"}
+                        className='group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 transition-all duration-200'
+                    >
+                        <List className="size-5 text-zinc-400 group-hover:text-primary transition-colors" />
+                        <span>{user.verifier ? "Verify Cases" : "Case List"}</span>
+                    </Link>
+                </nav>
             </div>
 
-            <div className='absolute bottom-0 w-full py-10'>
-                <div className=' text-2xl font-medium flex flex-col items-center px-2 py-5 text-primary '>
-                    {/* CREDITS */}
-                    {/* <Banknote className="size-16 stroke-white stroke-1 fill-primary" /> */}
-                    <div className='flex gap-2'>
-                        <span className='font-light'>Credits:</span>
-                        <span className='font-bold'>{user.tokens ? user.tokens : "🚫"}</span>
+            {/* --- BOTTOM SECTION --- */}
+            <div className='flex flex-col gap-4'>
+
+                {/* Credits Card */}
+                <div className='bg-zinc-50 flex items-end justify-between rounded-xl p-4 border border-zinc-100'>
+                    <div className='flex items-center gap-2 mb-1 text-xs font-semibold text-zinc-400 uppercase tracking-wider'>
+                        <Sparkles className="size-3" />
+                        <span>Credits</span>
+                    </div>
+                    <div className='text-2xl font-bold text-zinc-800'>
+                        {user.tokens !== undefined && user.tokens !== null ? user.tokens : "0"}
                     </div>
                 </div>
 
-                {/* LOGOUT */}
-                <div onClick={handle_logout} className=' w-fit pl-8 pr-6 py-1 rounded-e-full shadow shadow-white/0 hover:shadow-red-500  hover:bg-red-50 transition-all cursor-pointer flex items-center gap-1 '>
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="size-6">
-                        <path fillRule="evenodd" d="M16.5 3.75a1.5 1.5 0 0 1 1.5 1.5v13.5a1.5 1.5 0 0 1-1.5 1.5h-6a1.5 1.5 0 0 1-1.5-1.5V15a.75.75 0 0 0-1.5 0v3.75a3 3 0 0 0 3 3h6a3 3 0 0 0 3-3V5.25a3 3 0 0 0-3-3h-6a3 3 0 0 0-3 3V9A.75.75 0 1 0 9 9V5.25a1.5 1.5 0 0 1 1.5-1.5h6ZM5.78 8.47a.75.75 0 0 0-1.06 0l-3 3a.75.75 0 0 0 0 1.06l3 3a.75.75 0 0 0 1.06-1.06l-1.72-1.72H15a.75.75 0 0 0 0-1.5H4.06l1.72-1.72a.75.75 0 0 0 0-1.06Z" clipRule="evenodd" />
-                    </svg>
+                {/* Divider */}
+                <div className="h-px w-full bg-zinc-100 my-1"></div>
 
-                    Log out
-                </div>
+                {/* Logout */}
+                <button
+                    onClick={handle_logout}
+                    className='flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200 w-full text-left'
+                >
+                    <LogOut className="size-5" />
+                    <span>Log out</span>
+                </button>
             </div>
-        </div>
+        </aside>
     )
 }
 

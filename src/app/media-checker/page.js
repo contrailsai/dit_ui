@@ -5,10 +5,10 @@ import { useState } from "react";
 import { BadgeCheck, FileCheck, PlusCircle, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
-import VideoAnalysisForm from "@/app/media-analyzer/Videofile";
+import VideoAnalysisForm from "@/app/media-checker/File_direct";
 
 export default function FactChecker() {
-    
+
     const { user, updateUser, setUser } = useUser();
 
     console.log(user);
@@ -16,7 +16,7 @@ export default function FactChecker() {
     //RESPONSE INDICATOR FOR WHEN TO CHANGE PAGE
     const [response_data, set_res_data] = useState({});
 
-    if (user.user_type !== "direct"){
+    if (user.user_type !== "direct") {   // for longer media channel cases
         // SCENARIO 1: USER UPLOADS A FILE
         if (!response_data["uploaded"]) {
             return (
@@ -30,54 +30,60 @@ export default function FactChecker() {
                 </div>
             );
         }
-    
+
         // SCENARIO 2: SUCCESSFULL UPLOAD PAGE
         if (response_data["uploaded"]) {
             return (
-                <div className=' pt-16 w-full flex flex-col justify-center items-center gap-16 '>
-    
-                    <div className=' bg-slate-100 px-10 py-6 w-fit flex flex-col gap-4 items-center justify-center rounded-full aspect-square shadow-inner shadow-primary'>
-    
-                        <span className="">
-                            <FileCheck className="size-20" strokeWidth={1} />
-                        </span>
-    
-                        <h3 className='text-2xl flex items-center gap-3'>
-                            Case Uploaded Successfully
-                            <BadgeCheck className="size-8" strokeWidth={1.5} />
-                        </h3>
-                    </div>
-    
-                    <div className=' flex flex-col items-center'>
-                        <p>
-                            The results will be available in 1-2 Hours
-                        </p>
-    
-                        {/* BUTTONS FOR CASE LIST/ NEW ANALYSIS */}
-                        <div className=' flex gap-7 items-center mr-1 '>
-                            {/* NEW ANALYSIS */}
-                            <div onClick={() => { set_res_data({}) }} className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow'>
-                                <PlusCircle className="size-6" strokeWidth={1.5} />
-                                New Analysis
-                            </div>
-    
-                            {/* GOTO CASELIST */}
-                            <Link
-                                href={'/user/case-list'}
-                                className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow '
-                            >
-                                Goto CaseList
-                                <ExternalLink className="size-6" strokeWidth={1.5} />
-                            </Link>
+                <div className='pt-24 w-full flex flex-col justify-center items-center animate-in fade-in slide-in-from-bottom-4 duration-500'>
+
+                    {/* --- SUCCESS INDICATOR --- */}
+                    <div className='flex flex-col items-center gap-6 text-center mb-10'>
+
+                        {/* Icon Bubble */}
+                        <div className='bg-green-50 p-6 rounded-full ring-8 ring-green-50/50'>
+                            <FileCheck className="size-12 text-green-600" strokeWidth={1.5} />
+                        </div>
+
+                        {/* Headings */}
+                        <div className="space-y-2">
+                            <h3 className='text-3xl font-semibold tracking-tight text-zinc-900 flex items-center justify-center gap-3'>
+                                Case Uploaded Successfully
+                                <BadgeCheck className="size-6 text-green-600" strokeWidth={2} />
+                            </h3>
+                            <p className="text-zinc-500 text-lg font-light">
+                                The results will be available in 1-2 Hours
+                            </p>
                         </div>
                     </div>
-    
+
+                    {/* --- ACTION BUTTONS --- */}
+                    <div className='flex flex-row items-center gap-4'>
+
+                        {/* NEW ANALYSIS: Primary Button (Solid) */}
+                        <div
+                            onClick={() => { set_res_data({}) }}
+                            className='group cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white text-sm font-medium hover:bg-primary hover:shadow-lg hover:shadow-zinc-900/20 transition-all duration-200'
+                        >
+                            <PlusCircle className="size-5" strokeWidth={2} />
+                            <span>New Analysis</span>
+                        </div>
+
+                        {/* GOTO CASELIST: Secondary Button (Outline) */}
+                        <Link
+                            href={'/media-checker/case-list'}
+                            className='group cursor-pointer flex items-center gap-2 px-6 py-3 rounded-full bg-white border border-zinc-200 text-zinc-600 text-sm font-medium hover:border-zinc-400 hover:text-zinc-900 transition-all duration-200'
+                        >
+                            <span>Goto CaseList</span>
+                            <ExternalLink className="size-4 text-zinc-400 group-hover:text-zinc-900 transition-colors" strokeWidth={2} />
+                        </Link>
+                    </div>
+
                 </div>
             )
         }
     }
-    else{
-        return (
+    else {
+        return ( // for direct demos
             <VideoAnalysisForm user={user} />
         )
     }

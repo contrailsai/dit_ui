@@ -19,9 +19,12 @@ export default async function FactCheckerLayout({ children }) {
         <>
             <Sidebar user={user} />
             <UserProvider initialUser={user}>
-                <div className="pl-40">
-                    {children}
-                </div>
+                {/* Updated padding to match new sidebar width and added minimal background */}
+                <main className="pl-64 min-h-screen bg-gray-50/50">
+                    <div className=" px-2 py-6 max-w-7xl mx-auto">
+                        {children}
+                    </div>
+                </main>
             </UserProvider>
         </>
     );

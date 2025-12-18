@@ -5,13 +5,10 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { get_result_for_id } from '@/utils/cases_functions';
 
-// import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import Form from './Form';
-import Result_container from './Result_container';
-import Sidebar from '@/components/Sidebar';
+import Form from '../media-analyzer/Form';
+import Result_container from '../media-analyzer/Result_container';
 
-const VideoAnalysisForm = ({ user }) => {
+const DirectAnalysisForm = ({ user }) => {
     // const [user_data, set_user_data] = useState(user);
     const [response_data, set_res_data] = useState({ got_result: false });
     const [id, set_id] = useState("");
@@ -72,10 +69,8 @@ const VideoAnalysisForm = ({ user }) => {
     }
 
     return (
-        <>
-            <div className="h-screen">
-
-
+        <div className="">
+            <div>
                 {/* ERROR OCCURED IN GETTING USER */}
                 {
                     user.error !== undefined &&
@@ -92,15 +87,15 @@ const VideoAnalysisForm = ({ user }) => {
                         </div>
                     </div>
                 }
-                <div className=' pt-10 pb-10 px-5'>
+                <div className=' pt-10 pb-10 px-5 '>
                     {
                         user.error === undefined &&
-                        < div className=" min-h-[95vh] ">
+                        < div className=" min-h-[86vh] ">
                             {/* SHOW FORM */}
                             {
                                 !response_data.got_result &&
                                 <>
-                                    <h2 className=" w-full text-3xl font-semibold px-6 pb-6">Media Manipulation Detection</h2>
+                                    <h2 className=" text-zinc-800 w-full text-3xl font-semibold px-6 pb-6">Synthetic Media Verification</h2>
                                     <Form
                                         response_data={response_data}
                                         set_res_data={set_res_data}
@@ -143,10 +138,10 @@ const VideoAnalysisForm = ({ user }) => {
                         </div>
                     </>
                 }
-                <Footer />
-            </div >
-        </>
+            </div>
+        </div >
+
     );
 };
 
-export default VideoAnalysisForm;
+export default DirectAnalysisForm;
