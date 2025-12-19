@@ -321,9 +321,9 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                             className={`flex-shrink-0 flex items-center justify-center w-10 h-10 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white rounded-full transition-all ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'}`}
                         >
                             {isPaused ? (
-                                <Pause className="size-4" fill="currentColor" strokeWidth={0} />
-                            ) : (
                                 <Play className="size-4" fill="currentColor" strokeWidth={0} />
+                            ) : (
+                                <Pause className="size-4" fill="currentColor" strokeWidth={0} />
                             )}
                         </button>
 
