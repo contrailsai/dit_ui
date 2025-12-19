@@ -5,7 +5,7 @@ import { useState } from "react";
 import { BadgeCheck, FileCheck, PlusCircle, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
-import VideoAnalysisForm from "@/app/media-checker/File_direct";
+import DirectAnalysisForm from "@/app/media-checker/File_direct";
 
 export default function FactChecker() {
 
@@ -84,7 +84,7 @@ export default function FactChecker() {
     }
     else {
         return ( // for direct demos
-            <VideoAnalysisForm user={user} />
+            <DirectAnalysisForm user={user} />
         )
     }
 }
