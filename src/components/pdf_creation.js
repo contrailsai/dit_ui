@@ -84,7 +84,7 @@ const drawBadge = (doc, text, x, y, type = "neutral") => {
 // MAIN EXPORT FUNCTION
 // ----------------------------------------------------------------------
 
-export const video_pdf = async (analysisTypes, results, result_values, file_metadata, audio_graph_Ref, frame_person_refs) => {
+export const video_pdf = async (analysisTypes, results, result_values, file_metadata, audio_graph_Ref, frame_person_refs, fileUrl = null) => {
 
     if (!results || !result_values) {
         console.error("Analysis results are not ready for export.");
@@ -213,10 +213,7 @@ export const video_pdf = async (analysisTypes, results, result_values, file_meta
     // ============================================
     const drawAnalysisHeader = (title, isReal, score, imageBase64 = null) => {
         const headerH = 0.8;
-        const startY = curr_y;
-
-        // Background for header
-        // drawCard(doc, curr_x, curr_y, CONTENT_WIDTH, headerH, COLORS.white); // Optional: card background
+        // const startY = curr_y;
 
         let contentX = curr_x;
 
@@ -224,15 +221,12 @@ export const video_pdf = async (analysisTypes, results, result_values, file_meta
         if (imageBase64) {
             const imgSize = 0.6;
             // Mask circle? jsPDF doesn't do circle clipping easily. We'll do a rounded rect or just a rect.
-            // A rounded rect clip is possible but complex. Let's do a nice rounded square.
             try {
                 doc.setDrawColor(...COLORS.border);
                 doc.roundedRect(contentX, curr_y, imgSize, imgSize, 0.15, 0.15, 'S');
-                // We can't easily clip to rounded rect in jsPDF purely with addImage.
-                // We will just draw the image inside.
                 doc.addImage(imageBase64, 'JPEG', contentX + 0.02, curr_y + 0.02, imgSize - 0.04, imgSize - 0.04);
             } catch (e) {
-                console.warn("Could not draw face image", e);
+                console.warn("Could not draw face/thumbnail image", e);
             }
             contentX += imgSize + 0.25;
         }
@@ -271,7 +265,7 @@ export const video_pdf = async (analysisTypes, results, result_values, file_meta
     let overallReal = true;
     let overallScore = 0;
 
-    const analysisKeys = ["audioAnalysis", "frameCheck"];
+    const analysisKeys = ["audioAnalysis", "frameCheck", "aigcCheck"];
     let scores = [];
 
     analysisKeys.forEach(key => {
@@ -281,18 +275,17 @@ export const video_pdf = async (analysisTypes, results, result_values, file_meta
             if (key === "audioAnalysis") {
                 isReal = result_values[key].prediction;
                 score = Number(result_values[key].percentage);
+            } else if (key === "aigcCheck") {
+                isReal = result_values[key].prediction;
+                score = Number(result_values[key].percentage);
             } else if (key === "frameCheck") {
-                // For frames, take the worst or first? Usually worst prediction.
-                // result_values["frameCheck"] is an object of labels.
                 const labels = Object.keys(result_values["frameCheck"]);
                 if (labels.length > 0) {
-                    // Find if any label is fake
                     const fakeLabel = labels.find(l => !result_values["frameCheck"][l].prediction);
                     if (fakeLabel) {
                         isReal = false;
                         score = Number(result_values["frameCheck"][fakeLabel].percentage);
                     } else {
-                        // All real, take lowest confidence? or first.
                         isReal = true;
                         score = Number(result_values["frameCheck"][labels[0]].percentage);
                     }
@@ -340,7 +333,68 @@ export const video_pdf = async (analysisTypes, results, result_values, file_meta
         return false;
     };
 
-    // 1. AUDIO ANALYSIS
+    // 1. IMAGE ANALYSIS (Prioritize if exists)
+    if (result_values["aigcCheck"] && fileUrl) {
+        doc.addPage();
+        curr_y = GEOM.margin;
+
+        doc.setFontSize(16);
+        doc.setFont("Outfit", "bold");
+        doc.setTextColor(...COLORS.text);
+        doc.text("Image Analysis", curr_x, curr_y);
+        curr_y += 0.4;
+
+        const imgDataVal = result_values["aigcCheck"];
+        const isReal = imgDataVal.prediction;
+        const confScore = isReal ? imgDataVal.percentage : (100 - Number(imgDataVal.percentage)).toFixed(2);
+
+        // Header
+        drawAnalysisHeader("Analyzed Image", isReal, confScore, null);
+
+        // Draw Image Logic - Large Preview
+        if (fileUrl) {
+            try {
+                // Determine layout
+                const maxImgH = 5.0; // Max height for image
+                const maxImgW = CONTENT_WIDTH;
+
+                // We'll create an Image object to get dimensions, but since we are async...
+                // Ideally this should be passed in or we load it. 
+                // However, jspdf addImage can handle URL but synchronous is tricky if we don't know dims.
+                // We can just use a fixed aspect or try to load.
+                // For robustness, let's load it into an HTML Image element to get natural dims.
+                const img = new Image();
+                img.src = fileUrl;
+                await new Promise((resolve) => {
+                    if (img.complete) resolve();
+                    else {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    }
+                });
+
+                if (img.width) {
+                    let finalW = maxImgW;
+                    let finalH = (img.height * finalW) / img.width;
+
+                    if (finalH > maxImgH) {
+                        finalH = maxImgH;
+                        finalW = (img.width * finalH) / img.height;
+                    }
+
+                    // Center it if width < content width
+                    const xOffset = (CONTENT_WIDTH - finalW) / 2;
+
+                    doc.addImage(fileUrl, 'JPEG', curr_x + xOffset, curr_y, finalW, finalH);
+                    curr_y += finalH + 0.4;
+                }
+            } catch (e) {
+                console.error("Could not load main image for PDF", e);
+            }
+        }
+    }
+
+    // 2. AUDIO ANALYSIS
     if (result_values["audioAnalysis"] && audio_graph_Ref.current) {
         doc.addPage();
         curr_y = GEOM.margin;
@@ -380,7 +434,7 @@ export const video_pdf = async (analysisTypes, results, result_values, file_meta
         }
     }
 
-    // 2. FRAME ANALYSIS
+    // 3. FRAME ANALYSIS
     if (result_values["frameCheck"]) {
         doc.addPage();
         curr_y = GEOM.margin;
@@ -409,11 +463,6 @@ export const video_pdf = async (analysisTypes, results, result_values, file_meta
             const isReal = data.prediction;
             const confScore = isReal ? data.percentage : (100 - Number(data.percentage)).toFixed(2);
 
-            // Get Face Image
-            // Ensure we handle potential data URI prefix differences if any, 
-            // but usually `results.frameCheck.label_faces[label]` is a full data:image/jpeg;base64... string or URL.
-            // If it is a URL, addImage supports it if it's not CORS restricted.
-            // Since this runs client side, data URIs are safest.
             const faceImage = results?.frameCheck?.label_faces ? results.frameCheck.label_faces[label] : null;
 
             checkPageBreak(5); // Header + Graph
