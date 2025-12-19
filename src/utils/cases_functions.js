@@ -6,54 +6,45 @@ import { get_user_data } from "@/utils/user_functions";
 import { getSignedUrl } from '@aws-sdk/cloudfront-signer';
 import { publishSNSMessage } from "@/utils/sns";
 
-// get cases list based on user's role 
-export const get_user_transactions = async () => {
+export const get_user_transactions = async (offset = 0, limit = 20) => {
 
     const supabase = await createServerSupabaseClient();
     const user = await get_user_data();
 
-    if (user === null)
-        return;
+    if (user === null) return;
 
-    let transactions_list = {}
-    if (user.verifier) {
-        //get data from db and return it 
-        transactions_list = await supabase
-            .from('Transactions')
-            .select('id,created_at,input_request,file_metadata,status,prediction,method')
-    }
-    else {
-        //get data from db and return it 
-        transactions_list = await supabase
-            .from('Transactions')
-            .select('id,created_at,input_request,file_metadata,status,prediction,method')
-            .eq('user_id', user.id)
+    // 1. Start building the query
+    let query = supabase
+        .from('Transactions')
+        .select('id,created_at,input_request,file_metadata,status,prediction,method', { count: 'exact' });
+
+    // 2. Apply Role-Based Logic
+    // If NOT a verifier, restrict to specific user_id. 
+    // If they ARE a verifier, we skip this to return all rows.
+    if (!user.verifier) {
+        query = query.eq('user_id', user.id);
     }
 
+    // 3. Apply Sorting & Pagination (DB Side)
+    // We must sort BEFORE pagination to ensure we get the latest records first.
+    const { data, error, count } = await query
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
 
-    if (transactions_list.error) {
-        console.error(transactions_list.error)
+
+    if (error) {
+        console.error(error);
         return {
             "error": "error in getting user history"
-        }
+        };
     }
-    // SORT DATA BY DATE REVERSE ORDER
-    transactions_list.data.sort((x, y) => {
-        const timex = new Date(x.created_at).getTime()
-        const timey = new Date(y.created_at).getTime()
-        return -(timex - timey)
-    })
 
-    // let t_list = transactions_list.data.filter((val, idx) => {
-    //     if (!val.method)
-    //         return true
-    //     if (val.method == 'verification')
-    //         return true
-    //     else
-    //         return false
-    // })
-
-    return { user, t_list: transactions_list.data }; //transactions_list.data;
+    // Return user, list, and total count (useful for frontend pagination UI)
+    return {
+        user,
+        t_list: data,
+        total_count: count
+    };
 }
 
 export const get_demo_transactions = async () => {
