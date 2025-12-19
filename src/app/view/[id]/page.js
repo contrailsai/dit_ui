@@ -19,13 +19,13 @@ const Page = async ({ params }) => {
   const assets = await get_assets_for_id(id);
   const client_email = user_data.user_type === "verifier" ? await get_user_email_by_id(case_result_data.user_id) : "";
 
-  const has_result = typeof(case_result_data["prediction"]) === "boolean";
+  const has_result = typeof (case_result_data["prediction"]) === "boolean";
 
   return (
     <>
       <Sidebar user={user_data} />
 
-      <div className=' pl-40 h-screen '>
+      <div className='ml-64 h-screen '>
         {
           user_data.user_type === "verifier" ?
             // VERIFIER BASED 
@@ -41,8 +41,8 @@ const Page = async ({ params }) => {
                   {/* DIRECT RESULT USER */}
                   {
                     has_result ?
-                      <Result_container 
-                        res_data={case_result_data} 
+                      <Result_container
+                        res_data={case_result_data}
                         assets={assets}
                       />
                       :

@@ -3,21 +3,18 @@ import LineChart from "@/components/LineChart";
 import { useRef, useState, useEffect } from "react";
 import { VideoPlayer } from "@/components/Video_Player";
 import Waveform from "@/components/Waveform";
-import jsPDF from "jspdf";
-import html2canvas from 'html2canvas';
-import { Outfit_bold_font } from './outfit-bold-font';
-import { Outfit_normal_font } from './outfit-normal-font';
-import { logo_base64 } from './logo_base64';
-import { DownloadFile, PersonCircle, PlusCircle, RightArrow } from "./SVGs";
+import { Download, UserCircle2, PlusCircle, ChevronRight, AudioLines } from "lucide-react"
 import Image from "next/image";
+
+import { video_pdf } from "./pdf_creation";
 
 export default function Result_UI({ results, analysisTypes, file_metadata, fileUrl, handle_new_analysis = null }) {
 
     console.log("face labels = ", results["face_labels"])
-    const videoRef = useRef();
-    const audio_graph_Ref = useRef();
-    const frame_graph_Ref = useRef();
-    const frame_person_refs = [useRef(), useRef(), useRef()];
+    const videoRef = useRef(null);
+    const audio_graph_Ref = useRef(null);
+    const frame_graph_Ref = useRef(null);
+    const frame_person_refs = [useRef(null), useRef(null), useRef(null)];
 
     const [curr_model, set_curr_model] = useState(analysisTypes["frameCheck"] ? "frameCheck" : analysisTypes["audioAnalysis"] ? "audioAnalysis" : "");
     const [toggle_open, set_toggle_open] = useState(null);
@@ -28,8 +25,6 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     let frame_charts = null;
     let audio_chart = null;
     let fps = results["frameCheck"] ? results["frameCheck"]["video_fps"] : 25;
-
-    // console.log("res = ",results)
 
     useEffect(() => {
         set_curr_model(analysisTypes["frameCheck"] ? "frameCheck" : analysisTypes["audioAnalysis"] ? "audioAnalysis" : "");
@@ -42,7 +37,6 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     };
 
     const normalize_value = (prediction_value, threshold) => {
-        // NORMALIZE IT TO BE CORRECT   (0 - th) => (0, 0.5) and (th - 1) => (0.5 - 1) use y=mx+c to make the eqs
         if (prediction_value > threshold) {
             prediction_value = (0.5 * (prediction_value + 1) - threshold) / (1 - threshold);
         }
@@ -52,30 +46,37 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         return prediction_value;
     }
 
-    //-------------------------------------------------
+    const handle_pdf_creation = async () => {
+        console.log("creating pdf");
+        await video_pdf(analysisTypes, results, result_values, file_metadata, audio_graph_Ref, frame_person_refs);
+    }
+
     const get_chart_data = (duration, person_obj_list, threshold = 0.7) => {
-        let person_prediction_data = []
-        // default value 0.7 (if no data at that timestamp (frames in 1 sec))
+        let person_prediction_data = {}
         for (let i = 0; i <= duration; i++)
             person_prediction_data[i] = 0.5;
+
+        if (person_obj_list.length === 0) {
+            return { person_prediction_data, mean_prediction_value: 0.5 };
+        }
 
         let used_values = [];
 
         let count = 0;
         let prediction_sum = 0;
-        let curr_processing_time = 0;
-        // iterating through all data points of this person each point contains (start_index, end_index, predisction)
+        let curr_processing_time = Math.floor(person_obj_list[0].start_index / fps);
+
         for (let person_data of person_obj_list) {
             const time = Math.floor(person_data.start_index / fps);
             if (curr_processing_time !== time) {
-                // set the value to the average of all values in that second
-                let prediciton_value = prediction_sum / count;
+                if (count > 0) {
+                    let prediction_value = prediction_sum / count;
+                    prediction_value = normalize_value(prediction_value, threshold);
+                    person_prediction_data[curr_processing_time] = prediction_value;
+                }
 
-                prediciton_value = normalize_value(prediciton_value, threshold);
-                person_prediction_data[curr_processing_time] = prediciton_value;
-                // reset values with the new time value
                 count = 1;
-                prediction_sum = 0;
+                prediction_sum = person_data.prediction;
                 curr_processing_time = time;
             }
             else {
@@ -85,39 +86,39 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             used_values.push(person_data.prediction)
         }
 
-        const mean_result = used_values.reduce((accumulator, currentValue) => accumulator + currentValue, 0) / used_values.length;
+        // Final processing for the last accumulated chunk
+        if (count > 0) {
+            let prediction_value = prediction_sum / count;
+            prediction_value = normalize_value(prediction_value, threshold);
+            person_prediction_data[curr_processing_time] = prediction_value;
+        }
+
+        const mean_result = used_values.length > 0 ? used_values.reduce((accumulator, currentValue) => accumulator + currentValue, 0) / used_values.length : 0.5;
         let mean_prediction_value = normalize_value(mean_result, threshold);
 
         return { person_prediction_data, mean_prediction_value };
     }
-
-    // 3 cases
-    // using only returned values good looking curves, inconsistent with time frames 
-    // USING BOTJH 
 
     const update_frame_chart = () => {
         let temp_chart_data = {};
         let temp_frame_values = {};
 
         const duration = results["frameCheck"]["duration"];
-        const threshold_for_graph = 0.5; // since we normalize it
+        const threshold_for_graph = 0.5;
         const threshold = results["frameCheck"]["threshold"];
 
         for (let label in results["frameCheck"]["labels_result"]) {
             if (results["face_labels"].length > 0 && !results["face_labels"].includes(label)) {
                 continue;
             }
-            // console.log("frame chart pass: ", label);
             const person = results["frameCheck"]["labels_result"][label];
             const { person_prediction_data, mean_prediction_value } = get_chart_data(duration, person, threshold);
 
-            // console.log("label : ", label);
-            // console.log("prediction table : ", person_prediction_data);
-
             temp_frame_values[label] = {
-                "prediction": mean_prediction_value > 0.5, // threshold after normalization is 0.5
+                "prediction": mean_prediction_value > 0.5,
                 "percentage": (mean_prediction_value * 100).toFixed(2),
-                "data_points": person.length
+                "data_points": person.length,
+                "per_second_data": person_prediction_data
             };
 
             temp_chart_data[label] = {
@@ -128,13 +129,11 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                 datasets: [
 
                     {
-                        label: "Probablility of real",
+                        label: "Probability of real",
                         data: Object.values(person_prediction_data),
                         backgroundColor: Object.values(person_prediction_data).map((pred) => {
-                            return pred >= threshold_for_graph ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)"
+                            return pred >= threshold_for_graph ? "rgba(16, 185, 129, 0.2)" : "rgba(244, 63, 94, 0.2)" // Emerald/Rose
                         }),
-                        // borderColor: person.map((val, idx) => { return val.prediciton >= 0 ? "rgba(0,255,0,0.3)" : "rgba(255,0,0,0.3)" }),
-                        // borderWidth: 0.75,
                         barPercentage: 1,
                         borderRadius: 100,
                         inflateAmount: 1,
@@ -142,12 +141,12 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                     },
                     {
                         type: 'line',
-                        borderColor: "rgba(0,0,100, 0.3)",
+                        borderColor: "rgba(24, 24, 27, 0.2)", // Zinc-900
                         pointRadius: 0,
                         fill: {
                             target: { value: threshold_for_graph },
-                            above: "rgba(0,255,0,0.3)",   // Area above the origin
-                            below: "rgba(255,0,0,0.3)"    // below the origin
+                            above: "rgba(16, 185, 129, 0.1)",
+                            below: "rgba(244, 63, 94, 0.1)"
                         },
                         lineTension: 0.4,
                         spanGaps: true,
@@ -157,16 +156,13 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                 ]
             };
         }
-        // console.log("final frame values data = ", temp_frame_values)
         frame_charts = temp_chart_data;
-        // setframecharts(temp_chart_data);
         return temp_frame_values;
     }
 
     const update_audio_chart = () => {
         let temp_chart_data = {};
-        // const threshold = results["audioAnalysis"]["threshold"];
-        const threshold_for_graph = 0.5; // since we normalize it
+        const threshold_for_graph = 0.5;
         const threshold = results["audioAnalysis"]["threshold"];
 
         temp_chart_data = {
@@ -176,13 +172,11 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             ),
             datasets: [
                 {
-                    label: "Probablility of real",
+                    label: "Probability of real",
                     data: results["audioAnalysis"]["table_data"].map((data_pt) => normalize_value(data_pt["prediction"], threshold)),
                     backgroundColor: results["audioAnalysis"]["table_data"].map((data_pt) => {
-                        return normalize_value(data_pt["prediction"], threshold) >= threshold_for_graph ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)"
+                        return normalize_value(data_pt["prediction"], threshold) >= threshold_for_graph ? "rgba(16, 185, 129, 0.2)" : "rgba(244, 63, 94, 0.2)"
                     }),
-                    // borderColor: person.map((val, idx) => { return val.prediciton >= 0 ? "rgba(0,255,0,0.3)" : "rgba(255,0,0,0.3)" }),
-                    // borderWidth: 0.75,
                     barPercentage: 1,
                     borderRadius: 100,
                     inflateAmount: 1,
@@ -190,12 +184,12 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                 },
                 {
                     type: 'line',
-                    borderColor: "rgba(0,0,100, 0.3)",
+                    borderColor: "rgba(24, 24, 27, 0.2)",
                     pointRadius: 0,
                     fill: {
                         target: { value: threshold_for_graph },
-                        above: "rgba(0,255,0,0.3)",   // Area above the origin
-                        below: "rgba(255,0,0,0.3)"    // below the origin
+                        above: "rgba(16, 185, 129, 0.1)",
+                        below: "rgba(244, 63, 94, 0.1)"
                     },
                     lineTension: 0.4,
                     data: results["audioAnalysis"]["table_data"].map((data_pt) => normalize_value(data_pt["prediction"], threshold)),
@@ -204,9 +198,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             ]
         };
         audio_chart = temp_chart_data;
-        // setaudiocharts(temp_chart_data);
 
-        // NORMALIZE LIKE IN FRAME
         const prediction_value = results["audioAnalysis"]["result"];
         const normalized_prediction = normalize_value(prediction_value, threshold);
 
@@ -244,432 +236,54 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             }
         }
         bboxes_data = temp_bbox_data;
-        // set_bboxes_data({ ...temp_bbox_data });
     }
 
-    // LOAD CHART AND RESULTS
     if (results["frameCheck"] || results["audioAnalysis"]) {
         console.log("creating graphs, results");
-        // console.log("frameCheck", results["frameCheck"]);
 
         let temp_result_values = {
             "frameCheck": undefined,
             "audioAnalysis": undefined
         };
-        // format frame data for Chart, result UI 
         if (results["frameCheck"]) {
             temp_result_values["frameCheck"] = update_frame_chart();
-            // format bboxes by seconds
             update_bboxes_data();
         }
 
-        // format audio data for chart
         if (results["audioAnalysis"])
             temp_result_values["audioAnalysis"] = update_audio_chart();
 
-        // console.log(temp_result_values);
         result_values = temp_result_values;
     }
 
-    const handle_pdf_creation = async () => {
-        console.log("creating pdf");
 
-        // set_taking_ss(true);
-        // // Wait for the state update to be applied
-        // await new Promise(resolve => {
-        //     setTimeout(resolve, 500);
-        // });
-
-        // let temp_curr_analysis = curr_analysis;
-
-        const doc = new jsPDF({ orientation: "p", unit: "in", compress: true });
-        doc.addFileToVFS('outfit_normal.ttf', Outfit_normal_font);
-        doc.addFileToVFS('outfit_bold.ttf', Outfit_bold_font);
-
-        doc.addFont('outfit_normal.ttf', 'Outfit', 'normal');
-        doc.addFont('outfit_bold.ttf', 'Outfit', 'bold');
-
-        doc.setFont("Outfit", "bold");
-
-        const my = 1;
-        const mx = 0.4;
-
-        let curr_x = mx;
-        let curr_y = my;
-
-        let fontSize = 18;
-        doc.setFontSize(fontSize);
-
-        // SHOW LOGO AND NAME OF COMPANY
-        const logo_img_w = 18 / 72;
-        const logo_img_h = 18 / 72
-
-        doc.addImage(logo_base64, 'PNG', curr_x, curr_y - 16 / 72, logo_img_w, logo_img_h);
-        curr_x += 16 / 72 + 7 / 72;
-        doc.setTextColor(2, 83, 288);
-        doc.text('Contrails AI', curr_x, curr_y - 2 / 72);
-
-
-        curr_x = mx;
-        curr_y += fontSize / 72 + 14 / 72; //go down (1. for the above comapny name text, 2. for space b/t the 2 text)
-
-        // PRINT Heading (bold)
-        fontSize = 24;
-        doc.setFontSize(fontSize);
-        doc.setTextColor(0, 0, 0);
-        doc.text("Manipulation Detection Report", curr_x, curr_y);
-        curr_y += fontSize / 72 + 10 / 72;
-
-        // PRINT FILE DATA
-        fontSize = 18;
-        doc.setFontSize(fontSize);
-        doc.text("File Data", curr_x, curr_y);
-
-        curr_y += fontSize / 72 + 12 / 72;
-
-        fontSize = 14;
-        doc.setFontSize(fontSize);
-
-        // FILE NAME
-        doc.setFont("Outfit", "bold");
-        doc.text("File name: ", curr_x, curr_y);
-        curr_x += 80 / 72;
-        doc.setFont("Outfit", "normal")
-        doc.text(`${file_metadata.name}`, curr_x, curr_y);
-
-        curr_x = mx;
-        curr_y += fontSize / 72 + 12 / 72;
-
-        //FILE SIZE
-        doc.setFont("Outfit", "bold");
-        doc.text("File Size: ", curr_x, curr_y);
-        curr_x += 80 / 72;
-        doc.setFont("Outfit", "normal")
-        doc.text(`${file_metadata.size}`, curr_x, curr_y);
-
-        curr_x = mx;
-        curr_y += fontSize / 72 + 36 / 72;
-
-        fontSize = 20;
-        doc.setFontSize(fontSize);
-        doc.setFont("Outfit", "bold");
-        doc.text("Result", curr_x, curr_y);
-        doc.setFont("Outfit", "normal");
-
-        curr_y += fontSize / 72 + 12 / 72;
-
-        // fontSize = 14;
-        // doc.setFontSize(fontSize);
-
-        fontSize = 18;
-        doc.setFontSize(fontSize);
-
-        if (analysisTypes["audioAnalysis"]) {
-            if (results["audioAnalysis"] && results["audioAnalysis"]["result"] < results["audioAnalysis"]["threshold"]) {
-                doc.text(`Manipulation detected in Audio`, curr_x, curr_y);
-            }
-            else {
-                doc.text(`No manipulation detected in Audio`, curr_x, curr_y);
-            }
-            curr_y += fontSize / 72 + 6 / 72;
-        }
-        if (analysisTypes["audioAnalysis"] && analysisTypes["frameCheck"] && results["audioAnalysis"] && results["frameCheck"]) {
-            doc.text('and', curr_x, curr_y);
-            curr_y += fontSize / 72 + 10 / 72;
-        }
-        if (analysisTypes["frameCheck"]) {
-            if (results["frameCheck"] && results["frameCheck"]["result"] < results["frameCheck"]["threshold"]) {
-                doc.text(`Manipulation detected in Video`, curr_x, curr_y);
-            }
-            else {
-                doc.text(`No manipulation detected in Video`, curr_x, curr_y);
-            }
-            curr_y += fontSize / 72;
-            curr_x = mx;
-        }
-
-        curr_y += 36 / 72; //gap of 20 px
-
-        if (file_metadata.verifier_comment) {
-            fontSize = 18;
-            doc.setFontSize(fontSize);
-            doc.setFont("Outfit", "bold");
-            doc.text("Expert's Comment: ", curr_x, curr_y);
-            curr_x = mx;
-            curr_y += fontSize / 72 + 12 / 72
-            doc.setFont("Outfit", "normal");
-            fontSize = 14;
-            doc.setFontSize(fontSize);
-            const maxWidth = 550 / 72;
-            const commentLines = doc.splitTextToSize(file_metadata.verifier_comment, maxWidth);
-
-            doc.text(commentLines, curr_x, curr_y);
-
-            curr_x = mx;
-            curr_y += (commentLines.length * fontSize / 72) + (12 / 72);
-            // curr_y += (2 * fontSize / 72) + (12 / 72);
-        }
-        else {
-            curr_y += (fontSize / 72) + (12 / 72);
-        }
-
-
-        // SHOW VIDEO PREVIEW, RESULT OF BOTH ANALYSIS AND VERDICT
-
-        // const result_element = result_ref.current;
-        // let result_canvas = await html2canvas(result_element);
-        // const result_imgData = result_canvas.toDataURL('image/png');
-        // const res_img_w = 550 / 72;
-        // const res_img_h = (result_canvas.height * res_img_w) / result_canvas.width;
-        // doc.addImage(result_imgData, 'PNG', curr_x, curr_y, res_img_w, res_img_h, '', 'FAST');
-
-        // doc.setFillColor(2, 83, 288)
-        // doc.rect(curr_x, curr_y, 20*16/72, 20*9/72, 'F')
-
-        // doc.setDrawColor(150, 150, 150);
-        // doc.setLineWidth(1 / 72);
-        // doc.line(curr_x, curr_y, curr_x + 550 / 72, curr_y);
-
-
-        // _________________AUDIO ANALYSIS PAGE START_______________________
-        if (results["audioAnalysis"] !== undefined) {
-
-            // Create a new Page for audio analysis
-            doc.addPage();
-            curr_x = mx;
-            curr_y = my;
-
-            //AUDIO ANALYSIS START
-            fontSize = 24;
-            doc.setFontSize(fontSize);
-            doc.setFont("Outfit", "bold");
-            doc.text("Audio Analysis", curr_x, curr_y);
-            doc.setFont("Outfit", "normal");
-            curr_y += fontSize / 72 + 24 / 72;
-
-            // set_curr_model("audioAnalysis");
-            // Wait for the state update to be applied
-            // await new Promise(resolve => {
-            //     setTimeout(resolve, 100);
-            // });
-
-            fontSize = 20;
-            doc.setFontSize(fontSize);
-
-            const threshold = results["audioAnalysis"].threshold;
-            const threshold_for_graph = 0.5; // since we normalize it
-            const audio_result = normalize_value(results["audioAnalysis"].result, threshold);
-            // const audio_result = (results["audioAnalysis"].result).toFixed(4);
-
-            if (audio_result >= threshold_for_graph) {
-                doc.text("The audio analysis detected no manipulation", curr_x, curr_y);
-            }
-            else {
-                doc.text("The audio analysis detected manipulation", curr_x, curr_y);
-            }
-            curr_y += fontSize / 72 + 20 / 72;
-
-            fontSize = 18;
-            doc.setFontSize(fontSize);
-
-            doc.text("Audio result: ", curr_x, curr_y);
-
-            curr_x += 120 / 72;
-            doc.setFont("Outfit", "bold");
-
-            audio_result >= threshold_for_graph ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${audio_result >= threshold_for_graph ? "Real" : "Fake"} `, curr_x, curr_y);
-
-            doc.setTextColor(0, 0, 0);
-            doc.setFont("Outfit", "normal");
-            curr_x = mx;
-            curr_y += fontSize / 72 + 16 / 72;
-            doc.text("Confidence: ", curr_x, curr_y);
-
-            curr_x += 120 / 72;
-            doc.setFont("Outfit", "bold");
-            audio_result >= threshold_for_graph ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${audio_result >= threshold_for_graph ? (audio_result * 100).toFixed(2) : ((1 - audio_result) * 100).toFixed(2)} %`, curr_x, curr_y);
-
-            curr_x = mx;
-            curr_y += fontSize / 72 + 40 / 72;
-            // curr_y += fontSize / 72 + 10 / 72;
-            doc.setTextColor(0, 0, 0);
-
-            // fontSize = 11;
-            // doc.setFontSize(fontSize);
-            // doc.setFont("Outfit", "normal");
-            // doc.text("(confidence of audio being real)", curr_x, curr_y);
-
-            fontSize = 18;
-            doc.setFontSize(fontSize);
-            doc.setFont("Outfit", "bold");
-            doc.text("Audio Analysis Graph", curr_x, curr_y);
-
-            doc.setFont("Outfit", "normal");
-            curr_y += fontSize / 72 + 12 / 72;
-
-            fontSize = 14;
-            doc.setFontSize(fontSize);
-            doc.text("the graph shows the prediction score of the audio being real with respect to time.", curr_x, curr_y);
-
-            curr_y += fontSize / 72 + 16 / 72;
-
-            const audio_result_element = audio_graph_Ref.current;
-            console.log(audio_result_element);
-            let audio_result_canvas = await html2canvas(audio_result_element);
-            const audio_result_imgData = audio_result_canvas.toDataURL('image/png');
-            const aud_res_img_w = 550 / 72;
-            const aud_res_img_h = (audio_result_canvas.height * aud_res_img_w) / audio_result_canvas.width;
-            doc.addImage(audio_result_imgData, 'PNG', curr_x, curr_y, aud_res_img_w, aud_res_img_h, '', 'FAST');
-
-            curr_x = mx;
-            curr_y += aud_res_img_h + 30 / 72; //gap of 30 px
-
-            // doc.setDrawColor(150, 150, 150);
-            // doc.setLineWidth(1 / 72);
-            // doc.line(curr_x, curr_y, curr_x + 550 / 72, curr_y);
-
-            curr_y += 30 / 72;
-        }
-
-
-        // _________________FRAME ANALYSIS PAGE START_______________________
-        if (results["frameCheck"] !== undefined) {
-            doc.addPage();
-            curr_x = mx;
-            curr_y = my;
-
-            //FRAME ANALYSIS START
-            fontSize = 24;
-            doc.setFontSize(fontSize);
-            doc.setFont("Outfit", "bold");
-            doc.text("Frame Analysis", curr_x, curr_y);
-            doc.setFont("Outfit", "normal");
-
-            curr_y += fontSize / 72 + 24 / 72;
-
-            // set_curr_model("frameCheck");
-            // Wait for the state update to be applied
-            // await new Promise(resolve => {
-            //     setTimeout(resolve, 100);
-            // });
-
-            fontSize = 20;
-            doc.setFontSize(fontSize);
-
-            // console.log((result_values["frameCheck"]));
-            let sorted_labels = Object.keys(result_values["frameCheck"])
-                .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"]);
-
-            // let frame_result = (results["frameCheck"].result).toFixed(4);
-            const threshold = results["frameCheck"].threshold * 100;
-            const frame_prediction = Number(result_values["frameCheck"][sorted_labels[0]]["percentage"]).toFixed(2);
-            const frame_result = frame_prediction > threshold;
-            let labels_count = 0;
-
-            for (let label of sorted_labels) {
-                if (labels_count > 3)
-                    break;
-                labels_count++;
-            }
-
-
-            if (frame_result) {
-                doc.text("The video frames analysis detected no manipulation", curr_x, curr_y);
-            }
-            else {
-                doc.text("The video frames analysis detected manipulation", curr_x, curr_y);
-            }
-            curr_y += fontSize / 72 + 20 / 72;
-
-            fontSize = 18;
-            doc.setFontSize(fontSize);
-
-            doc.text("Frame result: ", curr_x, curr_y);
-
-            curr_x += 120 / 72;
-            doc.setFont("Outfit", "bold");
-
-            frame_result ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${frame_result ? "Real" : "Fake"} `, curr_x, curr_y);
-
-            doc.setTextColor(0, 0, 0);
-            doc.setFont("Outfit", "normal");
-            curr_x = mx;
-            curr_y += fontSize / 72 + 16 / 72;
-
-            doc.text("Confidence: ", curr_x, curr_y);
-
-            curr_x += 120 / 72;
-            doc.setFont("Outfit", "bold");
-            frame_result ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${(frame_result ? (frame_prediction) : (100 - frame_prediction))} %`, curr_x, curr_y);
-
-            curr_x = mx;
-            curr_y += fontSize / 72 + 10 / 72;
-
-            fontSize = 11;
-            doc.setFontSize(fontSize);
-            doc.setTextColor(0, 0, 0);
-            doc.setFont("Outfit", "normal");
-
-            // doc.text("(confidence of video frames being real)", curr_x, curr_y);
-            curr_y += fontSize / 72 + 40 / 72;
-
-            fontSize = 18;
-            doc.setFontSize(fontSize);
-            doc.setFont("Outfit", "bold");
-            doc.text("Frames Analysis Chart", curr_x, curr_y);
-
-            doc.setFont("Outfit", "normal");
-            curr_y += fontSize / 72 + 12 / 72;
-
-            fontSize = 14;
-            doc.setFontSize(fontSize);
-            doc.text("the graphs show individual people identified and prediction of their face being fake.", curr_x, curr_y);
-
-            curr_y += fontSize / 72 + 20 / 72;
-
-            for (let i = 0; i < frame_person_refs.length; i++) {
-                // check if the person's Ref was even made
-                if (frame_person_refs[i].current) {
-
-                    doc.text(`P ${i + 1}'s Graph`, curr_x, curr_y);
-                    curr_y += 10 / 72;
-
-                    const frame_result_element = frame_person_refs[i].current;
-                    let frame_result_canvas = await html2canvas(frame_result_element);
-                    const frame_result_imgData = frame_result_canvas.toDataURL('image/png');
-                    const frm_res_img_w = 500 / 72;
-                    const frm_res_img_h = (frame_result_canvas.height * frm_res_img_w) / frame_result_canvas.width;
-                    doc.addImage(frame_result_imgData, 'PNG', curr_x, curr_y, frm_res_img_w, frm_res_img_h, '', 'FAST');
-
-                    curr_x = mx;
-                    curr_y += frm_res_img_h + 30 / 72; //gap of 30 px
-                }
-            }
-
-            // const frame_result_element = frame_graph_Ref.current;
-            // let frame_result_canvas = await html2canvas(frame_result_element);
-            // const frame_result_imgData = frame_result_canvas.toDataURL('image/png');
-            // const frm_res_img_w = 550 / 72;
-            // const frm_res_img_h = (frame_result_canvas.height * frm_res_img_w) / frame_result_canvas.width;
-            // doc.addImage(frame_result_imgData, 'PNG', curr_x, curr_y, frm_res_img_w, frm_res_img_h, '', 'FAST');
-            // curr_x = mx;
-            // curr_y += frm_res_img_h + 30 / 72; //gap of 30 px
-        }
-
-        // set_taking_ss(false);
-        // await new Promise(resolve => {
-        //     setTimeout(resolve, 500);
-        // });
-
-        doc.save("Deepfake_Media_Report.pdf");
-        // set_curr_analysis(temp_curr_analysis);
-
-
-    }
+    // Hidden container for capturing graphs for PDF
+    const PDFGraphContainer = () => (
+        <div style={{ position: "fixed", left: "-10000px", top: 0, width: "600px", visibility: "visible", zIndex: -100 }}>
+            {/* Audio Chart */}
+            {results?.audioAnalysis && audio_chart && (
+                <div ref={audio_graph_Ref} style={{ width: "100%", height: "300px", background: "white" }}>
+                    <LineChart chartData={audio_chart} />
+                </div>
+            )}
+
+            {/* Frame Charts */}
+            {results?.frameCheck && frame_charts && result_values?.frameCheck && (
+                <div>
+                    {Object.keys(results["frameCheck"].labels_result)
+                        .filter((v) => results["face_labels"].length === 0 || results["face_labels"].includes(v))
+                        .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
+                        .slice(0, 3)
+                        .map((label, idx) => (
+                            <div key={idx} ref={frame_person_refs[idx]} style={{ width: "100%", height: "300px", background: "white", marginTop: "20px" }}>
+                                <LineChart chartData={frame_charts[label]} />
+                            </div>
+                        ))
+                    }
+                </div>
+            )}
+        </div>
+    );
 
     const handle_newCheck = () => {
         if (handle_new_analysis)
@@ -679,380 +293,296 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
     }
 
     return (
-        <div className="min-h-screen bg-white text-black">
-            {/* TITLE */}
-            <div className=' flex w-full justify-between items-end'>
-                <h2 className="text-3xl font-semibold px-5 pt-3 py-6">Deepfake Investigator</h2>
-                {
-                    fileUrl &&
-                    <div className=' flex gap-7 items-center mr-1 '>
-                        {/* NEW ANALYSIS */}
-                        <div onClick={handle_newCheck} className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow'>
-                            New Analysis
-                            <PlusCircle className="size-6" strokeWidth={1.5} />
-                        </div>
-
-                        {/* PDF EXPORT */}
-                        <div
-                            onClick={async () => { await handle_pdf_creation() }}
-                            className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow '
-                        >
-                            Export Report
-                            <DownloadFile className="size-6" strokeWidth={1.5} />
-                        </div>
+        <div className="min-h-screen text-zinc-900 font-sans selection:bg-zinc-200">
+            <PDFGraphContainer />
+            {/* HEADER */}
+            <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100">
+                <div className='max-w-[1400px] mx-auto flex w-full justify-between items-center px-6 py-4'>
+                    <div className="flex items-center gap-3">
+                        {/* <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                            <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
+                        </div> */}
+                        <h2 className="text-xl font-semibold tracking-tight text-black">Deepfake Investigator</h2>
                     </div>
-                }
-            </div>
+                    {fileUrl && (
+                        <div className='flex gap-3 items-center'>
+                            <button onClick={handle_newCheck} className='flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full text-zinc-600 border border-zinc-300 bg-white hover:border-zinc-400 transition-all'>
+                                New Analysis
+                                <PlusCircle className="size-4 text-zinc-600" strokeWidth={2} />
+                            </button>
+                            <button
+                                onClick={handle_pdf_creation}
+                                className='flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-full bg-primary text-white hover:bg-primary/90 transition-all shadow-md'
+                            >
+                                Export Report
+                                <Download className="size-4 text-zinc-50" strokeWidth={2} />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </header>
 
-            {/* VIDEO RESULTS + CHARTS */}
-            <div className="min-h-[132vh] flex flex-col pt-10 relative">
+            <main className="max-w-[1400px] mx-auto px-6 py-10 flex flex-col gap-12">
+                {/* TOP SECTION: VIDEO + SUMMARY CARDS */}
+                <section className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    {/* VIDEO CONTAINER */}
+                    <div className="lg:col-span-8 space-y-6 h-full flex items-center justify-center">
+                        <VideoPlayer
+                            videoRef={videoRef}
+                            fileUrl={fileUrl}
+                            bbox_data={bboxes_data}
+                            duration={results[curr_model] ? results[curr_model]["duration"] : 0}
+                            model_results={result_values}
+                        />
+                    </div>
 
-                <VideoPlayer
-                    videoRef={videoRef}
-                    fileUrl={fileUrl}
-                    bbox_data={bboxes_data}
-                    duration={results[curr_model] ? results[curr_model]["duration"] : 0}
-                    model_results={result_values}
-                // model_results={null}
-                />
+                    {/* SUMMARY CARDS */}
+                    <div className="lg:col-span-4 flex flex-col gap-4">
+                        <h3 className="text-sm font-bold uppercase tracking-widest text-zinc-400 px-2">Analysis Overview</h3>
+                        {result_values && Object.keys(result_values).map((val, idx) => {
+                            if (result_values[val] === undefined) return null;
 
-                {/* TOGGLE CURRENT ANALYSIS */}
-                <div className=" relative h-0 w-96 -top-36 flex gap-4 px-6 ">
-                    {
-                        Object.keys(analysisTypes).map((analysisType, idx) => {
-                            // console.log(analysisType, analysisTypes[analysisType]);
-                            if (!analysisTypes[analysisType])
-                                return;
+                            let pred;
+                            let perc;
+
+                            if (val === "audioAnalysis") {
+                                pred = result_values[val]["prediction"];
+                                perc = result_values[val]["percentage"];
+                            } else if (val === "frameCheck") {
+                                // Frame check summary logic
+                                const first_label = Object.keys(result_values[val])[0];
+                                if (first_label !== undefined) {
+                                    perc = result_values[val][first_label]["percentage"];
+                                    pred = result_values[val][first_label]["prediction"];
+                                } else {
+                                    perc = 0;
+                                    pred = false;
+                                }
+                            }
+
+                            const score = Number(pred ? (perc) : (100 - perc)).toFixed(1);
 
                             return (
-                                <div key={idx} onClick={() => { set_curr_model(analysisType) }} className={` transition-all cursor-pointer flex justify-center border-2 border-primary ${curr_model === analysisType ? "bg-primary text-white" : "bg-white text-primary"} h-20 w-36 px-2 py-4 rounded-3xl`}>
-                                    {analysisType === "frameCheck" ? "Frame Check" : analysisType === "audioAnalysis" ? "Audio Check" : "Image Check"}
+                                <div key={idx} className="bg-white border border-zinc-100 rounded-3xl p-6 shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <span className='font-bold text-zinc-900'>
+                                            {val === "frameCheck" ? "Visual Integrity" : "Audio Integrity"}
+                                        </span>
+                                        <span className={`text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-tighter ${pred ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>
+                                            {pred ? "Authentic" : "Suspicious"}
+                                        </span>
+                                    </div>
+
+                                    <div className="flex gap-4 h-24 mb-6">
+                                        <div className="flex-1 flex flex-col gap-2">
+                                            <div className="flex-1 bg-zinc-50 rounded-xl overflow-hidden relative">
+                                                <div
+                                                    style={{ height: `${100 - perc}%` }}
+                                                    className={`absolute bottom-0 w-full transition-all duration-1000 ${pred ? "bg-zinc-200" : "bg-rose-500"}`}
+                                                />
+                                            </div>
+                                            <span className="text-[10px] font-bold text-zinc-400 text-center uppercase tracking-widest">Spoof</span>
+                                        </div>
+                                        <div className="flex-1 flex flex-col gap-2">
+                                            <div className="flex-1 bg-zinc-50 rounded-xl overflow-hidden relative">
+                                                <div
+                                                    style={{ height: `${perc}%` }}
+                                                    className={`absolute bottom-0 w-full transition-all duration-1000 ${!pred ? "bg-zinc-200" : "bg-emerald-500"}`}
+                                                />
+                                            </div>
+                                            <span className="text-[10px] font-bold text-zinc-400 text-center uppercase tracking-widest">Real</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-4 border-t border-zinc-50 flex items-baseline justify-between">
+                                        <span className="text-zinc-500 text-sm font-medium">Confidence</span>
+                                        <span className="text-2xl font-light text-zinc-900">{score}%</span>
+                                    </div>
                                 </div>
-                            )
-                        })
-                    }
-                </div>
+                            );
+                        })}
+                    </div>
+                </section>
 
-                {
-                    result_values && result_values["frameCheck"] &&
-                    <>
-                        {/* FRAME CHECK */}
-                        <div className={`${curr_model === "frameCheck" ? "opacity-100 z-20" : "opacity-0 z-0"} max-w-[83vw] overflow-hidden duration-300 transition-all`}>
-                            <div ref={frame_graph_Ref} className={` h-full flex flex-col gap-2 py-5 rounded-3xl overflow-hidden`}>
-                                {
-                                    Object.keys(results["frameCheck"].labels_result)
-                                        .filter((v) => { return results["face_labels"].length == 0 || results["face_labels"].includes(v) })
-                                        .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
-                                        .slice(0, 3)
-                                        .map((label, idx) => {
+                {/* DETAILED RESULTS SECTION */}
+                <section className="space-y-8">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <h3 className="text-2xl font-semibold tracking-tight text-zinc-800">Technical Breakdown</h3>
+                        <div className="bg-zinc-100/80 backdrop-blur-sm p-1 rounded-2xl flex gap-1 w-fit">
+                            {Object.keys(analysisTypes).map((analysisType, idx) => {
+                                if (!analysisTypes[analysisType]) return null;
+                                const isActive = curr_model === analysisType;
+                                return (
+                                    <button
+                                        key={idx}
+                                        onClick={() => set_curr_model(analysisType)}
+                                        className={`px-6 py-2 rounded-xl text-sm font-semibold transition-all ${isActive ? "bg-white text-black shadow-sm" : "text-zinc-500 hover:text-zinc-800"}`}
+                                    >
+                                        {analysisType === "frameCheck" ? "Visual Analysis" : analysisType === "audioAnalysis" ? "Audio Analysis" : "Image Analysis"}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
 
-                                            const perc = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["percentage"] : 0;
-                                            const pred = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["prediction"] : false;
-                                            const threshold = results["frameCheck"]["threshold"];
-                                            if (isNaN(perc)) {
-                                                return null;
-                                            }
-                                            return (
-                                                <div key={idx} className=" flex flex-col">
-                                                    <div
-                                                        className={` group rounded-3xl bg-primary border-8 border-primary flex ${toggle_open === idx ? "h-72" : " "} transition-all overflow-hidden `}
-                                                        key={idx}
-                                                    >
-                                                        {/* PERSON DETAILS */}
-                                                        <div
-                                                            onClick={() => { toggle_open === idx ? set_toggle_open(null) : set_toggle_open(idx) }}
-                                                            className=" cursor-pointer text-white flex flex-row items-center px-2 group relative"
-                                                        >
-                                                            {/* ARROW */}
-                                                            <div className={` absolute top-5 left-0  h-5 w-5 ${toggle_open === idx ? " rotate-90 group-hover:rotate-[70deg]" : " group-hover:rotate-[20deg]"}  transition-all`}>
-                                                                <RightArrow strokeWidth={1} className=" size-6" />
-                                                            </div>
+                    {curr_model === "frameCheck" && result_values?.frameCheck && (
+                        <div className="grid grid-cols-1 gap-6">
+                            {Object.keys(results["frameCheck"].labels_result)
+                                .filter((v) => results["face_labels"].length === 0 || results["face_labels"].includes(v))
+                                .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
+                                .slice(0, 3)
+                                .map((label, idx) => {
+                                    const perc = result_values?.frameCheck[label]?.percentage || 0;
+                                    const pred = result_values?.frameCheck[label]?.prediction || false;
+                                    const threshold = results["frameCheck"]["threshold"];
 
-                                                            <div className={` flex flex-col justify-between items-center min-w-[169px]  h-full ${toggle_open === idx ? "py-5" : ""} transition-all`}>
+                                    if (isNaN(perc)) return null;
 
-                                                                {/* PERSON IMAGE + LABEL */}
-                                                                <div className={` flex ${toggle_open === idx ? "flex-col" : "flex-row"} justify-evenly items-center w-full gap-2 `}>
-
-                                                                    <div className="rounded-full overflow-hidden flex">
-                                                                        {
-                                                                            results?.frameCheck?.label_faces && results?.frameCheck?.label_faces[label] ?
-                                                                                <Image src={results?.frameCheck?.label_faces[label]} width={56} height={56} alt={`P - ${Number(idx) + 1} `} />
-                                                                                :
-                                                                                <PersonCircle className="size-14" strokeWidth={1} />
-                                                                        }
-                                                                    </div>
-                                                                    <div className=" ">
-                                                                        P {Number(idx) + 1}
-                                                                    </div>
-                                                                </div>
-                                                                {
-                                                                    toggle_open === idx &&
-                                                                    <div className="flex flex-col gap-3 h-full items-center justify-center">
-                                                                        <div className=' flex flex-col items-center w-full gap-2'>
-                                                                            <span>
-                                                                                Result
-                                                                            </span>
-                                                                            <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                                                                {pred ? "Real" : "Fake"}
-                                                                            </span>
-                                                                        </div>
-                                                                        {/* <div className=' flex  items-center w-full gap-2'>
-                                                                            <span>
-                                                                                Score
-                                                                            </span>
-                                                                            <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                                                                {isNaN(perc) ? "-" : perc} %
-                                                                            </span>
-                                                                        </div> */}
-                                                                    </div>
-                                                                }
-                                                            </div>
-
+                                    return (
+                                        <div
+                                            key={idx}
+                                            className={`group bg-white border ${toggle_open === idx ? "border-zinc-300 shadow-md" : "border-zinc-100 shadow-sm hover:border-zinc-300 hover:shadow-md hover:bg-zinc-50/40"} rounded-[2rem] overflow-hidden transition-all duration-500 ease-in-out`}
+                                        >
+                                            <div
+                                                onClick={() => set_toggle_open(toggle_open === idx ? null : idx)}
+                                                className="cursor-pointer p-8 flex flex-col md:flex-row items-center gap-10 relative"
+                                            >
+                                                <div className="flex items-center gap-6 min-w-[260px]">
+                                                    <div className="relative">
+                                                        <div className="w-14 h-14 rounded-2xl overflow-hidden ring-1 ring-zinc-100 group-hover:ring-zinc-200 transition-all duration-500">
+                                                            {results?.frameCheck?.label_faces && results?.frameCheck?.label_faces[label] ? (
+                                                                <Image src={results?.frameCheck?.label_faces[label]} width={56} height={56} alt={`Subject ${idx + 1}`} className="object-cover" />
+                                                            ) : (
+                                                                <UserCircle2 className="size-14 text-zinc-100" strokeWidth={0.5} />
+                                                            )}
                                                         </div>
-
-                                                        <div className={`w-full flex flex-col bg-white rounded-2xl overflow-hidden ${toggle_open === idx ? 'ml-0' : 'ml-8'} transition-all `}>
-
-                                                            {/* PERSON's VIDEO SECTIONS */}
-                                                            < div className={` ${toggle_open === idx ? 'max-h-0' : 'max-h-72'} h-full pr-2 bg-white flex items-center relative rounded-xl overflow-hidden transition-all `}>
-                                                                {/* REFERENCE LINE */}
-                                                                <div className="bg-gray-300 w-full h-[1px]" />
-                                                                {
-                                                                    results["frameCheck"].labels_result[label].map((v, i) => {
-                                                                        const total_frames = results["frameCheck"].duration * fps
-                                                                        let width = 0
-                                                                        if (v.end_index === v.start_index)
-                                                                            width = 100 / (results["frameCheck"].labels_result[label].length);
-                                                                        else
-                                                                            width = 100 * (v.end_index - v.start_index) / total_frames;
-                                                                        let start = 100 * v.start_index / total_frames;
-                                                                        // console.log(width, start);
-                                                                        return (
-                                                                            <div
-                                                                                key={i}
-                                                                                style={{ width: `${width}%`, left: `${start}%` }}
-                                                                                className={` h-full absolute ${v.prediction > threshold ? 'bg-green-400' : 'bg-red-400'} `}
-                                                                            />
-                                                                        );
-                                                                    })
-                                                                }
-                                                                {/* <div className="h-full w-20 bg-red-500/40 absolute"/> */}
-                                                            </div>
-
-                                                            {/* PERSON's GRAPH */}
-                                                            <div className={` ${toggle_open === idx ? 'max-h-72' : 'max-h-0'} h-full w-full bg-white rounded-2xl px-2 overflow-hidden transition-all `}>
-                                                                {frame_charts &&
-                                                                    idx < 3 ?
-                                                                    (
-                                                                        <div className="chart-container" ref={frame_person_refs[idx]} >
-                                                                            <LineChart chartData={frame_charts[label]} />
-                                                                        </div>
-                                                                    )
-                                                                    :
-                                                                    (
-                                                                        <div className="chart-container">
-                                                                            <LineChart chartData={frame_charts[label]} />
-                                                                        </div>
-                                                                    )
-                                                                }
-                                                            </div>
-
+                                                        <div className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ${pred ? "bg-emerald-400" : "bg-rose-400"}`} />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.25em] mb-1.5 opacity-80">Subject {idx + 1}</p>
+                                                        <div className="flex items-center gap-2.5">
+                                                            <h4 className="text-lg font-medium tracking-tight text-zinc-800">{pred ? "Real" : "Spoof"}</h4>
+                                                            {/* {!pred && <div className="w-1 h-1 rounded-full bg-rose-400 opacity-40" />} */}
                                                         </div>
+                                                    </div>
+                                                    <div className="flex items-center justify-center">
+                                                        <ChevronRight className={`size-4 text-zinc-400 group-hover:text-zinc-900 transition-all duration-500 ${toggle_open === idx ? "rotate-90 text-zinc-900" : "group-hover:translate-x-1"}`} />
                                                     </div>
                                                 </div>
-                                            )
-                                        })
-                                }
-                                <div className="flex flex-row flex-wrap max-w-[80vw] gap-3">
-                                    {
-                                        Object.keys(results["frameCheck"].labels_result).length > 3 &&
-                                        Object.keys(results["frameCheck"].labels_result)
-                                            .filter((v) => { return results["face_labels"].length == 0 || results["face_labels"].includes(v) })
-                                            .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
-                                            .slice(4, 10)
-                                            .map((label, index) => {
 
-                                                const perc = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["percentage"] : 0;
-                                                const pred = result_values && result_values["frameCheck"][label] ? result_values["frameCheck"][label]["prediction"] : false;
-                                                let idx = index + 3; // to make sure the index is unique for each person
+                                                <div className="flex-1 w-full h-8 bg-zinc-100/50 rounded-full overflow-hidden relative transition-colors duration-500">
+                                                    {Object.entries(result_values["frameCheck"][label].per_second_data).map(([sec, pred], i) => {
+                                                        const total_duration = results["frameCheck"].duration;
+                                                        // We use duration + 1 because the chart labels go from 0 to duration (inclusive)
+                                                        let width = 100 / (total_duration + 1);
+                                                        let start = (100 * parseInt(sec)) / (total_duration + 1);
 
-                                                if (isNaN(perc)) {
-                                                    return null;
-                                                }
+                                                        // Use the same 0.5 threshold logic as the graph
+                                                        if (pred === 0.5) return null;
 
-                                                return (
-                                                    <div key={idx} className=" flex flex-col">
-                                                        <div
-                                                            className={` group relative  bg-primary border-primary rounded-3xl  border-8 flex ${toggle_open === idx ? "h-72 w-[83vw] " : " "} transition-all overflow-hidden `}
-                                                            key={idx}
-                                                        >
-                                                            {/* PERSON DETAILS */}
+                                                        const isAuthentic = pred > 0.5;
+
+                                                        return (
                                                             <div
-                                                                onClick={() => { toggle_open === idx ? set_toggle_open(null) : set_toggle_open(idx) }}
-                                                                className=" cursor-pointer text-white flex flex-row items-center group relative"
-                                                            >
-                                                                {/* ARROW */}
-                                                                <div className={` absolute top-5 left-0  h-5 w-5 ${toggle_open === idx ? " rotate-90 group-hover:rotate-[70deg] opacity-100" : " opacity-0 group-hover:rotate-[20deg]"}  transition-all`}>
-                                                                    <RightArrow strokeWidth={1} className=" size-6" />
-                                                                </div>
+                                                                key={i}
+                                                                style={{ width: `${width}%`, left: `${start}%` }}
+                                                                className={`h-full absolute ${isAuthentic ? 'bg-emerald-400' : 'bg-rose-400'} transition-all duration-700`}
+                                                            />
+                                                        );
+                                                    })}
+                                                </div>
 
-                                                                <div className={` flex flex-col justify-between items-center min-w-[169px]  h-full ${toggle_open === idx ? "py-5" : ""} transition-all`}>
+                                            </div>
 
-                                                                    {/* PERSON IMAGE + LABEL */}
-                                                                    <div className={` flex ${toggle_open === idx ? "flex-col" : "flex-row  pr-10"} justify-between items-center w-full gap-2 `}>
-
-                                                                        <div className="rounded-full overflow-hidden flex">
-                                                                            {
-                                                                                results?.frameCheck?.label_faces && results?.frameCheck?.label_faces[label] ?
-                                                                                    <Image src={results?.frameCheck?.label_faces[label]} width={56} height={56} alt={`person - ${Number(idx) + 1} `} />
-                                                                                    :
-                                                                                    <PersonCircle className="size-14" strokeWidth={1} />
-                                                                            }
-                                                                        </div>
-                                                                        <div className="  ">
-                                                                            P {Number(idx) + 1}
-                                                                        </div>
-                                                                    </div>
-                                                                    {
-                                                                        toggle_open === idx &&
-                                                                        <div className="flex flex-col gap-3 h-full items-center justify-center">
-                                                                            <div className=' flex flex-col items-center w-full gap-2'>
-                                                                                <span>
-                                                                                    Result
-                                                                                </span>
-                                                                                <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                                                                    {pred ? "Real" : "Fake"}
-                                                                                </span>
-                                                                            </div>
-                                                                            {/* <div className=' flex  items-center w-full gap-2'>
-                                                                                <span>
-                                                                                    Score
-                                                                                </span>
-                                                                                <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                                                                    {perc} %
-                                                                                </span>
-                                                                            </div> */}
-                                                                        </div>
-                                                                    }
-                                                                </div>
-
-                                                            </div>
-
-                                                            <div className={`w-full absolute left-[186px] rounded-2xl overflow-hidden ${toggle_open === idx ? 'ml-0' : 'ml-8'} transition-all `}>
-                                                                {/* PERSON's GRAPH */}
-                                                                <div className={` ${toggle_open === idx ? 'max-h-70' : 'max-h-0'} h-full w-[70vw] bg-white rounded-2xl px-2 overflow-hidden transition-all `}>
-                                                                    {frame_charts &&
-                                                                        idx < 3 ?
-                                                                        (
-                                                                            <div className="chart-container" ref={frame_person_refs[idx]} >
-                                                                                <LineChart chartData={frame_charts[label]} />
-                                                                            </div>
-                                                                        )
-                                                                        :
-                                                                        (
-                                                                            <div className="chart-container">
-                                                                                <LineChart chartData={frame_charts[label]} />
-                                                                            </div>
-                                                                        )
-                                                                    }
-                                                                </div>
-                                                            </div>
-
-                                                        </div>
+                                            {toggle_open === idx && (
+                                                <div className="px-8 pb-10 border-t border-zinc-100 animate-in fade-in slide-in-from-top-2 duration-700">
+                                                    <div className="h-[300px] w-full mt-10">
+                                                        {frame_charts && <LineChart chartData={frame_charts[label]} />}
                                                     </div>
-                                                )
-                                            })
-                                    }
-                                </div>
-                            </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                         </div>
-                    </>
-                }
-                {
-                    result_values && result_values["audioAnalysis"] &&
-                    <>
-                        {/* AUDIO ANALYSIS */}
-                        <div className={`${curr_model === "audioAnalysis" ? "opacity-100 z-20" : "opacity-0 z-0"} absolute top-[77vh] max-w-[83vw]  overflow-hidden duration-300 transition-all`}>
-                            <div className={` overflow-hidden bg-primary w-full rounded-3xl border-8 border-primary flex my-5 `}>
-                                <div className="w-52  border-8 border-primary rounded-3xl flex flex-col gap-3 items-center justify-center text-white ">
-                                    <div className=' flex flex-col  items-center w-full gap-2'>
-                                        <span>
-                                            Result
-                                        </span>
-                                        <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${result_values["audioAnalysis"]["prediction"] ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                            {result_values["audioAnalysis"]["prediction"] ? "Real" : "Fake"}
-                                        </span>
+                    )}
+
+                    {curr_model === "audioAnalysis" && result_values?.audioAnalysis && (
+                        <div className="bg-white border border-zinc-100 rounded-[2rem] overflow-hidden shadow-sm">
+                            <div className="p-8 flex flex-col gap-8">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-6">
+                                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${result_values["audioAnalysis"]["prediction"] ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
+                                            <AudioLines className="size-8" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1">Audio Stream</p>
+                                            <h4 className="text-xl font-semibold">{result_values["audioAnalysis"]["prediction"] ? "Voice Matches Source" : "AI Generation Detected"}</h4>
+                                        </div>
                                     </div>
-                                    {/* <div className=' flex  items-center w-full gap-2'>
-                                        <span>
-                                            Score
-                                        </span>
-                                        <span className={` mx-auto text-lg px-3 py-1 rounded-3xl  font-semibold ${result_values["audioAnalysis"]["prediction"] ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                            {result_values["audioAnalysis"]["percentage"]} %
-                                        </span>
-                                    </div> */}
+                                    <div className="text-right">
+                                        <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1">Confidence</p>
+                                        <p className="text-3xl font-light">{result_values["audioAnalysis"]["prediction"] ? (result_values["audioAnalysis"]["percentage"]).toFixed(2) : (100 - result_values["audioAnalysis"]["percentage"]).toFixed(2)}%</p>
+                                    </div>
                                 </div>
-                                <div className=" h-[360px] flex flex-col justify-evenly bg-white rounded-2xl px-2 overflow-hidden transition-all w-full">
-                                    <div className=" max-w-[1200px]  overflow-hidden py-3">
-                                        {
-                                            videoRef.current &&
-                                            <div
-                                                className="pl-7 cursor-pointer"
-                                                style={{ width: (videoRef.current.duration / results["audioAnalysis"]["duration"]) * 1180 + "px" }}
-                                            >
+
+                                <div className="space-y-6">
+                                    <div className=" bg-zinc-50 rounded-2xl overflow-hidden relative">
+                                        {videoRef && (
+                                            <div className="w-full h-full cursor-pointer" onClick={(e) => {
+                                                if (!videoRef.current) return;
+                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                const x = e.clientX - rect.left;
+                                                const clickedTime = (x / rect.width) * results["audioAnalysis"]["duration"];
+                                                videoRef.current.currentTime = clickedTime;
+                                            }}>
                                                 <Waveform videoRef={videoRef} />
                                             </div>
-                                        }
+                                        )}
                                     </div>
-                                    <div ref={audio_graph_Ref}>
+                                    <div className="h-[300px]">
                                         <LineChart chartData={audio_chart} />
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </>
-                }
-            </div>
+                    )}
+                </section>
 
-            {/* METADATA + VERIFIER DATA */}
-            <div className=' flex gap-5 pt-4 items-start justify-between '>
-
-                {/* VERIFIER COMMENT */}
-                {
-                    file_metadata.verifier_comment &&
-                    (
-                        <div className=' bg-slate-100 py-4 px-5 border rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
-                            <span className=' text-xl'>
-                                Expert&apos;s Note
-                            </span>
-                            <div className='flex flex-col break-words whitespace-pre-wrap'>
+                {/* METADATA SECTION */}
+                <section className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-20">
+                    {file_metadata.verifier_comment && (
+                        <div className='bg-white border border-zinc-100 p-8 rounded-[2rem] shadow-sm space-y-4'>
+                            <h4 className="text-lg font-bold text-black flex items-center gap-2">
+                                {/* <span className="w-2 h-2 bg-blue-500 rounded-full" /> */}
+                                Expert Analysis
+                            </h4>
+                            <p className='text-zinc-600 leading-relaxed text-sm whitespace-pre-wrap'>
                                 {file_metadata.verifier_comment}
-                            </div>
+                            </p>
                         </div>
-                    )
-                }
+                    )}
 
-                {/* VIDEO META DATA */}
-                <div className=' bg-slate-100 py-4 px-5 border rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
-                    <span className=' text-xl'>
-                        Video Metadata
-                    </span>
-                    <div className='flex flex-col break-words'>
-                        <div>
-                            <span className=' font-medium pr-2' >FileName: </span>
-                            <span>{file_metadata.name}</span>
-                        </div>
-                        <div>
-                            <span className=' font-medium pr-2' > Size: </span>
-                            <span>{file_metadata.size}</span>
-                        </div>
-                        <div>
-                            <span className=' font-medium pr-2' >Video type: </span>
-                            <span>{file_metadata.type}</span>
+                    <div className='bg-white border border-zinc-100 p-8 rounded-[2rem] shadow-sm space-y-6'>
+                        <h4 className="text-lg font-bold text-black flex items-center gap-2">
+                            {/* <span className="w-2 h-2 bg-zinc-900 rounded-full" /> */}
+                            File Metadata
+                        </h4>
+                        <div className='space-y-4'>
+                            {[
+                                { label: "Filename", value: file_metadata.name },
+                                { label: "Size", value: file_metadata.size },
+                                { label: "Type", value: file_metadata.type }
+                            ].map((item, i) => (
+                                <div key={i} className="flex justify-between items-center py-2 border-b border-zinc-50 last:border-0">
+                                    <span className='text-zinc-400 text-sm font-medium'>{item.label}</span>
+                                    <span className="font-semibold text-zinc-900 text-sm truncate max-w-[200px]">{item.value}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                </div>
-
-            </div>
-        </div >
+                </section>
+            </main>
+        </div>
     );
 }

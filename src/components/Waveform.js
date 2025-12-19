@@ -6,7 +6,7 @@ const Waveform = ({ videoRef }) => {
     const wavesurferRef = useRef(null);
 
     useEffect(() => {
-        if (waveformRef.current && videoRef.current) {
+        if (waveformRef.current && videoRef?.current) {
             wavesurferRef.current = WaveSurfer.create({
                 container: waveformRef.current,
                 media: videoRef.current,
@@ -16,7 +16,7 @@ const Waveform = ({ videoRef }) => {
                 "barWidth": 3,
                 "barGap": 1,
                 "barRadius": 100,
-                "barHeight": 2,
+                "barHeight": 1,
                 dragToSeek: true,
             });
 

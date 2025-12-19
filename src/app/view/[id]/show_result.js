@@ -120,22 +120,21 @@ const Result_container = ({ res_data, assets }) => {
 
 
     return (<>
-        <div className=' pt-16 pb-10 px-12'>
+        <div className=' border-4 border-red-500'>
 
             {
                 upload_type === "video" &&
                 (
                     model_responses["version"] && Number(model_responses["version"].split(".")[0]) >= 2 ?
-                        <>
-                            {/* //NEW RESULT HERE */}
-                            <Result_UI
-                                results={results_data["results"]}
-                                analysisTypes={results_data["analysis_types"]}
-                                file_metadata={res_data["file_metadata"]}
-                                fileUrl={media_signed_url}
-                            />
-                        </>
+                        // V2
+                        <Result_UI
+                            results={results_data["results"]}
+                            analysisTypes={results_data["analysis_types"]}
+                            file_metadata={res_data["file_metadata"]}
+                            fileUrl={media_signed_url}
+                        />
                         :
+                        // V1
                         <ResultsVideoUI
                             response_data={results_data["results"]}
                             fileUrl={media_signed_url}

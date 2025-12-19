@@ -1,22 +1,21 @@
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Play, Pause, RefreshCw, AlertCircle } from "./SVGs";
+import { Play, Pause, RefreshCcw, AlertCircle } from "lucide-react"
 
 export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_results }) => {
 
     let frame_index;
     const [isPaused, setIsPaused] = useState(true);
     const [progress, setProgress] = useState(0);
-    const [current_bboxes, set_current_bboxes] = useState(); // array of objects -> [{"bbox": [t,r,b,l], "pred": bool}, ..]
+    const [current_bboxes, set_current_bboxes] = useState();
     const [videoDimensions, setVideoDimensions] = useState({ width: 0, height: 0 });
     const [videoError, setVideoError] = useState(null);
 
-    // New states for retry logic and loading
     const [isLoading, setIsLoading] = useState(true);
     const [retryCount, setRetryCount] = useState(0);
     const [isRetrying, setIsRetrying] = useState(false);
 
     const MAX_RETRIES = 5;
-    const RETRY_DELAY = 2000; // 2 seconds
+    const RETRY_DELAY = 2000;
 
     const setup_frame_index = () => {
         let temp_frame_index = null;
@@ -33,13 +32,11 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
             temp_frame_index = Object.keys(model_results["frameCheck"])[0];
         }
         frame_index = temp_frame_index;
-        // set_frame_index(temp_frame_index);
     }
     if (model_results && model_results["frameCheck"] !== undefined) {
         setup_frame_index();
     }
 
-    // Retry function with exponential backoff
     const retryVideoLoad = useCallback(() => {
         if (retryCount < MAX_RETRIES && videoRef.current) {
             setIsRetrying(true);
@@ -49,32 +46,30 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
 
             setTimeout(() => {
                 setRetryCount(prev => prev + 1);
-                videoRef.current.load(); // Reload the video
+                videoRef.current.load();
                 setIsRetrying(false);
             }, delay);
         }
     }, [retryCount, videoRef]);
 
-    // Safe video operations with error handling
     const safeVideoOperation = useCallback(async (operation) => {
         if (!videoRef.current) return;
         try {
             await operation();
         } catch (error) {
-            // Only log real errors, not interruption errors
             if (!error.message.includes('interrupted by a call to pause')) {
                 console.error('Video operation failed:', error);
-                setVideoError({ message: `Playback failed: ${error.message}` });
+                setVideoError({ message: `Playback failed: ${error.message} ` });
             }
         }
     }, [videoRef]);
 
     useEffect(() => {
         const video = videoRef.current;
+        if (!video) return;
 
         const handleTimeUpdate = () => {
-            // console.log("time =", Math.floor(video.currentTime), duration);
-            if (duration === 0) //results not loaded but video should be playable
+            if (duration === 0)
                 setProgress((video.currentTime / video.duration) * 100);
             else
                 setProgress((video.currentTime / duration) * 100);
@@ -106,7 +101,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
             }
 
             if (videoRef.current.paused) {
-                await videoRef.current.play(); // Handle promise properly
+                await videoRef.current.play();
             } else {
                 videoRef.current.pause();
             }
@@ -114,14 +109,12 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         });
     };
 
-    // Enhanced error handler with retry logic
     const handleVideoError = useCallback((event) => {
         const error = event.target.error;
         console.error('Video error:', error);
 
         setIsLoading(false);
 
-        // Categorize errors and decide whether to retry
         const shouldRetry = error && (
             error.code === MediaError.MEDIA_ERR_NETWORK ||
             error.code === MediaError.MEDIA_ERR_DECODE ||
@@ -129,7 +122,6 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         );
 
         if (shouldRetry && retryCount < MAX_RETRIES) {
-            console.log(`Retrying video load (attempt ${retryCount + 1}/${MAX_RETRIES})`);
             retryVideoLoad();
         } else {
             setVideoError({
@@ -140,7 +132,6 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         }
     }, [retryCount, retryVideoLoad]);
 
-    // Video event handlers
     const handleTimeUpdate = useCallback(() => {
         const video = videoRef.current;
         if (!video) return;
@@ -159,11 +150,10 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
 
     const handleVideoLoadedMetadata = useCallback(() => {
         if (!videoRef.current) return;
-
         const { videoWidth, videoHeight } = videoRef.current;
         setVideoDimensions({ width: videoWidth, height: videoHeight });
         setIsLoading(false);
-        setRetryCount(0); // Reset retry count on successful load
+        setRetryCount(0);
     }, []);
 
     const handleLoadStart = useCallback(() => {
@@ -187,12 +177,10 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         setIsLoading(false);
     }, []);
 
-    // Main effect for video event listeners
     useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
 
-        // Add all event listeners
         video.addEventListener('timeupdate', handleTimeUpdate);
         video.addEventListener('error', handleVideoError);
         video.addEventListener('loadedmetadata', handleVideoLoadedMetadata);
@@ -203,7 +191,6 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         video.addEventListener('loadeddata', handleLoadedData);
 
         return () => {
-            // Clean up ALL event listeners
             video.removeEventListener('timeupdate', handleTimeUpdate);
             video.removeEventListener('error', handleVideoError);
             video.removeEventListener('loadedmetadata', handleVideoLoadedMetadata);
@@ -224,10 +211,8 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         handleLoadedData
     ]);
 
-    // Handle video end
     useEffect(() => {
         if (progress > 100 && videoRef.current) {
-            console.log("video ended");
             videoRef.current.pause();
             setIsPaused(true);
         }
@@ -237,12 +222,11 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         if (isNaN(seconds)) return "0:00";
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = Math.floor(seconds % 60);
-        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+        return `${minutes}:${remainingSeconds.toString().padStart(2, '0')} `;
     };
 
     const handleSliderChange = (e) => {
         if (!videoRef.current || !duration) return;
-
         const time = (e.target.value * duration) / 100;
         videoRef.current.currentTime = time;
         setProgress(e.target.value);
@@ -256,278 +240,115 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         }
     };
 
-    // console.log(model_results)
-
     return (
-        <>
-            {
-                <div className=' relative w-full flex flex-row justify-evenly gap-5 '>
-                    {
-                        model_results ?
-                            (
-                                <>
-                                    {/* RESULT DETAILS */}
-                                    <div className=" flex flex-col items-center gap-2 bg-red-30 min-h-[59vh]">
+        <div className="flex flex-col items-center w-full max-w-5xl mx-auto">
+            <div className='relative w-full aspect-video bg-zinc-950 rounded-2xl overflow-hidden shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] group'>
+                {/* BBOX */}
+                {current_bboxes !== undefined && current_bboxes.length > 0 && (
+                    current_bboxes.map((person, idx) => {
+                        const top = (person["bbox"][1] / videoDimensions.height) * 100;
+                        const left = (person["bbox"][0] / videoDimensions.width) * 100;
+                        const width = ((person["bbox"][2] - person["bbox"][0]) / videoDimensions.width) * 100;
+                        const height = ((person["bbox"][3] - person["bbox"][1]) / videoDimensions.height) * 100;
 
-                                        {/* FRAME, AUDIO RESULTS BOXES */}
-                                        <div className=' flex justify-evenly items-center py-4 w-full gap-4 '>
-                                            {
-                                                // result of all analysis
-                                                model_results &&
-                                                Object.keys(model_results).map((val, idx) => {
-                                                    if (model_results[val] == undefined)
-                                                        return
+                        return (
+                            <div
+                                key={idx}
+                                style={{
+                                    top: `${top}%`,
+                                    left: `${left}%`,
+                                    width: `${width}%`,
+                                    height: `${height}%`,
+                                }}
+                                className={`z-10 absolute rounded-lg border-2 ${person["pred"] ? "border-emerald-400/80 shadow-[0_0_20px_rgba(52,211,153,0.4)]" : "border-rose-500/80 shadow-[0_0_20px_rgba(244,63,94,0.4)]"} transition-all duration-150 ease-out`}
+                            />
+                        )
+                    })
+                )}
 
-                                                    let pred;
-                                                    let perc;
-
-                                                    if (val === "audioAnalysis") {
-                                                        pred = model_results[val]["prediction"];
-                                                        perc = model_results[val]["percentage"];
-                                                    }
-                                                    else if (val === "frameCheck") {
-                                                        if (frame_index !== undefined) {
-                                                            perc = model_results[val][frame_index]["percentage"];
-                                                            pred = model_results[val][frame_index]["prediction"];
-                                                        }
-                                                        else {
-                                                            if (model_results[val]["0"] === undefined) {
-                                                                perc = "-";
-                                                                pred = false;
-                                                            }
-                                                            else {
-                                                                perc = isNaN(model_results[val]["0"]["percentage"]) ? "-" : model_results[val]["0"]["percentage"];
-                                                                pred = model_results[val]["0"]["prediction"];
-                                                            }
-                                                        }
-                                                    }
-
-                                                    return (
-                                                        <div key={idx} className={` w-72 relative -top-10 bg-white flex flex-col items-center gap-3 px-5 py-2 rounded-3xl shadow ${pred ? " shadow-green-700" : " shadow-red-700"}  `}>
-                                                            <span className=' text-xl mt-3'>
-                                                                {
-                                                                    val === "frameCheck" &&
-                                                                    (
-                                                                        <div className="flex flex-col gap-2 w-full">
-                                                                            <div className=' flex items-center justify-between gap-3'>
-                                                                                <span className='text-base'>
-                                                                                    Frame
-                                                                                </span>
-                                                                                <span className={` w-full text-center px-3 py-1 rounded-full font-semibold ${pred ? " text-green-700 bg-emerald-200 " : "text-red-700 bg-rose-200 "}`}>
-                                                                                    {/* {pred ? "No manipulation" : "Manipulated"} */}
-                                                                                    {pred ? "Real" : "Fake"}
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-                                                                    )
-                                                                }
-                                                                {
-                                                                    val === "audioAnalysis" &&
-                                                                    (
-                                                                        <div className="flex flex-col gap-2 w-full">
-                                                                            <div className=' flex items-center justify-between gap-3'>
-                                                                                <span className='text-base'>
-                                                                                    Audio
-                                                                                </span>
-                                                                                <span className={` w-full text-center px-3 py-1 rounded-full font-semibold ${pred ? " text-green-700 bg-emerald-200 " : "text-red-700 bg-rose-200 "}`}>
-                                                                                    {/* {pred ? "No manipulation" : "Manipulated"} */}
-                                                                                    {pred ? "Real" : "Fake"}
-                                                                                </span>
-                                                                            </div>
-                                                                        </div>
-                                                                    )
-                                                                }
-                                                            </span>
-                                                            <div className="flex divide-x w-full pt-5">
-                                                                <div className="flex flex-col gap-3 w-full">
-                                                                    {/* <div className=" h-56  bg-red-500 "> */}
-                                                                    <div className={` h-56 ${pred ? "bg-gray-400" : "bg-red-500"} `}>
-
-                                                                        {/* <div className={` h-56  bg-gradient-to-t ${pred ? "from-gray-100 to-gray-400" : "from-rose-100 to-red-600"} `}> */}
-                                                                        <div style={{ height: `${perc}%` }} className={` bg-white`} />
-                                                                        <div className={` w-full relative -top-4 bg-white/10 backdrop-blur-xl rounded-full  py-0.5 text-center text-xl font-extrabold ${pred ? " text-gray-200 " : "text-red-600 "}`} > {Number(100 - perc).toFixed(2)} &nbsp; % </div>
-                                                                    </div>
-                                                                    <div className="w-full text-center text-lg font-semibold ">
-                                                                        Spoof
-                                                                    </div>
-                                                                </div>
-                                                                <div className="flex flex-col gap-3 w-full">
-                                                                    {/* <div className={` h-56  bg-gradient-to-t ${!pred ? "from-gray-100 to-gray-400" : "from-emerald-100 to-green-600"} `}> */}
-                                                                    <div className={` h-56 ${!pred ? "bg-gray-400" : "bg-green-500"} `}>
-
-                                                                        <div style={{ height: `${100 - perc}%` }} className={` bg-white`} />
-                                                                        <div className={` w-full relative -top-4 bg-white/10 backdrop-blur-xl rounded-full  py-0.5 text-center text-xl font-extrabold ${!pred ? " text-gray-200 " : "text-green-600 "}`} > {Number(perc).toFixed(2)} &nbsp; % </div>
-                                                                    </div>
-                                                                    <div className="w-full text-center text-lg font-semibold ">
-                                                                        Original
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                            {/* <div className=' flex  items-center w-full gap-2'>
-                                                                <span>
-                                                                    Confidence:
-                                                                </span>
-                                                                <span className={` mx-auto text-2xl px-3 py-1 rounded-full  font-semibold ${pred ? " bg-green-200  text-green-700" : " bg-red-200  text-red-700"}`}>
-                                                                    {isNaN(perc) ? "-" : pred ? perc : (100 - perc).toFixed(2)} %
-                                                                </span>
-                                                            </div> */}
-                                                            {/* <div className="relative left-0 top-0 h-3 my-3 ml-16 w-[236px] " >
-                                                                <input
-                                                                    type="range"
-                                                                    className={`result-seperate-slider absolute w-[168px] outline-none transition-all duration-300 cursor-default`}
-                                                                    min="0"
-                                                                    max="100"
-                                                                    value={isNaN(perc) ? 0 : pred ? perc : (100 - perc).toFixed(2)}
-                                                                    readOnly
-                                                                />
-                                                            </div> */}
-                                                            {/* <span className=' text-xs'>
-                                                                confidence on {pred? "real": "fake"}
-                                                            </span> */}
-
-                                                        </div>
-                                                    )
-                                                })
-                                            }
-                                        </div>
-                                    </div>
-                                </>
-                            )
-                            :
-                            (
-                                <>
-                                    {/* SKELETON */}
-                                    <div className="flex flex-col justify-between">
-                                        <div className="flex flex-col gap-3 items-center ">
-                                            <div className="rounded skeleton-h h-8 w-72" />
-                                            <div className="rounded skeleton-h h-4 w-36" />
-                                            <div className="rounded skeleton-h h-8 w-72" />
-                                        </div>
-                                        <div className="gap-5 h-full flex items-center">
-                                            <div className="rounded skeleton-h h-40 w-72" />
-                                            <div className="rounded skeleton-h h-40 w-72" />
-                                        </div>
-                                    </div>
-                                </>
-                            )
-                    }
-
-                    {/* BBOXES + VIDEO */}
-                    <div className='relative h-fit w-fit'>
-                        {/* BBOX */}
-                        {current_bboxes !== undefined && current_bboxes.length > 0 && (
-                            current_bboxes.map((person, idx) => {
-                                const top = (person["bbox"][1] / videoDimensions.height) * 100;
-                                const left = (person["bbox"][0] / videoDimensions.width) * 100;
-                                const width = ((person["bbox"][2] - person["bbox"][0]) / videoDimensions.width) * 100;
-                                const height = ((person["bbox"][3] - person["bbox"][1]) / videoDimensions.height) * 100;
-                                // console.log(top, left, width, height);
-                                return (
-                                    <div
-                                        key={idx}
-                                        style={{
-                                            top: `${top}%`,
-                                            left: `${left}%`,
-                                            width: `${width}%`,
-                                            height: `${height}%`,
-                                        }}
-                                        className={` z-10 absolute border-4 rounded ${person["pred"] ? " border-green-500 " : "border-red-500"} transition-all duration-75 `}
-                                    />
-                                )
-                            })
+                {videoError ? (
+                    <div className="text-rose-500 h-full w-full flex flex-col items-center justify-center gap-4 bg-zinc-900">
+                        <AlertCircle className="size-12 opacity-50" />
+                        <div className="text-center">
+                            <p className="font-medium text-lg text-zinc-200">Playback Error</p>
+                            <p className="text-sm text-zinc-500 mt-1">{videoError.message}</p>
+                        </div>
+                        {videoError.canRetry && (
+                            <button
+                                onClick={handleManualRetry}
+                                className="flex items-center gap-2 px-6 py-2 bg-white text-black rounded-full hover:bg-zinc-200 transition-all font-medium text-sm"
+                            >
+                                <RefreshCcw className="size-4" />
+                                Retry
+                            </button>
                         )}
-                        {
-                            videoError ?
-                                (
-                                    <div className="text-red-500 h-1/2 w-1/2 p-5 mx-auto flex flex-col items-center gap-4">
-                                        <AlertCircle className="size-12" />
-                                        <div className="text-center">
-                                            <p className="font-semibold">Video Error:</p>
-                                            <p className="text-sm">{videoError.message}</p>
-                                            {videoError.code && (
-                                                <p className="text-xs opacity-75">Error Code: {videoError.code}</p>
-                                            )}
-                                        </div>
-                                        {videoError.canRetry && (
-                                            <button
-                                                onClick={handleManualRetry}
-                                                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                                            >
-                                                <RefreshCw className="size-4" />
-                                                Retry
-                                            </button>
-                                        )}
-                                    </div>
-                                )
-                                :
-                                (
-                                    <div className="relative">
-                                        <video
-                                            data-html2canvas-ignore
-                                            ref={videoRef}
-                                            src={fileUrl}
-                                            controls={false}
-                                            onError={handleVideoError}
-                                            onLoadedMetadata={handleVideoLoadedMetadata}
-                                            className="w-fit max-w-3xl h-[50vh]"
-                                        />
+                    </div>
+                ) : (
+                    <div className="relative w-full h-full flex items-center justify-center">
+                        <video
+                            data-html2canvas-ignore
+                            ref={videoRef}
+                            src={fileUrl}
+                            controls={false}
+                            onError={handleVideoError}
+                            onLoadedMetadata={handleVideoLoadedMetadata}
+                            className="w-full h-full object-contain"
+                        />
 
-                                        {/* Loading overlay */}
-                                        {(isLoading || isRetrying) && (
-                                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                                                <div className="text-white text-center">
-                                                    <RefreshCw className="size-8 animate-spin mx-auto mb-2" />
-                                                    <p>
-                                                        {isRetrying
-                                                            ? `Retrying... (${retryCount}/${MAX_RETRIES})`
-                                                            : 'Loading video'
-                                                        }
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                )
-                        }
+                        {/* Loading overlay */}
+                        {(isLoading || isRetrying) && (
+                            <div className="absolute inset-0 bg-zinc-950/40 backdrop-blur-[2px] flex items-center justify-center z-20 transition-all duration-300">
+                                <div className="text-white text-center">
+                                    <RefreshCcw className="size-8 animate-spin mx-auto mb-3 opacity-80" />
+                                    <p className="font-medium tracking-tight text-xs opacity-60">
+                                        {isRetrying
+                                            ? `RETRYING... (${retryCount}/${MAX_RETRIES})`
+                                            : 'LOADING MEDIA'
+                                        }
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* OVERLAY CONTROLS (FADES ON IDLE) */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                    <div className="flex items-center gap-4">
+                        <button
+                            disabled={videoError}
+                            onClick={handlePlayToggle}
+                            className={`flex-shrink-0 flex items-center justify-center w-10 h-10 bg-white/20 hover:bg-white/40 backdrop-blur-md text-white rounded-full transition-all ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:scale-95'}`}
+                        >
+                            {isPaused ? (
+                                <Pause className="size-4" fill="currentColor" strokeWidth={0} />
+                            ) : (
+                                <Play className="size-4" fill="currentColor" strokeWidth={0} />
+                            )}
+                        </button>
+
+                        <div className="flex-1 flex flex-col gap-2">
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                step="0.1"
+                                value={progress || 0}
+                                onChange={handleSliderChange}
+                                disabled={isLoading || videoError}
+                                className="w-full h-1 bg-white/20 rounded-full appearance-none cursor-pointer accent-white hover:h-1.5 transition-all"
+                                style={{
+                                    background: `linear-gradient(to right, white ${progress}%, rgba(255,255,255,0.2) ${progress}%)`
+                                }}
+                            />
+                            <div className="flex justify-between text-[10px] font-bold text-zinc-300 uppercase tracking-widest">
+                                <span>{formatTime(videoRef.current?.currentTime || 0)}</span>
+                                <span>{formatTime(duration)}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            }
-            {/* PLAYBACK BOARD / RECTANGLE */}
-            <div className=" z-10 flex w-full gap-14 mb-1 py-5 px-5 bg-primary text-white rounded-3xl items-center">
-                {/* PLAY BUTTON */}
-                <button
-                    disabled={videoError}
-                    onClick={handlePlayToggle}
-                    className={` border-2 rounded-full p-2 ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                >
-                    {isPaused ? (
-                        <Play className="size-8" strokeWidth={1.5} />
-                    ) : (
-                        <Pause className="size-8" strokeWidth={1.5} />
-                    )}
-                </button>
-                {/* DURATION/PROGRESS */}
-                <div className="text-sm flex flex-col divide-y-2 min-w-9 items-center ">
-                    <span>
-                        {formatTime(videoRef.current?.currentTime || 0)}
-                    </span>
-                    <span>
-                        {formatTime(duration)}
-                    </span>
-                </div>
-                {/* SLIDER */}
-
-                <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={progress}
-                    onChange={handleSliderChange}
-                    disabled={isLoading || videoError}
-                    className="win10-thumb w-full rounded-md outline-none transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-
             </div>
-        </>
-    )
-}
+        </div>
+    );
+};
