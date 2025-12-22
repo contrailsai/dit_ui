@@ -445,30 +445,60 @@ export const video_pdf = async (analysisTypes, results, result_values, file_meta
         doc.text("Visual Analysis", curr_x, curr_y);
         curr_y += 0.4;
 
-        // Iterate through top 3 faces as per UI
-        const sortedLabels = Object.keys(result_values["frameCheck"])
-            // Logic must match UI exactly to align with refs
-            // UI: filter face_labels -> sort -> slice(0,3)
-            .filter((v) => !results["face_labels"] || results["face_labels"].length === 0 || results["face_labels"].includes(v))
-            .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
-            .slice(0, 3);
+        // Deepfake face detections
+        if (result_values["frameCheck"]["prediction"] === undefined) {
+            // Iterate through top 3 faces as per UI
+            const sortedLabels = Object.keys(result_values["frameCheck"])
+                // Logic must match UI exactly to align with refs
+                // UI: filter face_labels -> sort -> slice(0,3)
+                .filter((v) => !results["face_labels"] || results["face_labels"].length === 0 || results["face_labels"].includes(v))
+                .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
+                .slice(0, 3);
 
-        for (let i = 0; i < sortedLabels.length; i++) {
-            const label = sortedLabels[i];
-            const data = result_values["frameCheck"][label];
-            const ref = frame_person_refs[i];
+            for (let i = 0; i < sortedLabels.length; i++) {
+                const label = sortedLabels[i];
+                const data = result_values["frameCheck"][label];
+                const ref = frame_person_refs[i];
 
-            if (!data || !ref.current) continue;
+                if (!data || !ref.current) continue;
 
+                const isReal = data.prediction;
+                const confScore = isReal ? data.percentage : (100 - Number(data.percentage)).toFixed(2);
+
+                const faceImage = results?.frameCheck?.label_faces ? results.frameCheck.label_faces[label] : null;
+
+                checkPageBreak(5); // Header + Graph
+
+                // Use Consistent Header
+                drawAnalysisHeader(`Subject ${i + 1}`, isReal, confScore, faceImage);
+
+                try {
+                    const canvas = await html2canvas(ref.current);
+                    const imgData = canvas.toDataURL('image/png');
+                    const imgW = CONTENT_WIDTH;
+                    const imgH = (canvas.height * imgW) / canvas.width;
+
+                    // doc.setDrawColor(...COLORS.border);
+                    // doc.rect(curr_x, curr_y, imgW, imgH, 'S');
+                    doc.addImage(imgData, 'PNG', curr_x, curr_y, imgW, imgH, '', 'FAST');
+
+                    curr_y += imgH + 0.4;
+                } catch (e) {
+                    console.error("Frame graph capture failed", e);
+                }
+            }
+        }
+        // AIGC detections
+        else {
+            const data = result_values["frameCheck"];
+            const ref = frame_person_refs[0];
             const isReal = data.prediction;
             const confScore = isReal ? data.percentage : (100 - Number(data.percentage)).toFixed(2);
-
-            const faceImage = results?.frameCheck?.label_faces ? results.frameCheck.label_faces[label] : null;
 
             checkPageBreak(5); // Header + Graph
 
             // Use Consistent Header
-            drawAnalysisHeader(`Subject ${i + 1}`, isReal, confScore, faceImage);
+            drawAnalysisHeader("AIGC Video Detection", isReal, confScore, null);
 
             try {
                 const canvas = await html2canvas(ref.current);

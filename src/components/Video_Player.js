@@ -3,7 +3,6 @@ import { Play, Pause, RefreshCcw, AlertCircle } from "lucide-react"
 
 export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_results }) => {
 
-    let frame_index;
     const [isPaused, setIsPaused] = useState(true);
     const [progress, setProgress] = useState(0);
     const [current_bboxes, set_current_bboxes] = useState();
@@ -16,26 +15,6 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
 
     const MAX_RETRIES = 5;
     const RETRY_DELAY = 2000;
-
-    const setup_frame_index = () => {
-        let temp_frame_index = null;
-        let max_points = 0;
-
-        for (let label in model_results["frameCheck"]) {
-
-            if (model_results["frameCheck"][label]["data_points"] > max_points) {
-                temp_frame_index = label;
-                max_points = model_results["frameCheck"][label]["data_points"];
-            }
-        }
-        if (temp_frame_index === null) {
-            temp_frame_index = Object.keys(model_results["frameCheck"])[0];
-        }
-        frame_index = temp_frame_index;
-    }
-    if (model_results && model_results["frameCheck"] !== undefined) {
-        setup_frame_index();
-    }
 
     const retryVideoLoad = useCallback(() => {
         if (retryCount < MAX_RETRIES && videoRef.current) {

@@ -6,7 +6,7 @@ function LineChart({ chartData }) {
   const options = {
     maintainAspectRatio: false,
     responsive: true,
-    
+
     //disbaling animation
     animation: false, // disables all animations
     animations: {
@@ -23,7 +23,7 @@ function LineChart({ chartData }) {
       }
     },
 
-    
+
     scales: {
       x: {
         position: 'top'

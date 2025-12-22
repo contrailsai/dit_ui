@@ -143,12 +143,21 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
         const { name, value, type, checked } = e.target;
 
         if (name === "FrameCheckModelUse") {
+            console.log("faces there ?  = ", Array.isArray(model_responses["results"]["frame"]["models_results"][value]["labels_result"]))
             // SET THE NEW FACE LABES BASED ON RESULT
-            const faces_list = Object.keys(model_responses["results"]["frame"]["models_results"][value]["labels_result"])
-            set_faces({
-                "selected": faces_list,
-                "removed": []
-            })
+            if (Array.isArray(model_responses["results"]["frame"]["models_results"][value]["labels_result"])) {
+                set_faces({
+                    "selected": [],
+                    "removed": []
+                })
+            }
+            else {
+                const faces_list = Object.keys(model_responses["results"]["frame"]["models_results"][value]["labels_result"])
+                set_faces({
+                    "selected": faces_list,
+                    "removed": []
+                })
+            }
         }
 
         set_verifier_metadata(prevState => ({
@@ -233,7 +242,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
             res_data["file_metadata"]["verifier_comment"] = verifier_metadata["verifierComment"];
         }
         else {
-            res_data["file_metadata"]["verifier_comment"] = undefzined;
+            res_data["file_metadata"]["verifier_comment"] = undefined;
         }
 
         if (verifier_metadata["showFrameCheck"]) {
@@ -572,7 +581,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                     </div>
 
                     {/* --- FACE SELECTION UI --- */}
-                    {/* Collapsible Section */}
+
                     <div className={`border-t border-gray-100 bg-gray-50/50 transition-all duration-300 ease-in-out ${verifier_metadata["showFrameCheck"] ? "max-h-[5000px] opacity-100" : "max-h-0 opacity-0 overflow-hidden"}`}>
                         {verifier_metadata["showFrameCheck"] && (
                             <div className='p-8'>
@@ -661,43 +670,50 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                                     <div className='flex-1 bg-slate-50 rounded-2xl p-5 border border-gray-200 border-dashed'>
                                         <div className='text-xs font-bold text-gray-400 uppercase tracking-wider mb-4'>Excluded Faces</div>
                                         <div className='flex flex-wrap gap-3'>
-                                            {Object.entries(model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["labels_result"])
-                                                .sort((a, b) => (b[1].length - a[1].length))
-                                                .filter((val) => faces["removed"].includes(val[0]))
-                                                .map((val, idx) => {
-                                                    const label_name = val[0];
-                                                    const data_pts = val[1].length;
-                                                    const img = model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["label_faces"]?.[`${label_name}`] || false;
+                                            {
+                                                (
+                                                    // AIGC gives arrays with no face detections
+                                                    Array.isArray(model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["labels_result"]) ? []
+                                                        :
+                                                        // give the face labels if they are there
+                                                        Object.entries(model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["labels_result"])
+                                                )
+                                                    .sort((a, b) => (b[1].length - a[1].length))
+                                                    .filter((val) => faces["removed"].includes(val[0]))
+                                                    .map((val, idx) => {
+                                                        const label_name = val[0];
+                                                        const data_pts = val[1].length;
+                                                        const img = model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["label_faces"]?.[`${label_name}`] || false;
 
-                                                    return (
-                                                        <div key={idx} className='relative group w-20 flex flex-col items-center gap-2 opacity-60 hover:opacity-100 transition-opacity'>
-                                                            <div className='relative w-14 h-14 rounded-full overflow-hidden ring-2 ring-offset-2 ring-gray-300 group-hover:ring-primary transition-all grayscale group-hover:grayscale-0'>
-                                                                {img ? (
-                                                                    <Image src={img} fill className='object-cover' alt={`id-${label_name}`} />
-                                                                ) : (
-                                                                    <div className='w-full h-full bg-slate-200'></div>
-                                                                )}
-                                                                <div className='absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center'>
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            set_faces(prevState => ({
-                                                                                "selected": [...prevState["selected"], label_name],
-                                                                                "removed": prevState["removed"].filter((val) => val !== label_name),
-                                                                            }));
-                                                                        }}
-                                                                        className='scale-0 group-hover:scale-100 bg-primary text-white rounded-full p-1 shadow-sm transition-transform'
-                                                                    >
-                                                                        <Plus className='size-3' strokeWidth={3} />
-                                                                    </button>
+                                                        return (
+                                                            <div key={idx} className='relative group w-20 flex flex-col items-center gap-2 opacity-60 hover:opacity-100 transition-opacity'>
+                                                                <div className='relative w-14 h-14 rounded-full overflow-hidden ring-2 ring-offset-2 ring-gray-300 group-hover:ring-primary transition-all grayscale group-hover:grayscale-0'>
+                                                                    {img ? (
+                                                                        <Image src={img} fill className='object-cover' alt={`id-${label_name}`} />
+                                                                    ) : (
+                                                                        <div className='w-full h-full bg-slate-200'></div>
+                                                                    )}
+                                                                    <div className='absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all flex items-center justify-center'>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                set_faces(prevState => ({
+                                                                                    "selected": [...prevState["selected"], label_name],
+                                                                                    "removed": prevState["removed"].filter((val) => val !== label_name),
+                                                                                }));
+                                                                            }}
+                                                                            className='scale-0 group-hover:scale-100 bg-primary text-white rounded-full p-1 shadow-sm transition-transform'
+                                                                        >
+                                                                            <Plus className='size-3' strokeWidth={3} />
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                                <div className='text-center'>
+                                                                    <div className='text-xs font-bold text-slate-700'>ID: {label_name}</div>
+                                                                    <div className='text-[10px] text-slate-400'>{data_pts} pts</div>
                                                                 </div>
                                                             </div>
-                                                            <div className='text-center'>
-                                                                <div className='text-xs font-bold text-slate-700'>ID: {label_name}</div>
-                                                                <div className='text-[10px] text-slate-400'>{data_pts} pts</div>
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                })}
+                                                        )
+                                                    })}
                                         </div>
                                     </div>
                                 </div>

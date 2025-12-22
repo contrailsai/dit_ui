@@ -107,27 +107,24 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         const threshold_for_graph = 0.5;
         const threshold = results["frameCheck"]["threshold"];
 
-        for (let label in results["frameCheck"]["labels_result"]) {
-            if (results["face_labels"].length > 0 && !results["face_labels"].includes(label)) {
-                continue;
-            }
-            const person = results["frameCheck"]["labels_result"][label];
-            const { person_prediction_data, mean_prediction_value } = get_chart_data(duration, person, threshold);
-
-            temp_frame_values[label] = {
+        if (Array.isArray(results["frameCheck"]["labels_result"])) {
+            // AIGC detection results on the whole videos
+            let aigc_result_values = results["frameCheck"]["labels_result"]
+            const { person_prediction_data, mean_prediction_value } = get_chart_data(duration, aigc_result_values, threshold);
+            temp_frame_values = {
                 "prediction": mean_prediction_value > 0.5,
                 "percentage": (mean_prediction_value * 100).toFixed(2),
-                "data_points": person.length,
+                "data_points": aigc_result_values.length,
                 "per_second_data": person_prediction_data
             };
 
-            temp_chart_data[label] = {
+            // format for charts
+            temp_chart_data = {
 
                 labels: Object.keys(person_prediction_data).map(
                     (idx) => { return idx }
                 ),
                 datasets: [
-
                     {
                         label: "Probability of real",
                         data: Object.values(person_prediction_data),
@@ -155,6 +152,59 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                     },
                 ]
             };
+
+        }
+        else {
+            // deepfake detection results on faces (distinguished by face labels)
+            for (let label in results["frameCheck"]["labels_result"]) {
+                if (results["face_labels"].length > 0 && !results["face_labels"].includes(label)) {
+                    continue;
+                }
+                const person = results["frameCheck"]["labels_result"][label];
+                const { person_prediction_data, mean_prediction_value } = get_chart_data(duration, person, threshold);
+
+                temp_frame_values[label] = {
+                    "prediction": mean_prediction_value > 0.5,
+                    "percentage": (mean_prediction_value * 100).toFixed(2),
+                    "data_points": person.length,
+                    "per_second_data": person_prediction_data
+                };
+
+                temp_chart_data[label] = {
+
+                    labels: Object.keys(person_prediction_data).map(
+                        (idx) => { return idx }
+                    ),
+                    datasets: [
+
+                        {
+                            label: "Probability of real",
+                            data: Object.values(person_prediction_data),
+                            backgroundColor: Object.values(person_prediction_data).map((pred) => {
+                                return pred >= threshold_for_graph ? "rgba(16, 185, 129, 0.2)" : "rgba(244, 63, 94, 0.2)" // Emerald/Rose
+                            }),
+                            barPercentage: 1,
+                            borderRadius: 100,
+                            inflateAmount: 1,
+                            base: threshold_for_graph
+                        },
+                        {
+                            type: 'line',
+                            borderColor: "rgba(24, 24, 27, 0.2)", // Zinc-900
+                            pointRadius: 0,
+                            fill: {
+                                target: { value: threshold_for_graph },
+                                above: "rgba(16, 185, 129, 0.1)",
+                                below: "rgba(244, 63, 94, 0.1)"
+                            },
+                            lineTension: 0.4,
+                            spanGaps: true,
+                            data: Object.values(person_prediction_data),
+                            borderWidth: 1,
+                        },
+                    ]
+                };
+            }
         }
         frame_charts = temp_chart_data;
         return temp_frame_values;
@@ -247,7 +297,9 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         };
         if (results["frameCheck"]) {
             temp_result_values["frameCheck"] = update_frame_chart();
-            update_bboxes_data();
+            // make bboxes only in case of deepfake face labels not AIGC
+            if (temp_result_values["frameCheck"]["prediction"] === undefined)
+                update_bboxes_data();
         }
 
         if (results["audioAnalysis"])
@@ -269,18 +321,29 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
 
             {/* Frame Charts */}
             {results?.frameCheck && frame_charts && result_values?.frameCheck && (
-                <div>
-                    {Object.keys(results["frameCheck"].labels_result)
-                        .filter((v) => results["face_labels"].length === 0 || results["face_labels"].includes(v))
-                        .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
-                        .slice(0, 3)
-                        .map((label, idx) => (
-                            <div key={idx} ref={frame_person_refs[idx]} style={{ width: "100%", height: "300px", background: "white", marginTop: "20px" }}>
-                                <LineChart chartData={frame_charts[label]} />
-                            </div>
-                        ))
-                    }
-                </div>
+                result_values["frameCheck"]["prediction"] === undefined ?
+                    (
+                        // DEEPFAKE FACE DETECTION RESULT
+                        <div>
+                            {Object.keys(results["frameCheck"].labels_result)
+                                .filter((v) => results["face_labels"].length === 0 || results["face_labels"].includes(v))
+                                .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
+                                .slice(0, 3)
+                                .map((label, idx) => (
+                                    <div key={idx} ref={frame_person_refs[idx]} style={{ width: "100%", height: "300px", background: "white", marginTop: "20px" }}>
+                                        <LineChart chartData={frame_charts[label]} />
+                                    </div>
+                                ))
+                            }
+                        </div>
+                    )
+                    :
+                    (
+                        // AIGC RESULT (frame person ref index is 0 for there is only 1 chart)
+                        <div ref={frame_person_refs[0]} style={{ width: "100%", height: "300px", background: "white", marginTop: "20px" }}>
+                            <LineChart chartData={frame_charts} />
+                        </div>
+                    )
             )}
         </div>
     );
@@ -349,14 +412,21 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                 pred = result_values[val]["prediction"];
                                 perc = result_values[val]["percentage"];
                             } else if (val === "frameCheck") {
-                                // Frame check summary logic
-                                const first_label = Object.keys(result_values[val])[0];
-                                if (first_label !== undefined) {
-                                    perc = result_values[val][first_label]["percentage"];
-                                    pred = result_values[val][first_label]["prediction"];
-                                } else {
-                                    perc = 0;
-                                    pred = false;
+                                // find the index for deepfake face detections
+                                if (result_values[val]["prediction"] === undefined) {
+                                    // Frame check summary logic
+                                    const first_label = Object.keys(result_values[val])[0];
+                                    if (first_label !== undefined) {
+                                        perc = result_values[val][first_label]["percentage"];
+                                        pred = result_values[val][first_label]["prediction"];
+                                    } else {
+                                        perc = 0;
+                                        pred = false;
+                                    }
+                                }
+                                else {
+                                    pred = result_values[val]["prediction"];
+                                    perc = result_values[val]["percentage"];
                                 }
                             }
 
@@ -426,85 +496,117 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                     </div>
 
                     {curr_model === "frameCheck" && result_values?.frameCheck && (
-                        <div className="grid grid-cols-1 gap-6">
-                            {Object.keys(results["frameCheck"].labels_result)
-                                .filter((v) => results["face_labels"].length === 0 || results["face_labels"].includes(v))
-                                .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
-                                .slice(0, 3)
-                                .map((label, idx) => {
-                                    const perc = result_values?.frameCheck[label]?.percentage || 0;
-                                    const pred = result_values?.frameCheck[label]?.prediction || false;
-                                    const threshold = results["frameCheck"]["threshold"];
+                        result_values["frameCheck"]["prediction"] === undefined ?
+                            // DEEPFAKE FACE DETECTION RESULT
+                            (
+                                <div className="grid grid-cols-1 gap-6">
+                                    {Object.keys(results["frameCheck"].labels_result)
+                                        .filter((v) => results["face_labels"].length === 0 || results["face_labels"].includes(v))
+                                        .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"])
+                                        .slice(0, 3)
+                                        .map((label, idx) => {
+                                            const perc = result_values?.frameCheck[label]?.percentage || 0;
+                                            const pred = result_values?.frameCheck[label]?.prediction || false;
+                                            const threshold = results["frameCheck"]["threshold"];
 
-                                    if (isNaN(perc)) return null;
+                                            if (isNaN(perc)) return null;
 
-                                    return (
-                                        <div
-                                            key={idx}
-                                            className={`group bg-white border ${toggle_open === idx ? "border-zinc-300 shadow-md" : "border-zinc-100 shadow-sm hover:border-zinc-300 hover:shadow-md hover:bg-zinc-50/40"} rounded-[2rem] overflow-hidden transition-all duration-500 ease-in-out`}
-                                        >
-                                            <div
-                                                onClick={() => set_toggle_open(toggle_open === idx ? null : idx)}
-                                                className="cursor-pointer p-8 flex flex-col md:flex-row items-center gap-10 relative"
-                                            >
-                                                <div className="flex items-center gap-6 min-w-[260px]">
-                                                    <div className="relative">
-                                                        <div className="w-14 h-14 rounded-2xl overflow-hidden ring-1 ring-zinc-100 group-hover:ring-zinc-200 transition-all duration-500">
-                                                            {results?.frameCheck?.label_faces && results?.frameCheck?.label_faces[label] ? (
-                                                                <Image src={results?.frameCheck?.label_faces[label]} width={56} height={56} alt={`Subject ${idx + 1}`} className="object-cover" />
-                                                            ) : (
-                                                                <UserCircle2 className="size-14 text-zinc-100" strokeWidth={0.5} />
-                                                            )}
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className={`group bg-white border ${toggle_open === idx ? "border-zinc-300 shadow-md" : "border-zinc-100 shadow-sm hover:border-zinc-300 hover:shadow-md hover:bg-zinc-50/40"} rounded-[2rem] overflow-hidden transition-all duration-500 ease-in-out`}
+                                                >
+                                                    <div
+                                                        onClick={() => set_toggle_open(toggle_open === idx ? null : idx)}
+                                                        className="cursor-pointer p-8 flex flex-col md:flex-row items-center gap-10 relative"
+                                                    >
+                                                        <div className="flex items-center gap-6 min-w-[260px]">
+                                                            <div className="relative">
+                                                                <div className="w-14 h-14 rounded-2xl overflow-hidden ring-1 ring-zinc-100 group-hover:ring-zinc-200 transition-all duration-500">
+                                                                    {results?.frameCheck?.label_faces && results?.frameCheck?.label_faces[label] ? (
+                                                                        <Image src={results?.frameCheck?.label_faces[label]} width={56} height={56} alt={`Subject ${idx + 1}`} className="object-cover" />
+                                                                    ) : (
+                                                                        <UserCircle2 className="size-14 text-zinc-100" strokeWidth={0.5} />
+                                                                    )}
+                                                                </div>
+                                                                <div className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ${pred ? "bg-emerald-400" : "bg-rose-400"}`} />
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.25em] mb-1.5 opacity-80">Subject {idx + 1}</p>
+                                                                <div className="flex items-center gap-2.5">
+                                                                    <h4 className="text-lg font-medium tracking-tight text-zinc-800">{pred ? "Real" : "Spoof"}</h4>
+                                                                    {/* {!pred && <div className="w-1 h-1 rounded-full bg-rose-400 opacity-40" />} */}
+                                                                </div>
+                                                            </div>
+                                                            <div className="flex items-center justify-center">
+                                                                <ChevronRight className={`size-4 text-zinc-400 group-hover:text-zinc-900 transition-all duration-500 ${toggle_open === idx ? "rotate-90 text-zinc-900" : "group-hover:translate-x-1"}`} />
+                                                            </div>
                                                         </div>
-                                                        <div className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ${pred ? "bg-emerald-400" : "bg-rose-400"}`} />
-                                                    </div>
-                                                    <div className="flex-1">
-                                                        <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.25em] mb-1.5 opacity-80">Subject {idx + 1}</p>
-                                                        <div className="flex items-center gap-2.5">
-                                                            <h4 className="text-lg font-medium tracking-tight text-zinc-800">{pred ? "Real" : "Spoof"}</h4>
-                                                            {/* {!pred && <div className="w-1 h-1 rounded-full bg-rose-400 opacity-40" />} */}
+
+                                                        <div className="flex-1 w-full h-8 bg-zinc-100/50 rounded-full overflow-hidden relative transition-colors duration-500">
+                                                            {Object.entries(result_values["frameCheck"][label].per_second_data).map(([sec, pred], i) => {
+                                                                const total_duration = results["frameCheck"].duration;
+                                                                // We use duration + 1 because the chart labels go from 0 to duration (inclusive)
+                                                                let width = 100 / (total_duration + 1);
+                                                                let start = (100 * parseInt(sec)) / (total_duration + 1);
+
+                                                                // Use the same 0.5 threshold logic as the graph
+                                                                if (pred === 0.5) return null;
+
+                                                                const isAuthentic = pred > 0.5;
+
+                                                                return (
+                                                                    <div
+                                                                        key={i}
+                                                                        style={{ width: `${width}%`, left: `${start}%` }}
+                                                                        className={`h-full absolute ${isAuthentic ? 'bg-emerald-400' : 'bg-rose-400'} transition-all duration-700`}
+                                                                    />
+                                                                );
+                                                            })}
                                                         </div>
+
                                                     </div>
-                                                    <div className="flex items-center justify-center">
-                                                        <ChevronRight className={`size-4 text-zinc-400 group-hover:text-zinc-900 transition-all duration-500 ${toggle_open === idx ? "rotate-90 text-zinc-900" : "group-hover:translate-x-1"}`} />
-                                                    </div>
+
+                                                    {toggle_open === idx && (
+                                                        <div className="px-8 pb-10 border-t border-zinc-100 animate-in fade-in slide-in-from-top-2 duration-700">
+                                                            <div className="h-[300px] w-full mt-10">
+                                                                {frame_charts && <LineChart chartData={frame_charts[label]} />}
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
-
-                                                <div className="flex-1 w-full h-8 bg-zinc-100/50 rounded-full overflow-hidden relative transition-colors duration-500">
-                                                    {Object.entries(result_values["frameCheck"][label].per_second_data).map(([sec, pred], i) => {
-                                                        const total_duration = results["frameCheck"].duration;
-                                                        // We use duration + 1 because the chart labels go from 0 to duration (inclusive)
-                                                        let width = 100 / (total_duration + 1);
-                                                        let start = (100 * parseInt(sec)) / (total_duration + 1);
-
-                                                        // Use the same 0.5 threshold logic as the graph
-                                                        if (pred === 0.5) return null;
-
-                                                        const isAuthentic = pred > 0.5;
-
-                                                        return (
-                                                            <div
-                                                                key={i}
-                                                                style={{ width: `${width}%`, left: `${start}%` }}
-                                                                className={`h-full absolute ${isAuthentic ? 'bg-emerald-400' : 'bg-rose-400'} transition-all duration-700`}
-                                                            />
-                                                        );
-                                                    })}
+                                            );
+                                        })}
+                                </div>
+                            ) :
+                            // AIGC DETECTION RESULT
+                            (
+                                <div className="bg-white border border-zinc-100 rounded-[2rem] overflow-hidden shadow-sm">
+                                    <div className="p-8 flex flex-col gap-8">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-6">
+                                                {/* <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${result_values["frameCheck"]["prediction"] ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
+                                                    <AudioLines className="size-8" />
+                                                </div> */}
+                                                <div>
+                                                    <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1">Video Stream</p>
+                                                    <h4 className="text-xl font-semibold">{result_values["frameCheck"]["prediction"] ? "Frames Match Source" : "AI Generation Detected"}</h4>
                                                 </div>
-
                                             </div>
-
-                                            {toggle_open === idx && (
-                                                <div className="px-8 pb-10 border-t border-zinc-100 animate-in fade-in slide-in-from-top-2 duration-700">
-                                                    <div className="h-[300px] w-full mt-10">
-                                                        {frame_charts && <LineChart chartData={frame_charts[label]} />}
-                                                    </div>
-                                                </div>
-                                            )}
+                                            <div className="text-right">
+                                                <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1">Confidence</p>
+                                                <p className="text-3xl font-light">{result_values["frameCheck"]["prediction"] ? (result_values["frameCheck"]["percentage"]).toFixed(2) : (100 - result_values["frameCheck"]["percentage"]).toFixed(2)}%</p>
+                                            </div>
                                         </div>
-                                    );
-                                })}
-                        </div>
+
+                                        <div className="space-y-6">
+                                            <div className="h-[300px]">
+                                                <LineChart chartData={frame_charts} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )
                     )}
 
                     {curr_model === "audioAnalysis" && result_values?.audioAnalysis && (
