@@ -355,6 +355,8 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             window.location.href = "/media-checker"
     }
 
+    console.log(result_values)
+
     return (
         <div className="min-h-screen text-zinc-900 font-sans selection:bg-zinc-200">
             <PDFGraphContainer />
@@ -595,7 +597,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                                             </div>
                                             <div className="text-right">
                                                 <p className="text-sm font-bold text-zinc-400 uppercase tracking-widest mb-1">Confidence</p>
-                                                <p className="text-3xl font-light">{result_values["frameCheck"]["prediction"] ? (result_values["frameCheck"]["percentage"]).toFixed(2) : (100 - result_values["frameCheck"]["percentage"]).toFixed(2)}%</p>
+                                                <p className="text-3xl font-light">{result_values["frameCheck"]["prediction"] ? Number(result_values["frameCheck"]["percentage"]).toFixed(2) : Number(100 - result_values["frameCheck"]["percentage"]).toFixed(2)}%</p>
                                             </div>
                                         </div>
 
