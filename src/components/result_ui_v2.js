@@ -365,11 +365,15 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
         doc.setFontSize(fontSize);
 
         if (analysisTypes["audioAnalysis"]) {
-            if (results["audioAnalysis"] && results["audioAnalysis"]["result"] < results["audioAnalysis"]["threshold"]) {
-                doc.text(`Manipulation detected in Audio`, curr_x, curr_y);
+            const threshold = results["audioAnalysis"].threshold;
+            const threshold_for_graph = 0.5; // since we normalize it
+            const audio_result = normalize_value(results["audioAnalysis"].result, threshold);
+
+            if (audio_result > threshold_for_graph) {
+                doc.text(`No manipulation detected in Audio`, curr_x, curr_y);
             }
             else {
-                doc.text(`No manipulation detected in Audio`, curr_x, curr_y);
+                doc.text(`Manipulation detected in Audio`, curr_x, curr_y);
             }
             curr_y += fontSize / 72 + 6 / 72;
         }
@@ -378,11 +382,19 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
             curr_y += fontSize / 72 + 10 / 72;
         }
         if (analysisTypes["frameCheck"]) {
-            if (results["frameCheck"] && results["frameCheck"]["result"] < results["frameCheck"]["threshold"]) {
-                doc.text(`Manipulation detected in Video`, curr_x, curr_y);
+            // console.log((result_values["frameCheck"]));
+            let sorted_labels = Object.keys(result_values["frameCheck"])
+                .sort((a, b) => result_values["frameCheck"][b]["data_points"] - result_values["frameCheck"][a]["data_points"]);
+            // let frame_result = (results["frameCheck"].result).toFixed(4);
+            const threshold = results["frameCheck"].threshold * 100;
+            const frame_prediction = Number(result_values["frameCheck"][sorted_labels[0]]["percentage"]).toFixed(2);
+            const frame_result = frame_prediction > threshold;
+
+            if (frame_result) {
+                doc.text(`No manipulation detected in Video`, curr_x, curr_y);
             }
             else {
-                doc.text(`No manipulation detected in Video`, curr_x, curr_y);
+                doc.text(`Manipulation detected in Video`, curr_x, curr_y);
             }
             curr_y += fontSize / 72;
             curr_x = mx;
