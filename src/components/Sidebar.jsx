@@ -52,7 +52,7 @@ const Sidebar = ({ user }) => {
                     {/* <Banknote className="size-16 stroke-white stroke-1 fill-primary" /> */}
                     <div className='flex gap-2'>
                         <span className='font-light'>Credits:</span>
-                        <span className='font-bold'>{user.tokens ? user.tokens : "🚫"}</span>
+                        <span className='font-bold'>{user.tokens !== undefined && user.tokens !== null ? user.tokens : "0"}</span>
                     </div>
                 </div>
 

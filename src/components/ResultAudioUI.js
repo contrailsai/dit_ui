@@ -2,11 +2,7 @@ import LineChart from './LineChart';
 import React, { useState, useRef, useEffect } from 'react';
 import WaveSurfer from 'wavesurfer.js';
 
-import jsPDF from "jspdf";
-import html2canvas from 'html2canvas';
-import { Outfit_bold_font } from './outfit-bold-font';
-import { Outfit_normal_font } from './outfit-normal-font';
-import { logo_base64 } from './logo_base64';
+import { video_pdf } from "./pdf_creation";
 import { Play, Pause, PlusCircle, DownloadFile } from './SVGs';
 
 const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck }) => {
@@ -118,177 +114,16 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
     };
 
     const handle_pdf_creation = async () => {
-
-        const doc = new jsPDF({ orientation: "p", unit: "in", compress: true });
-        doc.addFileToVFS('outfit_normal.ttf', Outfit_normal_font);
-        doc.addFileToVFS('outfit_bold.ttf', Outfit_bold_font);
-
-        doc.addFont('outfit_normal.ttf', 'Outfit', 'normal');
-        doc.addFont('outfit_bold.ttf', 'Outfit', 'bold');
-
-        doc.setFont("Outfit", "bold");
-
-        const my = 0.6;
-        const mx = 0.3;
-
-        let curr_x = mx;
-        let curr_y = my;
-
-        let fontSize = 18;
-        doc.setFontSize(fontSize);
-
-        // SHOW LOGO AND NAME OF COMPANY
-        const logo_img_w = 18 / 72;
-        const logo_img_h = 18 / 72
-
-        doc.addImage(logo_base64, 'PNG', curr_x, curr_y - 16 / 72, logo_img_w, logo_img_h);
-        curr_x += 16 / 72 + 7 / 72;
-        doc.setTextColor(2, 83, 288);
-        doc.text('Contrails AI', curr_x, curr_y - 2 / 72);
-
-
-        curr_x = mx;
-        curr_y += fontSize / 72 + 14 / 72; //go down (1. for the above comapny name text, 2. for space b/t the 2 text)
-
-        // PRINT Heading (bold)
-        fontSize = 24;
-        doc.setFontSize(fontSize);
-        doc.setTextColor(0, 0, 0);
-        doc.text("Manipulation Detection Report", curr_x, curr_y);
-        curr_y += fontSize / 72 + 10 / 72;
-
-        // PRINT FILE DATA
-        fontSize = 18;
-        doc.setFontSize(fontSize);
-        doc.text("File Data", curr_x, curr_y);
-
-        curr_y += fontSize / 72 + 6 / 72;
-
-        fontSize = 12;
-        doc.setFontSize(fontSize);
-
-        // FILE NAME
-        doc.setFont("Outfit", "bold");
-        doc.text("File name: ", curr_x, curr_y);
-        curr_x += 70 / 72;
-        doc.setFont("Outfit", "normal")
-        doc.text(`${file_metadata.name}`, curr_x, curr_y);
-
-        curr_x = mx;
-        curr_y += fontSize / 72 + 6 / 72;
-
-        //FILE SIZE
-        doc.setFont("Outfit", "bold");
-        doc.text("File Size: ", curr_x, curr_y);
-        curr_x += 70 / 72;
-        doc.setFont("Outfit", "normal")
-        doc.text(`${file_metadata.size}`, curr_x, curr_y);
-
-        curr_x = mx;
-        curr_y += fontSize / 72 + 6 / 72;
-
-        //FILE DURATION
-        doc.setFont("Outfit", "bold");
-        doc.text("Duration: ", curr_x, curr_y);
-        curr_x += 70 / 72;
-        doc.setFont("Outfit", "normal")
-        doc.text(`${wavesurferRef.current.getDuration().toFixed(1)} sec`, curr_x, curr_y);
-
-        curr_x = mx;
-        curr_y += (2 * fontSize / 72);
-
-        // PRINT VERIFIER COMMENT
-        if (file_metadata.verifier_comment) {
-            fontSize = 12;
-            doc.setFontSize(fontSize);
-            doc.setFont("Outfit", "bold");
-            doc.text("Expert's Comment: ", curr_x, curr_y);
-            curr_x = mx;
-            curr_y += fontSize / 72 + 6 / 72
-            doc.setFont("Outfit", "normal");
-            fontSize = 11;
-            doc.setFontSize(fontSize);
-            const maxWidth = 550 / 72;
-            const commentLines = doc.splitTextToSize(file_metadata.verifier_comment, maxWidth);
-
-            doc.text(commentLines, curr_x, curr_y);
-
-            curr_x = mx;
-            curr_y += (commentLines.length * fontSize / 72) + (30 / 72);
-            // curr_y += (2 * fontSize / 72) + (12 / 72);
+        if (chartData && resultValues) {
+            await video_pdf(
+                { audioAnalysis: true, frameCheck: false },
+                response_data,
+                resultValues,
+                file_metadata,
+                audio_graph_ref,
+                []
+            );
         }
-        else {
-            curr_y += (fontSize / 72) + (30 / 72);
-        }
-
-        //AUDIO ANALYSIS START
-        fontSize = 18;
-        doc.setFontSize(fontSize);
-
-        doc.setFont("Outfit", "bold");
-        doc.text("Audio Analysis", curr_x, curr_y);
-
-        curr_y += fontSize / 72 + 6 / 72;
-
-        fontSize = 16;
-        doc.setFontSize(fontSize);
-        doc.setFont("Outfit", "normal")
-
-        const audio_result = (response_data["audioAnalysis"].result).toFixed(4);
-        const threshold = response_data["audioAnalysis"].threshold
-
-        if (audio_result >= threshold) {
-            doc.text("The audio analysis detected no manipulation", curr_x, curr_y);
-        }
-        else {
-            doc.text("The audio analysis detected manipulation", curr_x, curr_y);
-        }
-        curr_y += fontSize / 72 + 8 / 72;
-
-        fontSize = 14;
-        doc.setFontSize(fontSize);
-
-        doc.text("Audio result: ", curr_x, curr_y);
-
-        curr_x += 90 / 72;
-        doc.setFont("Outfit", "bold");
-
-        audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-        doc.text(` ${audio_result >= threshold ? "Real" : "Fake"} `, curr_x, curr_y);
-
-        doc.setTextColor(0, 0, 0);
-        doc.setFont("Outfit", "normal");
-        curr_x = mx;
-        curr_y += fontSize / 72 + 6 / 72;
-        doc.text("Real Score: ", curr_x, curr_y);
-
-        curr_x += 90 / 72;
-        doc.setFont("Outfit", "bold");
-        audio_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-        doc.text(` ${(audio_result * 100).toFixed(2)} %`, curr_x, curr_y);
-
-        curr_x = mx;
-        curr_y += fontSize / 72 + 5 / 72;
-
-        fontSize = 9;
-        doc.setFontSize(fontSize);
-        doc.setTextColor(0, 0, 0);
-        doc.setFont("Outfit", "normal");
-
-        doc.text("( confidence of audio being real )", curr_x, curr_y);
-        curr_y += 2 * fontSize / 72;
-
-        const audio_result_element = audio_graph_ref.current;
-        let audio_result_canvas = await html2canvas(audio_result_element);
-        const audio_result_imgData = audio_result_canvas.toDataURL('image/png');
-        const aud_res_img_w = 550 / 72;
-        const aud_res_img_h = (audio_result_canvas.height * aud_res_img_w) / audio_result_canvas.width;
-        doc.addImage(audio_result_imgData, 'PNG', curr_x, curr_y, aud_res_img_w, aud_res_img_h, '', 'FAST');
-
-        curr_x = mx;
-        curr_y += aud_res_img_h + 20 / 72; //gap of 20 px
-
-        doc.save("a4.pdf");
     }
 
     useEffect(() => {
@@ -330,7 +165,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
 
                             {/* PDF EXPORT */}
                             <div
-                                onClick={async () => { await handle_pdf_creation() }}
+                                onClick={handle_pdf_creation}
                                 className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow '
                             >
                                 <DownloadFile className='size-6' strokeWidth={1.5} />

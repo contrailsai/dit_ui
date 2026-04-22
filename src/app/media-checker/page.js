@@ -5,7 +5,7 @@ import { useState } from "react";
 import { BadgeCheck, FileCheck, PlusCircle, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
-import VideoAnalysisForm from "@/app/media-analyzer/Videofile";
+import VideoAnalysisForm from "@/app/media-checker/File_direct";
 
 export default function FactChecker() {
     
@@ -63,7 +63,7 @@ export default function FactChecker() {
     
                             {/* GOTO CASELIST */}
                             <Link
-                                href={'/user/case-list'}
+                                href={'/media-checker/case-list'}
                                 className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow '
                             >
                                 Goto CaseList

@@ -7,8 +7,8 @@ import { get_result_for_id } from '@/utils/cases_functions';
 
 // import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import Form from './Form';
-import Result_container from './Result_container';
+import Form from '../media-analyzer/Form';
+import Result_container from '../media-analyzer/Result_container';
 import Sidebar from '@/components/Sidebar';
 
 const VideoAnalysisForm = ({ user }) => {

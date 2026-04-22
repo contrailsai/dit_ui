@@ -131,7 +131,8 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
 
         if (name === "FrameCheckModelUse") {
             // SET THE NEW FACE LABES BASED ON RESULT
-            const faces_list = Object.keys(model_responses["results"]["frame"]["models_results"][value]["labels_result"])
+            const model_res = model_responses["results"]["frame"]["models_results"][value]["labels_result"];
+            const faces_list = Array.isArray(model_res) ? [] : Object.keys(model_res);
             set_faces({
                 "selected": faces_list,
                 "removed": []
@@ -220,7 +221,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
             res_data["file_metadata"]["verifier_comment"] = verifier_metadata["verifierComment"];
         }
         else {
-            res_data["file_metadata"]["verifier_comment"] = undefzined;
+            res_data["file_metadata"]["verifier_comment"] = undefined;
         }
 
         if (verifier_metadata["showFrameCheck"]) {
@@ -551,200 +552,204 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                 </div>
 
                 {/* FACES SELECTION */}
-                <div className={` ${verifier_metadata["showFrameCheck"] ? " max-h-[5000px] " : " max-h-0"} overflow-hidden transition-all duration-200  w-full mt-5 `}>
-                    {verifier_metadata["showFrameCheck"] &&
-                        <div className=' p-4 flex flex-col border border-primary rounded-3xl'>
-                            <div className='text-xl'>Select and Remove Faces</div>
-                            <div className='text-sm'>(at max only 9 faces will be shown)</div>
-                            <div className='flex justify-between border-b border-primary py-3'>
-                                <div
-                                    onClick={() => {
-                                        set_verifier_metadata(prevState => ({
-                                            ...prevState,
-                                            ["face_labels"]: faces["selected"]
-                                        }));
-                                    }}
-                                    className='bg-primary w-fit py-2 px-6 rounded-3xl text-white cursor-pointer'
-                                >
-                                    Save for preview
-                                </div>
-                                <div className='flex gap-3'>
+                {
+                    verifier_metadata["showFrameCheck"] && !Array.isArray(model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["labels_result"]) &&
+                    (
+                        <div className={` max-h-[5000px] overflow-hidden transition-all duration-200  w-full mt-5 `}>
+                            <div className=' p-4 flex flex-col border border-primary rounded-3xl'>
+                                <div className='text-xl'>Select and Remove Faces</div>
+                                <div className='text-sm'>(at max only 9 faces will be shown)</div>
+                                <div className='flex justify-between border-b border-primary py-3'>
                                     <div
                                         onClick={() => {
-                                            set_faces(prevState => ({
-                                                "selected": [...prevState["selected"], ...prevState["removed"]],
-                                                "removed": []
+                                            set_verifier_metadata(prevState => ({
+                                                ...prevState,
+                                                ["face_labels"]: faces["selected"]
                                             }));
                                         }}
                                         className='bg-primary w-fit py-2 px-6 rounded-3xl text-white cursor-pointer'
                                     >
-                                        Select All
+                                        Save for preview
                                     </div>
-                                    <div
-                                        onClick={() => {
-                                            set_faces(prevState => ({
-                                                "selected": [],
-                                                "removed": [...prevState["selected"], ...prevState["removed"]]
-                                            }));
-                                        }}
-                                        className='bg-primary w-fit py-2 px-6 rounded-3xl text-white cursor-pointer'
-                                    >
-                                        Remove All
+                                    <div className='flex gap-3'>
+                                        <div
+                                            onClick={() => {
+                                                set_faces(prevState => ({
+                                                    "selected": [...prevState["selected"], ...prevState["removed"]],
+                                                    "removed": []
+                                                }));
+                                            }}
+                                            className='bg-primary w-fit py-2 px-6 rounded-3xl text-white cursor-pointer'
+                                        >
+                                            Select All
+                                        </div>
+                                        <div
+                                            onClick={() => {
+                                                set_faces(prevState => ({
+                                                    "selected": [],
+                                                    "removed": [...prevState["selected"], ...prevState["removed"]]
+                                                }));
+                                            }}
+                                            className='bg-primary w-fit py-2 px-6 rounded-3xl text-white cursor-pointer'
+                                        >
+                                            Remove All
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div className='flex divide-x divide-primary '>
+                                <div className='flex divide-x divide-primary '>
 
-                                {/* SELECTED FACES */}
-                                <div className='w-full h-full flex flex-wrap gap-3 pr-10'>
-                                    <div className='min-w-24 w-full py-3'>
-                                        Selected Faces:
+                                    {/* SELECTED FACES */}
+                                    <div className='w-full h-full flex flex-wrap gap-3 pr-10'>
+                                        <div className='min-w-24 w-full py-3'>
+                                            Selected Faces:
+                                        </div>
+                                        {
+                                            Object.entries(model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["labels_result"])
+                                                .sort((a, b) => (b[1].length - a[1].length))
+                                                .filter((val) => {
+                                                    const label = val[0];
+                                                    if (faces["selected"].includes(label))
+                                                        return true
+                                                })
+                                                .map((val, idx) => {
+                                                    const label_name = val[0];
+                                                    const data_pts = val[1].length;
+                                                    // console.log(val);
+                                                    let img = true;
+                                                    if (model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["label_faces"])
+                                                        img = model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["label_faces"][`${label_name}`]
+                                                    else
+                                                        img = false;
+
+                                                    return (
+                                                        <div key={idx} className=' relative w-20 h-30 flex flex-col justify-evenly gap-1 bg-primary p-2 rounded-2xl text-white'>
+                                                            <div
+                                                                onClick={() => {
+                                                                    set_faces(prevState => ({
+                                                                        "selected": prevState["selected"].filter((val) => val !== label_name),
+                                                                        "removed": [...prevState["removed"], label_name]
+                                                                    }));
+                                                                }}
+                                                                className='absolute -top-2 left-1/2 -translate-x-1/2  bg-rose-400 rounded-full cursor-pointer hover:bg-rose-500 transition-all'
+                                                            >
+                                                                <Minus className='size-4 ' />
+                                                            </div>
+                                                            <div className='font-light text-xs w-full flex justify-between'>
+                                                                <span>
+                                                                    id: &nbsp;
+                                                                </span>
+                                                                <span className='font-bold'>
+                                                                    {label_name}
+                                                                </span>
+                                                            </div>
+                                                            <div className='font-light text-xs w-full flex justify-between'>
+                                                                <span>
+                                                                    Points: &nbsp;
+                                                                </span>
+                                                                <span className='font-bold bg-slate-800 px-1 h-fit w-fit rounded-3xl'>
+                                                                    {data_pts}
+                                                                </span>
+                                                            </div>
+                                                            <div className='rounded-full overflow-hidden'>
+                                                                {
+                                                                    img ?
+                                                                        <Image
+                                                                            src={img}
+                                                                            width={56}
+                                                                            height={56}
+                                                                            alt={`person - ${Number(label_name) + 1} `}
+                                                                        />
+                                                                        :
+                                                                        (
+                                                                            <PersonCircle className="size-14" strokeWidth={1} />
+                                                                        )
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })
+                                        }
                                     </div>
-                                    {
-                                        Object.entries(model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["labels_result"])
-                                            .sort((a, b) => (b[1].length - a[1].length))
-                                            .filter((val) => {
-                                                const label = val[0];
-                                                if (faces["selected"].includes(label))
-                                                    return true
-                                            })
-                                            .map((val, idx) => {
-                                                const label_name = val[0];
-                                                const data_pts = val[1].length;
-                                                // console.log(val);
-                                                let img = true;
-                                                if (model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["label_faces"])
-                                                    img = model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["label_faces"][`${label_name}`]
-                                                else
-                                                    img = false;
 
-                                                return (
-                                                    <div key={idx} className=' relative w-20 h-30 flex flex-col justify-evenly gap-1 bg-primary p-2 rounded-2xl text-white'>
-                                                        <div
-                                                            onClick={() => {
-                                                                set_faces(prevState => ({
-                                                                    "selected": prevState["selected"].filter((val) => val !== label_name),
-                                                                    "removed": [...prevState["removed"], label_name]
-                                                                }));
-                                                            }}
-                                                            className='absolute -top-2 left-1/2 -translate-x-1/2  bg-rose-400 rounded-full cursor-pointer hover:bg-rose-500 transition-all'
-                                                        >
-                                                            <Minus className='size-4 ' />
-                                                        </div>
-                                                        <div className='font-light text-xs w-full flex justify-between'>
-                                                            <span>
-                                                                id: &nbsp;
-                                                            </span>
-                                                            <span className='font-bold'>
-                                                                {label_name}
-                                                            </span>
-                                                        </div>
-                                                        <div className='font-light text-xs w-full flex justify-between'>
-                                                            <span>
-                                                                Points: &nbsp;
-                                                            </span>
-                                                            <span className='font-bold bg-slate-800 px-1 h-fit w-fit rounded-3xl'>
-                                                                {data_pts}
-                                                            </span>
-                                                        </div>
-                                                        <div className='rounded-full overflow-hidden'>
-                                                            {
-                                                                img ?
-                                                                    <Image
-                                                                        src={img}
-                                                                        width={56}
-                                                                        height={56}
-                                                                        alt={`person - ${Number(label_name) + 1} `}
-                                                                    />
-                                                                    :
-                                                                    (
-                                                                        <PersonCircle className="size-14" strokeWidth={1} />
-                                                                    )
-                                                            }
-                                                        </div>
-                                                    </div>
-                                                )
-                                            })
-                                    }
-                                </div>
+                                    {/* //REMOVED FACES */}
+                                    <div className='w-full h-full flex flex-wrap gap-3 pl-10'>
+                                        <div className='min-w-24 w-full py-3'>
+                                            Removed Faces:
+                                        </div>
+                                        {
+                                            Object.entries(model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["labels_result"])
+                                                .sort((a, b) => (b[1].length - a[1].length))
+                                                .filter((val) => {
+                                                    const label = val[0];
+                                                    if (faces["removed"].includes(label))
+                                                        return true
+                                                })
+                                                .map((val, idx) => {
+                                                    const label_name = val[0];
+                                                    const data_pts = val[1].length;
+                                                    // console.log(val);
+                                                    let img = true;
+                                                    if (model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["label_faces"])
+                                                        img = model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["label_faces"][`${label_name}`]
+                                                    else
+                                                        img = false;
 
-                                {/* //REMOVED FACES */}
-                                <div className='w-full h-full flex flex-wrap gap-3 pl-10'>
-                                    <div className='min-w-24 w-full py-3'>
-                                        Removed Faces:
+                                                    return (
+                                                        <div key={idx} className=' relative w-20 h-30 flex flex-col justify-evenly gap-1 bg-primary p-2 rounded-2xl text-white'>
+                                                            <div
+                                                                onClick={() => {
+                                                                    set_faces(prevState => ({
+                                                                        "selected": [...prevState["selected"], label_name],
+                                                                        "removed": prevState["removed"].filter((val) => val !== label_name),
+                                                                    }));
+                                                                }}
+                                                                className='absolute -top-2 left-1/2 -translate-x-1/2  bg-emerald-400 rounded-full cursor-pointer hover:bg-emerald-500 transition-all'
+                                                            >
+                                                                <Plus className='size-4 ' />
+                                                            </div>
+                                                            <div className='font-light text-xs w-full flex justify-between'>
+                                                                <span>
+                                                                    id: &nbsp;
+                                                                </span>
+                                                                <span className='font-bold'>
+                                                                    {label_name}
+                                                                </span>
+                                                            </div>
+                                                            <div className='font-light text-xs w-full flex justify-between'>
+                                                                <span>
+                                                                    Points: &nbsp;
+                                                                </span>
+                                                                <span className='font-bold bg-slate-800 px-1 h-fit w-fit rounded-3xl'>
+                                                                    {data_pts}
+                                                                </span>
+                                                            </div>
+                                                            <div className='rounded-full overflow-hidden'>
+                                                                {
+                                                                    img ?
+                                                                        <Image
+                                                                            src={img}
+                                                                            width={56}
+                                                                            height={56}
+                                                                            alt={`person - ${Number(label_name) + 1} `}
+                                                                        />
+                                                                        :
+                                                                        (
+                                                                            <PersonCircle className="size-14" strokeWidth={1} />
+                                                                        )
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    )
+                                                })
+                                        }
                                     </div>
-                                    {
-                                        Object.entries(model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["labels_result"])
-                                            .sort((a, b) => (b[1].length - a[1].length))
-                                            .filter((val) => {
-                                                const label = val[0];
-                                                if (faces["removed"].includes(label))
-                                                    return true
-                                            })
-                                            .map((val, idx) => {
-                                                const label_name = val[0];
-                                                const data_pts = val[1].length;
-                                                // console.log(val);
-                                                let img = true;
-                                                if (model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["label_faces"])
-                                                    img = model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]]["label_faces"][`${label_name}`]
-                                                else
-                                                    img = false;
 
-                                                return (
-                                                    <div key={idx} className=' relative w-20 h-30 flex flex-col justify-evenly gap-1 bg-primary p-2 rounded-2xl text-white'>
-                                                        <div
-                                                            onClick={() => {
-                                                                set_faces(prevState => ({
-                                                                    "selected": [...prevState["selected"], label_name],
-                                                                    "removed": prevState["removed"].filter((val) => val !== label_name),
-                                                                }));
-                                                            }}
-                                                            className='absolute -top-2 left-1/2 -translate-x-1/2  bg-emerald-400 rounded-full cursor-pointer hover:bg-emerald-500 transition-all'
-                                                        >
-                                                            <Plus className='size-4 ' />
-                                                        </div>
-                                                        <div className='font-light text-xs w-full flex justify-between'>
-                                                            <span>
-                                                                id: &nbsp;
-                                                            </span>
-                                                            <span className='font-bold'>
-                                                                {label_name}
-                                                            </span>
-                                                        </div>
-                                                        <div className='font-light text-xs w-full flex justify-between'>
-                                                            <span>
-                                                                Points: &nbsp;
-                                                            </span>
-                                                            <span className='font-bold bg-slate-800 px-1 h-fit w-fit rounded-3xl'>
-                                                                {data_pts}
-                                                            </span>
-                                                        </div>
-                                                        <div className='rounded-full overflow-hidden'>
-                                                            {
-                                                                img ?
-                                                                    <Image
-                                                                        src={img}
-                                                                        width={56}
-                                                                        height={56}
-                                                                        alt={`person - ${Number(label_name) + 1} `}
-                                                                    />
-                                                                    :
-                                                                    (
-                                                                        <PersonCircle className="size-14" strokeWidth={1} />
-                                                                    )
-                                                            }
-                                                        </div>
-                                                    </div>
-                                                )
-                                            })
-                                    }
                                 </div>
-
                             </div>
                         </div>
-                    }
-                </div>
+                    )
+                }
+
 
                 {/* COMMENTS AND SUBMISSION */}
                 <div className=' py-4 relative flex gap-5 mt-2'>

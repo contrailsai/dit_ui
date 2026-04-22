@@ -3,11 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 // import Image from 'next/image';
 
 import { PlusCircle, DownloadFile, LoadingCircle } from './SVGs';
-import jsPDF from "jspdf";
-// import html2canvas from 'html2canvas';
-import { Outfit_bold_font } from './outfit-bold-font';
-import { Outfit_normal_font } from './outfit-normal-font';
-import { logo_base64 } from './logo_base64';
+import { video_pdf } from "./pdf_creation";
 
 const ResultsImageUI = ({ response_data, fileUrl, file_metadata, analysisTypes, handle_newCheck }) => {
 
@@ -15,227 +11,18 @@ const ResultsImageUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
     const result_ref = useRef(null);
     const [taking_ss, set_taking_ss] = useState(false);
 
-    const handle_pdf_tester = async () => {
-
-        // set_taking_ss(true);
-        // Wait for the state update to be applied
-        await new Promise(resolve => {
-            setTimeout(resolve, 500);
-        });
-
-        const doc = new jsPDF({ orientation: "p", unit: "in", compress: true });
-        doc.addFileToVFS('outfit_normal.ttf', Outfit_normal_font);
-        doc.addFileToVFS('outfit_bold.ttf', Outfit_bold_font);
-
-        doc.addFont('outfit_normal.ttf', 'Outfit', 'normal');
-        doc.addFont('outfit_bold.ttf', 'Outfit', 'bold');
-
-        doc.setFont("Outfit", "bold");
-
-        const my = 0.6;
-        const mx = 0.3;
-
-        let curr_x = mx;
-        let curr_y = my;
-
-        let fontSize = 18;
-        doc.setFontSize(fontSize);
-
-        // SHOW LOGO AND NAME OF COMPANY
-        const logo_img_w = 18 / 72;
-        const logo_img_h = 18 / 72
-
-        doc.addImage(logo_base64, 'PNG', curr_x, curr_y - 16 / 72, logo_img_w, logo_img_h);
-        curr_x += 16 / 72 + 7 / 72;
-        doc.setTextColor(2, 83, 288);
-        doc.text('Contrails AI', curr_x, curr_y - 2 / 72);
-
-
-        curr_x = mx;
-        curr_y += fontSize / 72 + 14 / 72; //go down (1. for the above comapny name text, 2. for space b/t the 2 text)
-
-        // PRINT Heading (bold)
-        fontSize = 24;
-        doc.setFontSize(fontSize);
-        doc.setTextColor(0, 0, 0);
-        doc.text("Manipulation Detection Report", curr_x, curr_y);
-        curr_y += fontSize / 72 + 10 / 72;
-
-        // PRINT FILE DATA
-        fontSize = 18;
-        doc.setFontSize(fontSize);
-        doc.text("File Data", curr_x, curr_y);
-
-        curr_y += fontSize / 72 + 6 / 72;
-
-        fontSize = 12;
-        doc.setFontSize(fontSize);
-
-        // FILE NAME
-        doc.setFont("Outfit", "bold");
-        doc.text("File name: ", curr_x, curr_y);
-        curr_x += 70 / 72;
-        doc.setFont("Outfit", "normal")
-        doc.text(`${file_metadata.name}`, curr_x, curr_y);
-
-        curr_x = mx;
-        curr_y += fontSize / 72 + 6 / 72;
-
-        //FILE SIZE
-        doc.setFont("Outfit", "bold");
-        doc.text("File Size: ", curr_x, curr_y);
-        curr_x += 70 / 72;
-        doc.setFont("Outfit", "normal")
-        doc.text(`${file_metadata.size}`, curr_x, curr_y);
-
-        curr_x = mx;
-        curr_y += fontSize / 72 + 8 / 72;
-
-        if (file_metadata.verifier_comment) {
-            fontSize = 12;
-            doc.setFontSize(fontSize);
-            doc.setFont("Outfit", "bold");
-            doc.text("Expert's Comment: ", curr_x, curr_y);
-            curr_x = mx;
-            curr_y += fontSize / 72 + 6 / 72
-            doc.setFont("Outfit", "normal");
-            fontSize = 11;
-            doc.setFontSize(fontSize);
-            const maxWidth = 550 / 72;
-            const commentLines = doc.splitTextToSize(file_metadata.verifier_comment, maxWidth);
-
-            doc.text(commentLines, curr_x, curr_y);
-
-            curr_x = mx;
-            curr_y += (commentLines.length * fontSize / 72) + (12 / 72);
-            // curr_y += (2 * fontSize / 72) + (12 / 72);
+    const handle_pdf_creation = async () => {
+        if (resultValues) {
+            await video_pdf(
+                analysisTypes,
+                response_data,
+                resultValues,
+                file_metadata,
+                { current: null },
+                [],
+                fileUrl
+            );
         }
-        else {
-            curr_y += (fontSize / 72) + (6 / 72);
-        }
-
-        // SHOW VIDEO PREVIEW, RESULT OF BOTH ANALYSIS AND VERDICT
-        // const result_element = result_ref.current;
-        // let result_canvas = await html2canvas(result_element);
-        // const result_imgData = result_canvas.toDataURL('image/png');
-        // const res_img_w = 550 / 72;
-        // const res_img_h = (result_canvas.height * res_img_w) / result_canvas.width;
-        // doc.addImage(result_imgData, 'PNG', curr_x, curr_y, res_img_w, res_img_h, '', 'FAST');
-
-        // doc.setFillColor(2, 83, 288)
-        // doc.rect(curr_x, curr_y, 20*16/72, 20*9/72, 'F')
-        fontSize = 18;
-        doc.setFontSize(fontSize);
-        doc.setFont("Outfit", "bold");
-        doc.text("Result", curr_x, curr_y);
-        doc.setFont("Outfit", "normal");
-        curr_y += fontSize / 72 + 6 / 72;
-        fontSize = 12;
-
-        if (response_data["aigcCheck"] !== undefined) {
-            doc.setFontSize(14);
-            if (response_data["aigcCheck"] && response_data["aigcCheck"]["result"] < response_data["aigcCheck"]["threshold"]) {
-                doc.text(`Manipulation detected in Image`, curr_x, curr_y);
-            }
-            else {
-                doc.text(`No manipulation detected in Image`, curr_x, curr_y);
-            }
-            doc.setFontSize(fontSize);
-            curr_y += fontSize / 72 ;
-        }
-        
-        curr_y += 10 / 72; //gap of 20 px
-
-        doc.setDrawColor(150, 150, 150);
-        doc.setLineWidth(1 / 72);
-        doc.line(curr_x, curr_y, curr_x + 550 / 72, curr_y);
-
-        curr_y += 30 / 72;
-
-        if (response_data["aigcCheck"] !== undefined) {
-
-            //AUDIO ANALYSIS START
-            fontSize = 18;
-            doc.setFontSize(fontSize);
-            doc.text("Aigc Check", curr_x, curr_y);
-
-            curr_y += fontSize / 72 + 6 / 72;
-
-            fontSize = 16;
-            doc.setFontSize(fontSize);
-
-            const image_result = (response_data["aigcCheck"].result).toFixed(4);
-            const threshold = response_data["aigcCheck"].threshold;
-
-            if (image_result >= threshold) {
-                doc.text("The Image Check detected no manipulation", curr_x, curr_y);
-            }
-            else {
-                doc.text("The Image check detected manipulation", curr_x, curr_y);
-            }
-            curr_y += fontSize / 72 + 8 / 72;
-
-            fontSize = 14;
-            doc.setFontSize(fontSize);
-
-            doc.text("Image result: ", curr_x, curr_y);
-
-            curr_x += 90 / 72;
-            doc.setFont("Outfit", "bold");
-
-            image_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${image_result >= threshold ? "Real" : "Fake"} `, curr_x, curr_y);
-
-            doc.setTextColor(0, 0, 0);
-            doc.setFont("Outfit", "normal");
-            curr_x = mx;
-            curr_y += fontSize / 72 + 6 / 72;
-            doc.text("Real Score: ", curr_x, curr_y);
-
-            curr_x += 90 / 72;
-            doc.setFont("Outfit", "bold");
-            image_result >= threshold ? doc.setTextColor(5, 160, 20) : doc.setTextColor(200, 30, 30);
-            doc.text(` ${image_result * 100} %`, curr_x, curr_y);
-
-            curr_x = mx;
-            curr_y += fontSize / 72 + 5 / 72;
-
-            fontSize = 9;
-            doc.setFontSize(fontSize);
-            doc.setTextColor(0, 0, 0);
-            doc.setFont("Outfit", "normal");
-
-            doc.text("(confidence of image being real)", curr_x, curr_y);
-            curr_y += 2 * fontSize / 72;
-
-            fontSize = 14;
-            doc.setFontSize(fontSize);
-            doc.setFont("Outfit", "bold");
-            doc.text("Image :", curr_x, curr_y);
-
-            curr_y += fontSize / 72;
-            // const result_element = result_ref.current;
-            // let result_canvas = await html2canvas(result_element);
-            // const result_imgData = result_canvas.toDataURL('image/png');
-            // const res_img_w = 550 / 72;
-            // const res_img_h = (result_canvas.height * res_img_w) / result_canvas.width;
-            const res_img_h = 300/72;
-            const res_img_w = 300/72;
-            doc.addImage(fileUrl, 'PNG', curr_x, curr_y, res_img_w, res_img_h, '', 'FAST');
-
-            curr_x = mx;
-            curr_y += res_img_h + 30 / 72; //gap of 30 px
-
-            // doc.setDrawColor(150, 150, 150);
-            // doc.setLineWidth(1 / 72);
-            // doc.line(curr_x, curr_y, curr_x + 550 / 72, curr_y);
-
-            // curr_y += 30 / 72;
-        }
-
-        // set_taking_ss(false);
-
-        doc.save("deepfake_report.pdf");
     }
 
     // console.log(response_data, analysisTypes)
@@ -258,7 +45,7 @@ const ResultsImageUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
 
                             {/* PDF EXPORT */}
                             <div
-                                onClick={async () => { await handle_pdf_tester() }}
+                                onClick={handle_pdf_creation}
                                 className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow '
                             >
                                 Export Report
