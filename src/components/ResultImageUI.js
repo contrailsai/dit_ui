@@ -38,7 +38,7 @@ const ResultsImageUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                         fileUrl &&
                         <div className=' flex gap-7 items-center mr-1 '>
                             {/* NEW ANALYSIS */}
-                            <div onClick={handle_newCheck} className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow'>
+                            <div onClick={handle_newCheck} className=' flex items-center gap-2 cursor-pointer text-lg font-medium h-fit px-5 py-2.5 my-6 rounded-full bg-white border border-slate-200 shadow-sm hover:border-primary/40 hover:text-primary transition-all'>
                                 <PlusCircle className='size-6' strokeWidth={1.5} />
                                 New Analysis
                             </div>
@@ -46,7 +46,7 @@ const ResultsImageUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                             {/* PDF EXPORT */}
                             <div
                                 onClick={handle_pdf_creation}
-                                className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow '
+                                className=' flex items-center gap-2 cursor-pointer text-lg font-medium h-fit px-5 py-2.5 my-6 rounded-full bg-white border border-slate-200 shadow-sm hover:border-primary/40 hover:text-primary transition-all '
                             >
                                 Export Report
                                 <DownloadFile className='size-6' strokeWidth={1.5} />
@@ -56,9 +56,9 @@ const ResultsImageUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                 </div>
 
                 {/* ANALYSIS */}
-                <div className=" relative w-full flex flex-col lg:gap-3 items-center bg-slate-50 rounded-lg overflow-hidden ">
+                <div className=" relative w-full flex flex-col lg:gap-3 items-center bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-card ">
 
-                    <div className={` ${taking_ss ? '' : 'hidden'} absolute z-20 w-full h-full bg-black/90 backdrop-blur-2xl text-white `}>
+                    <div className={` ${taking_ss ? '' : 'hidden'} absolute z-20 w-full h-full bg-slate-900 text-white `}>
 
                         <div className=' flex flex-col justify-center items-center gap-4 text-2xl my-40 '>
                             <div role="status">
@@ -168,7 +168,7 @@ const ResultsImageUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                     {
                         file_metadata.verifier_comment &&
                         (
-                            <div className=' bg-slate-100 py-4 px-5 border rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                            <div className=' bg-white py-4 px-5 border border-slate-200 rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow-card transition-all duration-300'>
                                 <span className=' text-xl'>
                                     Expert&apos;s Note
                                 </span>
@@ -180,7 +180,7 @@ const ResultsImageUI = ({ response_data, fileUrl, file_metadata, analysisTypes, 
                     }
 
                     {/* VIDEO META DATA */}
-                    <div className=' bg-slate-100 py-4 px-5 border rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                    <div className=' bg-white py-4 px-5 border border-slate-200 rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow-card transition-all duration-300'>
                         <span className=' text-xl'>
                             Video Metadata
                         </span>

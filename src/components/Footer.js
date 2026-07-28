@@ -2,11 +2,12 @@ import Link from "next/link";
 
 const Footer = () => {
     return (
-        <div className=' bg-white flex gap-3 py-1.5 justify-center items-center border-t border-primary '>
-            <Link href={'https://contrails.ai'} target='_blank' className='hover:underline'>
+        <div className="bg-white flex gap-3 py-2.5 justify-center items-center border-t border-slate-200 text-sm text-slate-500">
+            <Link href="https://contrails.ai" target="_blank" className="hover:text-primary hover:underline transition-colors">
                 Contrails AI
             </Link>
-            ©{new Date().getFullYear()}
+            <span className="text-slate-300">·</span>
+            <span>©{new Date().getFullYear()}</span>
         </div>
     )
 }

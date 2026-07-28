@@ -79,15 +79,15 @@ const VideoAnalysisForm = ({ user }) => {
                 {/* ERROR OCCURED IN GETTING USER */}
                 {
                     user.error !== undefined &&
-                    <div className=" min-h-[94vh] flex flex-col mx-20 py-32 items-center ">
-                        <div className=" w-full text-2xl bg-red-400 px-3 rounded-t">
-                            ERROR:
+                    <div className="min-h-[94vh] flex flex-col mx-20 py-32 items-center">
+                        <div className="w-full max-w-2xl text-2xl bg-red-50 text-red-700 border border-red-200 px-5 py-3 rounded-t-3xl font-semibold">
+                            ERROR
                         </div>
-                        <div className=" bg-red-300 w-full px-3 text-xl pb-3 pt-2 rounded-b ">
+                        <div className="bg-white w-full max-w-2xl px-5 text-xl pb-5 pt-3 rounded-b-3xl border border-t-0 border-red-200 text-slate-700 shadow-card">
                             {user.error}
                             <br />
-                            <div className=" text-base pt-3">
-                                contact to report this issue
+                            <div className="text-base pt-3 text-slate-500">
+                                Contact support to report this issue
                             </div>
                         </div>
                     </div>
@@ -100,7 +100,14 @@ const VideoAnalysisForm = ({ user }) => {
                             {
                                 !response_data.got_result &&
                                 <>
-                                    <h2 className=" w-full text-3xl font-semibold px-6 pb-6">Media Manipulation Detection</h2>
+                                    <div className="px-6 pb-6">
+                                        <h2 className="w-full text-3xl font-semibold tracking-tight text-slate-900">
+                                            Media Manipulation Detection
+                                        </h2>
+                                        <p className="text-sm text-slate-500 mt-1.5">
+                                            Run automated deepfake detection on your media
+                                        </p>
+                                    </div>
                                     <Form
                                         response_data={response_data}
                                         set_res_data={set_res_data}

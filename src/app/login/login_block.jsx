@@ -70,22 +70,22 @@ const Login_block = () => {
 
     return (
         <>
-            <div className=' shadow border border-primary/20 bg-white/70 backdrop-blur-sm mt-10 flex flex-col items-stretch w-fit py-10 px-10 rounded-3xl text-gray-800 '>
+            <div className="shadow-card border border-slate-200 bg-white mt-10 flex flex-col items-stretch w-fit py-10 px-10 rounded-3xl text-slate-800">
 
                 {/* LOGO */}
-                <div className=' text-primary w-full text-xl font-bold pb-7 flex justify-start items-center gap-3'>
-                    <Image src={'/logo.png'} width={30} height={20} alt="LOGO" />
-                    <span className="font-bold text-2xl text-[#2530FF]">
+                <div className="text-primary w-full text-xl font-bold pb-7 flex justify-start items-center gap-3">
+                    <Image src="/logo.png" width={30} height={20} alt="LOGO" />
+                    <span className="font-bold text-2xl text-primary">
                         Contrails AI
                     </span>
                 </div>
 
-                <div className=" text-3xl font-semibold">
+                <div className="text-3xl font-semibold tracking-tight text-slate-900">
                     {curr_shown === 'signup' && 'Create your Account'}
                     {curr_shown === 'login' && 'Login to your Account'}
                     {curr_shown === 'forgot' && 'Reset your Account Password'}
                 </div>
-                <div className=' font-light mb-2'>
+                <div className="font-light mb-2 text-slate-500">
                     {curr_shown === 'signup' && 'Hello! select method of signup:'}
                     {curr_shown === 'login' && 'Welcome back! select method to login:'}
                     {curr_shown === 'forgot' && 'Enter email :'}
@@ -98,7 +98,7 @@ const Login_block = () => {
                         {/* OTHER PROVIDERS */}
                         < button
                             onClick={(e) => { e.preventDefault(); handleGoogleSignIn() }}
-                            className=' mt-5 flex items-center gap-2 border border-gray-300 px-4 py-3 min-w-80 rounded-full bg-gray-50 transition-all'
+                            className="mt-5 flex items-center gap-2 border border-slate-200 px-4 py-3 min-w-80 rounded-full bg-slate-50 hover:bg-slate-100 transition-all"
                         >
 
                             <span>
@@ -110,47 +110,47 @@ const Login_block = () => {
 
 
                         {/* OR */}
-                        <div className='flex items-center gap-3 pt-7  pb-5'>
+                        <div className="flex items-center gap-3 pt-7 pb-5">
 
-                            <div className='w-32 h-[1px] bg-gray-400' />
-                            <div className=" text-sm text-gray-600">
+                            <div className="w-32 h-px bg-slate-200" />
+                            <div className="text-sm text-slate-500">
                                 or continue with email
                             </div>
-                            <div className='w-32 h-[1px] bg-gray-400' />
+                            <div className="w-32 h-px bg-slate-200" />
                         </div>
                     </>
                 }
 
                 {/* FORM */}
-                <form onSubmit={handle_pass_signin} className=' flex flex-col gap-2'>
+                <form onSubmit={handle_pass_signin} className="flex flex-col gap-2">
                     <div className="flex flex-col gap-6">
                         <div className="relative">
-                            <label className=' flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-gradient-to-t from-white to-transparent rounded-full ' htmlFor="email">
+                            <label className="flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-white rounded-full text-slate-600" htmlFor="email">
                                 <Mail strokeWidth={1} className="size-4" />
                                 Email
                             </label>
                             <input
-                                name='email'
+                                name="email"
                                 type="email"
                                 required
                                 value={email}
-                                className='border border-gray-300 bg-white focus:bg-white outline-none py-3 pl-6 pr-2 min-w-96 rounded-3xl w-full'
+                                className="border border-slate-200 bg-white focus:border-primary outline-none py-3 pl-6 pr-2 min-w-96 rounded-full w-full"
                                 onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>
                         {
                             curr_shown !== 'forgot' &&
                             <div className="relative">
-                                <label className=' flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-gradient-to-t from-white to-transparent rounded-full ' htmlFor="password">
+                                <label className="flex px-1 gap-1 absolute z-10 font-medium text-xs -top-2 left-5 bg-white rounded-full text-slate-600" htmlFor="password">
                                     <LockKeyhole className="size-4" strokeWidth={1} />
                                     Password
                                 </label>
                                 <input
-                                    name='password'
+                                    name="password"
                                     type="password"
                                     required
                                     value={password}
-                                    className='border border-gray-300 bg-white focus:bg-white outline-none py-3 pl-6 pr-2 min-w-96 rounded-3xl w-full'
+                                    className="border border-slate-200 bg-white focus:border-primary outline-none py-3 pl-6 pr-2 min-w-96 rounded-full w-full"
                                     onChange={(e) => setPassword(e.target.value)}
                                 />
                             </div>
@@ -158,13 +158,13 @@ const Login_block = () => {
                     </div>
                     {
                         (curr_shown === 'login') &&
-                        <div onClick={() => { set_curr_shown('forgot') }} className=" w-full text-sm font-semibold text-end text-primary cursor-pointer">
+                        <div onClick={() => { set_curr_shown('forgot') }} className="w-full text-sm font-semibold text-end text-primary cursor-pointer">
                             Forgot password?
                         </div>
                     }
 
                     {/* SUBMIT BUTTON */}
-                    <button type="submit" className=' cursor-pointer mt-3 outline-none flex gap-3 items-center justify-center p-3 font-medium bg-primary hover:bg-primary/90 text-white rounded-3xl transition-all'>
+                    <button type="submit" className="cursor-pointer mt-3 outline-none flex gap-3 items-center justify-center p-3 font-medium bg-primary hover:bg-primary/90 text-white rounded-full shadow-sm transition-all">
                         <div>
                             {curr_shown === 'signup' ? 'Create Account' : curr_shown === 'login' ? 'Log In' : 'Submit'}
                         </div>
@@ -176,12 +176,12 @@ const Login_block = () => {
                         }
                     </button>
 
-                    <div className=' text-sm font-semibold text-center mt-5  '>
+                    <div className="text-sm font-semibold text-center mt-5 text-slate-600">
                         {
                             curr_shown === 'signup' &&
                             <>
                                 Already have an account?
-                                <span onClick={() => { set_curr_shown('login'); setEmail(''); setPassword('') }} className=' px-2 cursor-pointer text-primary'>
+                                <span onClick={() => { set_curr_shown('login'); setEmail(''); setPassword('') }} className="px-2 cursor-pointer text-primary">
                                     Login
                                 </span>
                             </>
@@ -190,7 +190,7 @@ const Login_block = () => {
                             (curr_shown === 'login' || curr_shown === 'forgot') &&
                             <>
                                 Don&apos;t have an account?
-                                <span onClick={() => { set_curr_shown('signup'); setEmail(''); setPassword('') }} className=' px-2 cursor-pointer text-primary'>
+                                <span onClick={() => { set_curr_shown('signup'); setEmail(''); setPassword('') }} className="px-2 cursor-pointer text-primary">
                                     Create an account
                                 </span>
                             </>
@@ -203,7 +203,7 @@ const Login_block = () => {
 
             {/* MESSAGE NOTIFICATION */}
             {show_message && (
-                <div className="absolute bottom-5 right-5  bg-primary text-white shadow min-h-20 w-64 rounded-3xl px-3 pt-6 pb-4 flex justify-between">
+                <div className="absolute bottom-5 right-5 bg-primary text-white shadow-card min-h-20 w-64 rounded-3xl px-3 pt-6 pb-4 flex justify-between border border-primary">
                     <div className="w-full font-light text-lg pt-4 pl-2 break-words">
                         {show_message}
                     </div>

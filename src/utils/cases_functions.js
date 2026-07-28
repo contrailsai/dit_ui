@@ -13,10 +13,11 @@ export const get_user_transactions = async (offset = 0, limit = 20) => {
 
     if (user === null) return;
 
-    // 1. Start building the query
+    // 1. Start building the query — only direct & verification cases (exclude demo / other)
     let query = supabase
         .from('Transactions')
-        .select('id,created_at,input_request,file_metadata,status,prediction,method', { count: 'exact' });
+        .select('id,created_at,input_request,file_metadata,status,prediction,method', { count: 'exact' })
+        .in('method', ['direct', 'verification']);
 
     // 2. Apply Role-Based Logic
     // If NOT a verifier, restrict to specific user_id. 

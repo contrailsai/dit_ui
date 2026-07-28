@@ -158,7 +158,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                         fileUrl &&
                         <div className=' flex gap-7 items-center mr-1 '>
                             {/* NEW ANALYSIS */}
-                            <div onClick={handle_newCheck} className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow'>
+                            <div onClick={handle_newCheck} className=' flex items-center gap-2 cursor-pointer text-lg font-medium h-fit px-5 py-2.5 my-6 rounded-full bg-white border border-slate-200 shadow-sm hover:border-primary/40 hover:text-primary transition-all'>
                                 <PlusCircle className='size-6' strokeWidth={1.5} />
                                 New Analysis
                             </div>
@@ -166,7 +166,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                             {/* PDF EXPORT */}
                             <div
                                 onClick={handle_pdf_creation}
-                                className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow '
+                                className=' flex items-center gap-2 cursor-pointer text-lg font-medium h-fit px-5 py-2.5 my-6 rounded-full bg-white border border-slate-200 shadow-sm hover:border-primary/40 hover:text-primary transition-all '
                             >
                                 <DownloadFile className='size-6' strokeWidth={1.5} />
                                 Export Report
@@ -268,7 +268,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                         </div>
 
                         {/* AUDIO META DATA */}
-                        <div className=' bg-white my-2 py-4 px-5 border rounded-3xl w-fit min-w-96 flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                        <div className=' bg-white my-2 py-4 px-5 border border-slate-200 rounded-3xl w-fit min-w-96 flex flex-col gap-4 shadow-card transition-all duration-300'>
                             <span className=' text-xl'>
                                 Audio Metadata
                             </span>
@@ -334,7 +334,7 @@ const ResultsAudioUI = ({ response_data, fileUrl, file_metadata, handle_newCheck
                 {
                     file_metadata.verifier_comment &&
                     (
-                        <div className=' bg-slate-100 mt-5 py-4 px-5 border rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                        <div className=' bg-white mt-5 py-4 px-5 border border-slate-200 rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow-card transition-all duration-300'>
                             <span className=' text-xl'>
                                 Expert&apos;s Note
                             </span>

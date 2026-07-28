@@ -124,7 +124,7 @@ const Assets_Upload = ({ SavedAssets, CurrAssets, SetCurrAssets }) => {
                         <label htmlFor="uploaded" className=" px-4">UPLOAD ASSETS</label>
                         {/* Drop FILE */}
                         <div
-                            className=" flex flex-col justify-center items-center gap-3 h-full w-full cursor-pointer border-2 border-primary border-dashed rounded-2xl p-8 bg-primary/10 "
+                            className="flex flex-col justify-center items-center gap-3 h-full w-full cursor-pointer border-2 border-primary/30 border-dashed rounded-2xl p-8 bg-slate-50 hover:bg-primary/5 transition-colors"
 
                             onDrop={handleDrop}
                             onDragOver={handleDragOver}

@@ -349,7 +349,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                     fileUrl &&
                     <div className=' flex gap-7 items-center mr-1 '>
                         {/* NEW ANALYSIS */}
-                        <div onClick={handle_newCheck} className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow'>
+                        <div onClick={handle_newCheck} className=' flex items-center gap-2 cursor-pointer text-lg font-medium h-fit px-5 py-2.5 my-6 rounded-full bg-white border border-slate-200 shadow-sm hover:border-primary/40 hover:text-primary transition-all'>
                             New Analysis
                             <PlusCircle className="size-6" strokeWidth={1.5} />
                         </div>
@@ -357,7 +357,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                         {/* PDF EXPORT */}
                         <div
                             onClick={handle_pdf_creation}
-                            className=' flex items-center gap-2 cursor-pointer text-lg h-fit px-5 py-2 my-6 rounded-3xl shadow-primary shadow '
+                            className=' flex items-center gap-2 cursor-pointer text-lg font-medium h-fit px-5 py-2.5 my-6 rounded-full bg-white border border-slate-200 shadow-sm hover:border-primary/40 hover:text-primary transition-all '
                         >
                             Export Report
                             <DownloadFile className="size-6" strokeWidth={1.5} />
@@ -699,7 +699,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                 {
                     file_metadata.verifier_comment &&
                     (
-                        <div className=' bg-slate-100 py-4 px-5 border rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                        <div className=' bg-white py-4 px-5 border border-slate-200 rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow-card transition-all duration-300'>
                             <span className=' text-xl'>
                                 Expert&apos;s Note
                             </span>
@@ -711,7 +711,7 @@ export default function Result_UI({ results, analysisTypes, file_metadata, fileU
                 }
 
                 {/* VIDEO META DATA */}
-                <div className=' bg-slate-100 py-4 px-5 border rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow hover:shadow-primary transition-all duration-300'>
+                <div className=' bg-white py-4 px-5 border border-slate-200 rounded-3xl w-fit min-w-[40vw] flex flex-col gap-4 shadow-card transition-all duration-300'>
                     <span className=' text-xl'>
                         Video Metadata
                     </span>

@@ -490,7 +490,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
 
                     {/* CASE DETAILS */}
                     <div className=' flex flex-col divide-primary divide-y min-w-48 pb-2 my-4 ml-auto mr-4 border border-primary rounded-2xl overflow-hidden'>
-                        <div className=' w-fit h-fit px-4 py-3 rounded-lg flex gap-4'>
+                        <div className=' w-fit h-fit px-4 py-3 rounded-2xl border border-slate-200 bg-white shadow-card flex gap-4'>
                             <span className=' font-semibold'>
                                 User email:
                             </span>
@@ -754,7 +754,7 @@ const Verifier_results_container = ({ client_email, res_data, saved_assets }) =>
                 {/* COMMENTS AND SUBMISSION */}
                 <div className=' py-4 relative flex gap-5 mt-2'>
                     <div className='w-full min-w-[450px]'>
-                        <label className=' font-medium absolute top-1 left-10 bg-gradient-to-t from-transparent via-white via-50% to-transparent ' htmlFor="verifier-comment">Verifier Comments</label>
+                        <label className=' font-medium absolute top-1 left-10 bg-white px-1 ' htmlFor="verifier-comment">Verifier Comments</label>
                         <textarea
                             onChange={handleInputChange}
                             value={verifier_metadata["verifierComment"]} id="verifier-comment"

@@ -66,7 +66,7 @@ const Assets_Show = ({ CurrAssets }) => {
     };
 
     return (
-        <div className="flex flex-col w-fit border bg-slate-100 shadow hover:shadow-primary p-2 h-full overflow-hidden rounded-3xl transition-all duration-300">
+        <div className="flex flex-col w-fit border border-slate-200 bg-white shadow-card p-2 h-full overflow-hidden rounded-3xl transition-all duration-300">
             <p className="text-2xl px-5 py-2" >Assets</p>
             {
                 CurrAssets.length !== 0 &&
@@ -131,7 +131,7 @@ const Assets_Show = ({ CurrAssets }) => {
                                                 onClick={() => { handleDownload(asset.signedUrl, asset.name) }}
                                                 disabled={status === 'downloading'}
 
-                                                className=" cursor-pointer bg-primary/90 hover:bg-primary h-fit p-2 px-8 text-white rounded-3xl w-fit min-w-20 transition-all"
+                                                className="cursor-pointer bg-primary hover:bg-primary/90 h-fit p-2 px-8 text-white rounded-full w-fit min-w-20 shadow-sm transition-all"
                                             >
                                                 {status === 'downloading' ? 'Downloading...' : 'Download'}
                                             </div>

@@ -19,7 +19,7 @@ export default async function FactCheckerLayout({ children }) {
         <>
             <Sidebar user={user} />
             <UserProvider initialUser={user}>
-                <div className="pl-40">
+                <div className="pl-40 min-h-screen bg-slate-50">
                     {children}
                 </div>
             </UserProvider>

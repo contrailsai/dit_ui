@@ -345,7 +345,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
 
                                                                         {/* <div className={` h-56  bg-gradient-to-t ${pred ? "from-gray-100 to-gray-400" : "from-rose-100 to-red-600"} `}> */}
                                                                         <div style={{ height: `${perc}%` }} className={` bg-white`} />
-                                                                        <div className={` w-full relative -top-4 bg-white/10 backdrop-blur-xl rounded-full  py-0.5 text-center text-xl font-extrabold ${pred ? " text-gray-200 " : "text-red-600 "}`} > {Number(100 - perc).toFixed(2)} &nbsp; % </div>
+                                                                        <div className={`w-full relative -top-4 bg-white border border-slate-200 rounded-full py-0.5 text-center text-xl font-extrabold shadow-sm ${pred ? "text-slate-500" : "text-red-600"}`} > {Number(100 - perc).toFixed(2)} &nbsp; % </div>
                                                                     </div>
                                                                     <div className="w-full text-center text-lg font-semibold ">
                                                                         Spoof
@@ -356,7 +356,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                                                                     <div className={` h-56 ${!pred ? "bg-gray-400" : "bg-green-500"} `}>
 
                                                                         <div style={{ height: `${100 - perc}%` }} className={` bg-white`} />
-                                                                        <div className={` w-full relative -top-4 bg-white/10 backdrop-blur-xl rounded-full  py-0.5 text-center text-xl font-extrabold ${!pred ? " text-gray-200 " : "text-green-600 "}`} > {Number(perc).toFixed(2)} &nbsp; % </div>
+                                                                        <div className={`w-full relative -top-4 bg-white border border-slate-200 rounded-full py-0.5 text-center text-xl font-extrabold shadow-sm ${!pred ? "text-slate-500" : "text-green-600"}`} > {Number(perc).toFixed(2)} &nbsp; % </div>
                                                                     </div>
                                                                     <div className="w-full text-center text-lg font-semibold ">
                                                                         Original

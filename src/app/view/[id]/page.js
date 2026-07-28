@@ -25,10 +25,9 @@ const Page = async ({ params }) => {
     <>
       <Sidebar user={user_data} />
 
-      <div className=' pl-40 h-screen '>
+      <div className="pl-40 min-h-screen bg-slate-50">
         {
           user_data.user_type === "verifier" ?
-            // VERIFIER BASED 
             <Verifier_results_container
               client_email={client_email}
               res_data={case_result_data}
@@ -38,7 +37,6 @@ const Page = async ({ params }) => {
             user_data.user_type === "direct" ?
               (
                 <>
-                  {/* DIRECT RESULT USER */}
                   {
                     has_result ?
                       <Result_container 
@@ -46,38 +44,17 @@ const Page = async ({ params }) => {
                         assets={assets}
                       />
                       :
-                      <div className=' flex flex-col gap-2 items-center text-xl pt-28 px-16 min-h-[95vh]'>
-                        <span className=' text-4xl underline px-2 pb-8'>
-                          Status
-                        </span>
-                        <span className=' font-light text-2xl '>
-                          Results are currently not available.
-                        </span>
-                        <span className=' font-light '>
-                          (they will be updated shorty)
-                        </span>
-                      </div>
+                      <PendingResults />
                   }
                 </>
               ) :
               (
                 <>
-                  {/* NORMAL USER */}
                   {
                     case_result_data.status ?
                       <Result_container res_data={case_result_data} assets={assets} />
                       :
-                      <div className=' flex flex-col gap-2 items-center text-xl pt-28 px-16 min-h-[95vh]'>
-                        <span className=' text-4xl underline px-2 pb-8'>
-                          Status
-                        </span>
-                        <span className=' font-light text-2xl '>
-                          Results are currently not available.
-                        </span>
-                        <span className=' font-light '>
-                          (they will be updated shorty)
-                        </span>
-                      </div>
+                      <PendingResults />
                   }
                 </>
               )
@@ -87,5 +64,19 @@ const Page = async ({ params }) => {
     </>
   );
 }
+
+const PendingResults = () => (
+  <div className="flex flex-col gap-3 items-center text-center pt-28 px-16 min-h-[90vh]">
+    <div className="size-16 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center mb-2">
+      <div className="size-3 rounded-full bg-amber-400 animate-pulse" />
+    </div>
+    <span className="text-3xl font-semibold text-slate-800 tracking-tight">
+      Analysis in progress
+    </span>
+    <span className="font-light text-lg text-slate-500 max-w-md">
+      Results are not available yet. They will appear here once processing finishes.
+    </span>
+  </div>
+);
 
 export default Page;

@@ -1,151 +1,113 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Clock, BadgeCheck, ExternalLink, Video, AudioLines, Image as ImageIcon } from "lucide-react";
+import { Clock, BadgeCheck, ExternalLink, Video, AudioLines, Image as ImageIcon, Loader2, Inbox } from "lucide-react";
 import { fetchMoreCases } from "./actions";
 import Link from "next/link";
-import { PlusCircle, Loader2 } from "lucide-react";
 
 const ITEMS_PER_PAGE = 20;
+
+const MediaIcon = ({ upload_type }) => {
+    if (upload_type === "video") return <Video className="size-5 text-slate-500" strokeWidth={1.5} />;
+    if (upload_type === "audio") return <AudioLines className="size-5 text-slate-500" strokeWidth={1.5} />;
+    if (upload_type === "image") return <ImageIcon className="size-5 text-slate-500" strokeWidth={1.5} />;
+    return null;
+};
 
 const CaseRow = ({ val, idx, user }) => {
     const time = new Date(val.created_at);
     const { analysis_types, upload_type } = val.input_request || {};
     const { name } = val.file_metadata || {};
 
-    const method = val.method;
-    const has_result = typeof(val.prediction) === "boolean" ? true : false;
-    
-    // Fallback if missing
-    if(!analysis_types) return null;
+    if (!analysis_types) return null;
 
-    if (method === 'direct') {
-        return (
-            <div className=' border-b-2 border-b-gray-200 pl-6 pr-2 w-full flex gap-5 items-center py-3 max-h-28'>
-                <span className='min-w-14 flex justify-center'>
-                    {idx + 1}
-                </span>
-                {/* NAME */}
-                <span className=' w-[300px] truncate'>
-                    {name ? name : "---"}
-                </span>
-                {/* UPLAOD TYPE */}
-                <span className=' min-w-24 flex items-center gap-2 '>
-                    {upload_type === "video" && <Video className='size-6' strokeWidth={1.5} />}
-                    {upload_type === "audio" && <AudioLines className='size-6' strokeWidth={1.5} />}
-                    {upload_type === "image" && <ImageIcon className='size-6' strokeWidth={1.5} />}
-                    {upload_type}
-                </span>
-                {/* STATUS */}
-                <span className=' min-w-28 flex items-center gap-2 '>
-                    {has_result ? (
-                        <div className='text-emerald-600 bg-green-200 rounded-full'>
-                            <BadgeCheck className='size-6' strokeWidth={2} />
-                        </div>
-                    ) : (
-                        <div className=' text-yellow-600 bg-yellow-200 rounded-full'>
-                            <Clock className='size-6' strokeWidth={2} />
-                        </div>
-                    )}
-                    {(has_result) ? "Done" : "Pending"}
-                </span>
-                <span className=' min-w-28  '>
-                    <div className={`rounded-full ${ has_result ? (val.prediction ? "bg-green-200 border border-green-300" : "bg-red-200 border border-red-300") : ""} w-fit px-5 py-0.5`}>
-                        {( has_result ? (val.prediction ? "Real" : "Fake"): "---")}
+    const isDirect = val.method === "direct";
+    const isDone = isDirect
+        ? typeof val.prediction === "boolean"
+        : Boolean(val.status);
+    const showLink = isDone || user?.verifier;
+    const predictionLabel = isDone
+        ? (val.prediction ? "Real" : "Fake")
+        : "---";
+
+    return (
+        <div className="border-b border-slate-100 last:border-b-0 pl-6 pr-2 w-full flex gap-5 items-center py-3.5 max-h-28 hover:bg-slate-50 transition-colors">
+            <span className="min-w-14 flex justify-center text-slate-400 text-sm tabular-nums">
+                {idx + 1}
+            </span>
+
+            <span className="w-[300px] truncate font-medium text-slate-800" title={name || undefined}>
+                {name || "---"}
+            </span>
+
+            <span className="min-w-24 flex items-center gap-2 capitalize text-slate-600 text-sm">
+                <MediaIcon upload_type={upload_type} />
+                {upload_type}
+            </span>
+
+            <span className="min-w-28 flex items-center gap-2 text-sm">
+                {isDone ? (
+                    <div className="text-emerald-600 bg-emerald-100 rounded-full p-0.5">
+                        <BadgeCheck className="size-5" strokeWidth={2} />
                     </div>
-                </span>
-                <span className=' w-72 flex flex-wrap gap-4 '>
-                    {Object.keys(analysis_types).map((input_type, input_idx) => {
-                        if (analysis_types[input_type])
-                            return (
-                                <span key={input_idx} className=' bg-primary/20 border border-primary/40 rounded-full px-3 w-fit h-fit py-0.5'>
-                                    {input_type}
-                                </span>
-                            )
-                    })}
-                </span>
-                <span className='min-w-24 '>
-                    {`${time.getDate()}-${time.getMonth() + 1}-${time.getFullYear()}`}
-                </span>
-                <span className='min-w-20 '>
-                    {
-                        (has_result || user.verifier) ?
-                            (
-                                <Link className='underline flex items-center gap-1 ' href={'/view/' + val.id} >
-                                    link
-                                    <ExternalLink className='size-4' strokeWidth={1} />
-                                </Link>
-                            ) :
-                            "---"
-                    }
-                </span>
-            </div>
-        )
-    }
-    else {
-        return (
-            <div className=' border-b-2 border-b-gray-200 pl-6 pr-2 w-full flex gap-5 items-center py-3 max-h-28'>
-                <span className='min-w-14 flex justify-center'>
-                    {idx + 1}
-                </span>
-                {/* NAME */}
-                <span className=' w-[300px] truncate'>
-                    {name ? name : "---"}
-                </span>
-                {/* UPLAOD TYPE */}
-                <span className=' min-w-24 flex items-center gap-2 '>
-                    {upload_type === "video" && <Video className='size-6' strokeWidth={1.5} />}
-                    {upload_type === "audio" && <AudioLines className='size-6' strokeWidth={1.5} />}
-                    {upload_type === "image" && <ImageIcon className='size-6' strokeWidth={1.5} />}
-                    {upload_type}
-                </span>
-                {/* STATUS */}
-                <span className=' min-w-28 flex items-center gap-2 '>
-                    {val.status ? (
-                        <div className='text-emerald-600 bg-green-200 rounded-full'>
-                            <BadgeCheck className='size-6' strokeWidth={2} />
-                        </div>
-                    ) : (
-                        <div className=' text-yellow-600 bg-yellow-200 rounded-full'>
-                            <Clock className='size-6' strokeWidth={2} />
-                        </div>
-                    )}
-                    {val.status ? "Done" : "Pending"}
-                </span>
-                <span className=' min-w-28  '>
-                    <div className={`rounded-full ${ val.status ? (val.prediction ? "bg-green-200 border border-green-300" : "bg-red-200 border border-red-300") : ""} w-fit px-5 py-0.5`}>
-                        {( val.status ? (val.prediction ? "Real" : "Fake"): "---")}
+                ) : (
+                    <div className="text-amber-600 bg-amber-100 rounded-full p-0.5">
+                        <Clock className="size-5" strokeWidth={2} />
                     </div>
+                )}
+                <span className={isDone ? "text-emerald-700" : "text-amber-700"}>
+                    {isDone ? "Done" : "Pending"}
                 </span>
-                <span className=' w-72 flex flex-wrap gap-4 '>
-                    {Object.keys(analysis_types).map((input_type, input_idx) => {
-                        if (analysis_types[input_type])
-                            return (
-                                <span key={input_idx} className=' bg-primary/20 border border-primary/40 rounded-full px-3 w-fit h-fit py-0.5'>
-                                    {input_type}
-                                </span>
-                            )
-                    })}
-                </span>
-                <span className='min-w-24 '>
-                    {`${time.getDate()}-${time.getMonth() + 1}-${time.getFullYear()}`}
-                </span>
-                <span className='min-w-20 '>
-                    {
-                        (val.status || user.verifier) ?
-                            (
-                                <Link className='underline flex items-center gap-1 ' href={'/view/' + val.id} >
-                                    link
-                                    <ExternalLink className='size-4' strokeWidth={1} />
-                                </Link>
-                            ) :
-                            "---"
-                    }
-                </span>
-            </div>
-        )
-    }
-}
+            </span>
+
+            <span className="min-w-28">
+                <div
+                    className={`rounded-full text-sm font-medium w-fit px-4 py-0.5 ${
+                        isDone
+                            ? val.prediction
+                                ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                : "bg-red-50 text-red-700 border border-red-200"
+                            : "text-slate-400"
+                    }`}
+                >
+                    {predictionLabel}
+                </div>
+            </span>
+
+            <span className="w-72 flex flex-wrap gap-2">
+                {Object.keys(analysis_types).map((input_type) => {
+                    if (!analysis_types[input_type]) return null;
+                    return (
+                        <span
+                            key={input_type}
+                            className="bg-primary/10 border border-primary/25 text-primary text-xs font-medium rounded-full px-2.5 py-0.5 w-fit h-fit"
+                        >
+                            {input_type}
+                        </span>
+                    );
+                })}
+            </span>
+
+            <span className="min-w-24 text-sm text-slate-500 tabular-nums">
+                {`${time.getDate()}-${time.getMonth() + 1}-${time.getFullYear()}`}
+            </span>
+
+            <span className="min-w-20">
+                {showLink ? (
+                    <Link
+                        className="text-primary hover:text-primary/80 flex items-center gap-1 text-sm font-medium transition-colors"
+                        href={`/view/${val.id}`}
+                    >
+                        Open
+                        <ExternalLink className="size-3.5" strokeWidth={1.5} />
+                    </Link>
+                ) : (
+                    <span className="text-slate-300">---</span>
+                )}
+            </span>
+        </div>
+    );
+};
 
 export default function CasesListClient({ initialData, user }) {
     const [cases, setCases] = useState(initialData);
@@ -167,8 +129,8 @@ export default function CasesListClient({ initialData, user }) {
             }
 
             if (newCases.length > 0) {
-                setCases(prev => [...prev, ...newCases]);
-                setOffset(prev => prev + ITEMS_PER_PAGE);
+                setCases((prev) => [...prev, ...newCases]);
+                setOffset((prev) => prev + ITEMS_PER_PAGE);
             }
         } catch (error) {
             console.error("Failed to load more cases", error);
@@ -179,7 +141,7 @@ export default function CasesListClient({ initialData, user }) {
 
     useEffect(() => {
         const observer = new IntersectionObserver(
-            entries => {
+            (entries) => {
                 if (entries[0].isIntersecting) {
                     loadMore();
                 }
@@ -187,43 +149,48 @@ export default function CasesListClient({ initialData, user }) {
             { threshold: 0.1, rootMargin: "100px" }
         );
 
-        if (observerTarget.current) {
-            observer.observe(observerTarget.current);
-        }
+        const target = observerTarget.current;
+        if (target) observer.observe(target);
 
         return () => {
-            if (observerTarget.current) {
-                observer.unobserve(observerTarget.current);
-            }
+            if (target) observer.unobserve(target);
         };
     }, [loadMore]);
 
     if (!cases || cases.length === 0) {
         return (
-            <div className='flex flex-col w-full justify-center items-center py-24 text-zinc-400'>
-                <div className='text-lg font-light'>No cases found</div>
+            <div className="flex flex-col w-full justify-center items-center py-28 text-slate-400 gap-3">
+                <Inbox className="size-12 stroke-1 text-slate-300" />
+                <div className="text-lg font-medium text-slate-500">No cases found</div>
+                <p className="text-sm text-slate-400">Upload a file to start your first analysis</p>
+                <Link
+                    href="/media-checker"
+                    className="mt-2 text-sm text-primary font-medium hover:underline"
+                >
+                    Go to Media Checker
+                </Link>
             </div>
         );
     }
 
     return (
-        <div className="">
+        <div>
             {cases.map((val, idx) => (
-                <CaseRow key={`${val.id}-${idx}`} val={val} idx={idx} user={user} />
+                <CaseRow key={val.id} val={val} idx={idx} user={user} />
             ))}
-            
-            <div 
-                ref={observerTarget} 
+
+            <div
+                ref={observerTarget}
                 className="w-full flex justify-center p-6 h-20"
             >
                 {isLoading && (
-                    <div className="flex items-center gap-2 text-primary/60">
-                        <Loader2 className="size-6 animate-spin" />
-                        <span className="text-sm font-medium">Loading older cases...</span>
+                    <div className="flex items-center gap-2 text-primary/70">
+                        <Loader2 className="size-5 animate-spin" />
+                        <span className="text-sm font-medium">Loading older cases…</span>
                     </div>
                 )}
-                {!hasMore && cases.length > 0 && (
-                    <div className="text-zinc-400 text-sm italic">
+                {!hasMore && cases.length > 0 && !isLoading && (
+                    <div className="text-slate-400 text-sm">
                         All cases loaded
                     </div>
                 )}

@@ -4,7 +4,7 @@
 
 @layer base {
 	:root {
-		--color-primary: 2 83 288;
+		--color-primary: 2 83 255;
 	}
 }
 
@@ -272,23 +272,38 @@ body {
 
 /* SKELETON CSS */
 .skeleton-h {
-	background: linear-gradient(90deg, #ddd, #bcd, #ddd);
-	animation: leftToRight 1.5s infinite reverse;
-	background-size: 200%;
+	background: linear-gradient(90deg, #e2e8f0, #f1f5f9, #e2e8f0);
+	animation: leftToRight 1.4s ease-in-out infinite;
+	background-size: 200% 100%;
 }
 
 .skeleton-l {
-	background: linear-gradient(90deg, #eee, #ebebeb, #eee);
-	animation: leftToRight 1.5s infinite reverse;
-	background-size: 200%;
+	background: linear-gradient(90deg, #f1f5f9, #f8fafc, #f1f5f9);
+	animation: leftToRight 1.4s ease-in-out infinite;
+	background-size: 200% 100%;
 }
 
 @keyframes leftToRight {
 	0% {
-		background-position: -100% 0;
+		background-position: 100% 0;
 	}
 
 	100% {
-		background-position: 100% 0;
+		background-position: -100% 0;
+	}
+}
+
+.animate-in {
+	animation: fadeSlideIn 0.35s ease-out;
+}
+
+@keyframes fadeSlideIn {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
 	}
 }

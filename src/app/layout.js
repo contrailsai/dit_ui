@@ -3,7 +3,10 @@ import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/react"
 
-const outfit = Outfit({ subsets: ["latin"] });
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+});
 
 export const metadata = {
   title: "DIT | Contrails",
@@ -12,18 +15,15 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" className={outfit.variable}>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet" />
         <meta property="og:image" content="/logo.png" />
         <link rel="icon" href="/logo.png" />
       </head>
 
-      <body className={outfit.className}>
+      <body className={`${outfit.className} font-outfit antialiased`}>
         <Analytics />
-        <div className="min-w-[1080px] font-outfit ">
+        <div className="min-w-[1080px]">
           {children}
         </div>
         <SpeedInsights />
