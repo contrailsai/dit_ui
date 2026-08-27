@@ -4,12 +4,16 @@ import ResultsVideoUI from '@/components/ResultVideoUI_v1';
 import ResultsAudioUI from '@/components/ResultAudioUI';
 import ResultsImageUI from '@/components/ResultImageUI';
 import Result_UI from '@/components/result_ui_v2';
+import ResultV3 from '@/components/results-v3/ResultV3';
 import Assets_Show from '@/components/Assets_show'
+import { getV3EnvelopeFromTransaction } from '@/lib/deepfake-api/envelope';
 import { useState, useEffect } from 'react';
+
 
 const Result_container = ({ res_data, assets }) => {
     const model_responses = typeof (res_data["models_responses"]) === "string" ? JSON.parse(res_data["models_responses"]) : res_data["models_responses"];
     const upload_type = res_data["input_request"]["upload_type"];
+    const v3Envelope = getV3EnvelopeFromTransaction(res_data);
 
     const handle_newCheck = () => {
         if (typeof window !== 'undefined') {
@@ -26,31 +30,22 @@ const Result_container = ({ res_data, assets }) => {
         }
     };
 
-    // console.log( Object.keys(res_data["models_responses"]))
-
-    if (res_data["method"] === "direct") {
+    if (!v3Envelope && res_data["method"] === "direct") {
         const analysis_types = res_data["input_request"]["analysis_types"];
         results_data["analysis_types"] = analysis_types;
 
-        // IMAGE
         if (analysis_types["aigcCheck"])
             results_data["results"]["aigcCheck"] = model_responses["results"]["image"]["models_results"][0];
-        // AUDIO    
         if (analysis_types["audioAnalysis"])
             results_data["results"]["audioAnalysis"] = model_responses["results"]["audio"]["models_results"][0];
-        // FRAME
         if (analysis_types["frameCheck"]) {
             results_data["results"]["frameCheck"] = model_responses["results"]["frame"]["models_results"][0];
             results_data["results"]["face_labels"] = [];
         }
-    }
-
-    // VERIFIED RESULTS
-    else {
+    } else if (!v3Envelope) {
         const verifier_metadata = res_data["verifier_metadata"];
 
         if (upload_type === 'image') {
-            //IMAGE
             if (verifier_metadata["showAigcCheck"]) {
                 results_data["analysis_types"]["aigcCheck"] = true;
 
@@ -61,7 +56,6 @@ const Result_container = ({ res_data, assets }) => {
                 results_data["results"]["aigcCheck"] = undefined;
         }
         else {
-            // AUDIO
             if (verifier_metadata["showAudioCheck"]) {
                 results_data["analysis_types"]["audioAnalysis"] = true;
 
@@ -71,14 +65,12 @@ const Result_container = ({ res_data, assets }) => {
             else
                 results_data["results"]["audioAnalysis"] = undefined;
 
-            // FRAME
             if (verifier_metadata["showFrameCheck"]) {
                 results_data["analysis_types"]["frameCheck"] = true;
 
                 if (verifier_metadata["FrameCheckModelUse"] !== null)
                     results_data["results"]["frameCheck"] = model_responses["results"]["frame"]["models_results"][verifier_metadata["FrameCheckModelUse"]];
 
-                // WHICH FACES TO SHOW IN RESULT (empty for no face)
                 results_data["results"]["face_labels"] = verifier_metadata["face_labels"] !== undefined ? verifier_metadata["face_labels"] : [];
             }
             else
@@ -105,12 +97,8 @@ const Result_container = ({ res_data, assets }) => {
 
             const data = await response.json();
             set_media_signed_url(data.signed_url);
-            // Optional: Automatically trigger the download
-            // window.location.href = data.signed_url; 
-
         } catch (error) {
             console.error('Error:', error);
-            // Handle error in UI
         }
     };
 
@@ -122,12 +110,20 @@ const Result_container = ({ res_data, assets }) => {
     return (<>
         <div className=' pt-16 pb-10 px-12'>
 
+            {v3Envelope ? (
+                <ResultV3
+                    envelope={v3Envelope}
+                    fileUrl={media_signed_url}
+                    file_metadata={res_data["file_metadata"]}
+                    handle_newCheck={handle_newCheck}
+                />
+            ) : (
+                <>
             {
                 upload_type === "video" &&
                 (
                     model_responses["version"] && Number(model_responses["version"].split(".")[0]) >= 2 ?
                         <>
-                            {/* //NEW RESULT HERE */}
                             <Result_UI
                                 results={results_data["results"]}
                                 analysisTypes={results_data["analysis_types"]}
@@ -167,6 +163,8 @@ const Result_container = ({ res_data, assets }) => {
                     handle_newCheck={handle_newCheck}
                 />
             }
+                </>
+            )}
 
             {
                 assets.length !== 0 &&
@@ -178,5 +176,5 @@ const Result_container = ({ res_data, assets }) => {
         </div>
     </>);
 }
-//
+
 export default Result_container;

@@ -1,9 +1,10 @@
 "use client"
+
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { user_logout } from '@/utils/user_functions';
-import { LucideChartArea, List, LogOut } from "lucide-react";
+import { LucideChartArea, List, LogOut, FlaskConical, BookOpen, KeyRound } from "lucide-react";
 
 const Sidebar = ({ user }) => {
     const pathname = usePathname();
@@ -26,6 +27,28 @@ const Sidebar = ({ user }) => {
             icon: List,
             match: (path) => path?.startsWith("/media-checker/case-list") || path?.startsWith("/view/"),
         },
+        ...(user?.verifier
+            ? [
+                {
+                    href: "/demo",
+                    label: "Demo",
+                    icon: FlaskConical,
+                    match: (path) => path?.startsWith("/demo"),
+                },
+                {
+                    href: "/docs",
+                    label: "API Docs",
+                    icon: BookOpen,
+                    match: (path) => path?.startsWith("/docs"),
+                },
+                {
+                    href: "/account",
+                    label: "API Keys",
+                    icon: KeyRound,
+                    match: (path) => path?.startsWith("/account"),
+                },
+            ]
+            : []),
     ];
 
     return (

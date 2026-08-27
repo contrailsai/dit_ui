@@ -100,7 +100,7 @@ const Form = ({ response_data, set_res_data, set_id }) => {
             });
             if (!res.ok) throw new Error('Failed to get signed URL');
 
-            const { id, signedUrl } = await res.json();
+            const { id, signedUrl, media_key } = await res.json();
 
             const res_s3 = await fetch(signedUrl, {
                 method: 'PUT',
@@ -109,25 +109,42 @@ const Form = ({ response_data, set_res_data, set_id }) => {
             });
             if (!res_s3.ok) throw new Error('Failed to upload file to S3');
 
+            // Images → Contrails detect API; video/audio → SQS
+            const isImage = uploadType === "image" || file.type?.startsWith("image/");
+            if (isImage) {
+                const detectRes = await fetch('/api/detect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        transaction_id: id,
+                        media_key,
+                        detailed_analysis: true,
+                    }),
+                });
+                if (!detectRes.ok) {
+                    const errBody = await detectRes.json().catch(() => ({}));
+                    throw new Error(errBody.error || 'Failed to run image detection');
+                }
+                const { envelope } = await detectRes.json();
+                return { id, envelope, media_key, signedUrl, isImage: true };
+            }
 
             const res_set_to_queue = await fetch('/api/send-message', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(
-                    {
-                        task_id: id,
-                        method: "direct"
-                    }
-                ),
+                body: JSON.stringify({
+                    task_id: id,
+                    method: "direct"
+                }),
             });
             if (!res_set_to_queue.ok) throw new Error('Failed to send message to queue');
 
-            alert('File Uploaded');
-            return id;
+            return { id, isImage: false };
 
         } catch (error) {
             console.error('Error uploading file:', error);
-            alert('Failed to upload file');
+            alert(error.message || 'Failed to upload file');
+            return null;
         }
     }
 
@@ -137,26 +154,44 @@ const Form = ({ response_data, set_res_data, set_id }) => {
 
             // 1. create a db element
             // 2. upload file to s3
-            // 3. send message to queue
-            const supabase_id = await upload_file_s3();
+            // 3. detect (images) or SQS (video/audio)
+            const uploadResult = await upload_file_s3();
+            if (!uploadResult) {
+                setLoading(false);
+                return;
+            }
+
+            if (uploadResult.isImage && uploadResult.envelope) {
+                set_res_data({
+                    uploaded: true,
+                    got_result: true,
+                    id: uploadResult.id,
+                    media_key: uploadResult.media_key,
+                    signedUrl: tempfileUrl,
+                    file_metadata: {
+                        name: file.name,
+                        size: humanFileSize(file.size),
+                        type: file.type,
+                    },
+                    input_request: {
+                        upload_type: "image",
+                        analysis_types: analysisTypes,
+                    },
+                    method: "direct",
+                    models_responses: uploadResult.envelope,
+                    prediction: uploadResult.envelope.prediction,
+                });
+                setLoading(false);
+                return;
+            }
 
             let res_data = {
                 "uploaded": true,
                 "got_result": false,
             };
 
-            // update db with new token amount
-            // const db_update_res = await db_updates({ new_token_amount, user_id });
-            // if (db_update_res !== null) {
-            //     res_data = { message: db_update_res.error };
-            //     set_res_data(res_data);
-            //     setLoading(false);
-            //     return;
-            // }
-
-            // setup the data if no issue occured
             set_res_data(res_data);
-            set_id(supabase_id);
+            set_id(uploadResult.id);
         }
         catch (error) {
             console.error("Error in sending data", error);
@@ -307,11 +342,13 @@ const Form = ({ response_data, set_res_data, set_id }) => {
 
                         {loading && (
                             <div className="flex gap-3 items-center text-slate-600">
-                                <span className="text-base">Uploading File</span>
+                                <span className="text-base">
+                                    {uploadType === "image" ? "Analyzing image…" : "Uploading File"}
+                                </span>
                                 <LoadingCircle className="w-7 h-7 text-primary/60 animate-spin fill-primary" />
                             </div>
                         )}
-                        {response_data["uploaded"] && !response_data["got_result"] && (
+                        {response_data["uploaded"] && !response_data["got_result"] && !loading && (
                             <div className="flex gap-3 items-center text-slate-600">
                                 <span className="text-base">Generating Report</span>
                                 <LoadingCircle className="w-7 h-7 text-primary/60 animate-spin fill-primary" />

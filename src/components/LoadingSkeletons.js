@@ -1,19 +1,19 @@
 export function CaseListSkeleton({ rows = 6 }) {
     return (
-        <div className="flex flex-col gap-0 px-1">
+        <div className="flex flex-col gap-0">
             {Array.from({ length: rows }).map((_, i) => (
                 <div
                     key={i}
-                    className="pl-6 pr-2 w-full flex gap-5 items-center py-4 border-b border-slate-100 last:border-b-0"
+                    className="pl-5 pr-4 w-full flex gap-3 xl:gap-4 items-center py-3.5 border-b border-slate-100 last:border-b-0"
                 >
-                    <span className="min-w-14 h-5 skeleton-h rounded-full" />
-                    <span className="w-[300px] h-5 skeleton-h rounded-full" />
-                    <span className="min-w-24 h-5 skeleton-h rounded-full" />
-                    <span className="min-w-28 h-5 skeleton-h rounded-full" />
-                    <span className="min-w-28 h-5 skeleton-h rounded-full" />
-                    <span className="w-72 h-5 skeleton-h rounded-full" />
-                    <span className="min-w-24 h-5 skeleton-h rounded-full" />
-                    <span className="min-w-20 h-5 skeleton-h rounded-full" />
+                    <span className="w-10 shrink-0 h-4 skeleton-h rounded-full" />
+                    <span className="flex-1 min-w-0 h-4 skeleton-h rounded-full" />
+                    <span className="w-[5.5rem] shrink-0 h-4 skeleton-h rounded-full" />
+                    <span className="w-[6.5rem] shrink-0 h-5 skeleton-h rounded-full" />
+                    <span className="w-[6.5rem] shrink-0 h-5 skeleton-h rounded-full" />
+                    <span className="hidden xl:block w-56 2xl:w-64 shrink-0 h-4 skeleton-h rounded-full" />
+                    <span className="w-[5.5rem] shrink-0 h-4 skeleton-h rounded-full" />
+                    <span className="w-[4.5rem] shrink-0 h-4 skeleton-h rounded-full" />
                 </div>
             ))}
         </div>
@@ -23,14 +23,26 @@ export function CaseListSkeleton({ rows = 6 }) {
 export function CaseListPageSkeleton() {
     return (
         <div className="pt-8 pb-10 min-h-screen animate-in">
-            <div className="w-full flex justify-between px-10 py-4 items-center">
-                <div className="h-9 w-48 skeleton-h rounded-full" />
-                <div className="h-11 w-40 skeleton-h rounded-full" />
+            <div className="w-full flex justify-between px-10 py-4 items-start">
+                <div className="space-y-2">
+                    <div className="h-9 w-48 skeleton-h rounded-full" />
+                    <div className="h-4 w-56 skeleton-l rounded-full" />
+                </div>
+                <div className="h-10 w-36 skeleton-h rounded-full" />
             </div>
 
-            <div className="px-4 flex flex-col gap-3 mt-2">
-                <div className="pl-6 pr-2 w-full h-12 skeleton-h rounded-2xl" />
+            <div className="px-4 mt-2">
                 <div className="bg-white rounded-3xl border border-slate-200 shadow-card overflow-hidden">
+                    <div className="px-5 py-4 border-b border-slate-100 flex flex-wrap items-center gap-3">
+                        <div className="h-8 w-24 skeleton-h rounded-full" />
+                        <div className="h-9 w-64 skeleton-h rounded-full" />
+                        <div className="h-9 w-44 skeleton-h rounded-full" />
+                        <div className="h-9 w-36 skeleton-h rounded-full" />
+                        <div className="h-9 w-24 skeleton-h rounded-full" />
+                    </div>
+                    <div className="pl-5 pr-4 py-2.5 bg-primary/20">
+                        <div className="h-3 w-full max-w-3xl skeleton-l rounded-full opacity-40" />
+                    </div>
                     <CaseListSkeleton rows={8} />
                 </div>
             </div>

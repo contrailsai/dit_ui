@@ -1,5 +1,24 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Play, Pause, RefreshCw, AlertCircle } from "./SVGs";
+
+const MEDIA_ERROR_MESSAGES = {
+    1: 'Video loading was aborted',
+    2: 'Network error while loading video',
+    3: 'Video decoding failed',
+    4: 'Video format not supported or source unavailable',
+};
+
+const getMediaErrorInfo = (mediaError) => {
+    if (!mediaError) {
+        return { code: undefined, message: 'Unknown video error' };
+    }
+    const code = mediaError.code;
+    const message =
+        mediaError.message ||
+        MEDIA_ERROR_MESSAGES[code] ||
+        'Unknown video error';
+    return { code, message };
+};
 
 export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_results }) => {
 
@@ -11,9 +30,10 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
     const [videoError, setVideoError] = useState(null);
 
     // New states for retry logic and loading
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(Boolean(fileUrl));
     const [retryCount, setRetryCount] = useState(0);
     const [isRetrying, setIsRetrying] = useState(false);
+    const retryTimeoutRef = useRef(null);
 
     const MAX_RETRIES = 5;
     const RETRY_DELAY = 2000; // 2 seconds
@@ -39,21 +59,57 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         setup_frame_index();
     }
 
+    // Reset when signed URL arrives or changes (avoids stuck error from empty src)
+    useEffect(() => {
+        if (retryTimeoutRef.current) {
+            clearTimeout(retryTimeoutRef.current);
+            retryTimeoutRef.current = null;
+        }
+
+        setVideoError(null);
+        setRetryCount(0);
+        setIsRetrying(false);
+        setProgress(0);
+        setIsPaused(true);
+
+        if (!fileUrl) {
+            setIsLoading(false);
+            return;
+        }
+
+        setIsLoading(true);
+        const video = videoRef.current;
+        if (video) {
+            video.load();
+        }
+    }, [fileUrl, videoRef]);
+
+    useEffect(() => {
+        return () => {
+            if (retryTimeoutRef.current) {
+                clearTimeout(retryTimeoutRef.current);
+            }
+        };
+    }, []);
+
     // Retry function with exponential backoff
     const retryVideoLoad = useCallback(() => {
-        if (retryCount < MAX_RETRIES && videoRef.current) {
-            setIsRetrying(true);
-            setVideoError(null);
+        if (retryCount >= MAX_RETRIES || !videoRef.current || !fileUrl) return;
 
-            const delay = RETRY_DELAY * Math.pow(2, retryCount);
+        setIsRetrying(true);
+        setVideoError(null);
+        setIsLoading(true);
 
-            setTimeout(() => {
-                setRetryCount(prev => prev + 1);
-                videoRef.current.load(); // Reload the video
-                setIsRetrying(false);
-            }, delay);
-        }
-    }, [retryCount, videoRef]);
+        const delay = RETRY_DELAY * Math.pow(2, retryCount);
+
+        retryTimeoutRef.current = setTimeout(() => {
+            setRetryCount(prev => prev + 1);
+            if (videoRef.current) {
+                videoRef.current.load();
+            }
+            setIsRetrying(false);
+        }, delay);
+    }, [retryCount, videoRef, fileUrl]);
 
     // Safe video operations with error handling
     const safeVideoOperation = useCallback(async (operation) => {
@@ -64,40 +120,13 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
             // Only log real errors, not interruption errors
             if (!error.message.includes('interrupted by a call to pause')) {
                 console.error('Video operation failed:', error);
-                setVideoError({ message: `Playback failed: ${error.message}` });
+                setVideoError({ message: `Playback failed: ${error.message}`, canRetry: true });
             }
         }
     }, [videoRef]);
 
-    useEffect(() => {
-        const video = videoRef.current;
-
-        const handleTimeUpdate = () => {
-            // console.log("time =", Math.floor(video.currentTime), duration);
-            if (duration === 0) //results not loaded but video should be playable
-                setProgress((video.currentTime / video.duration) * 100);
-            else
-                setProgress((video.currentTime / duration) * 100);
-
-            if (model_results && model_results["frameCheck"] !== undefined)
-                set_current_bboxes(bbox_data[Math.floor(video.currentTime)]);
-        };
-
-        if (model_results !== null && video.error) {
-            console.error(video.error);
-            setVideoError(video.error);
-            return;
-        }
-
-        video.addEventListener('timeupdate', handleTimeUpdate);
-
-        return () => {
-            video.removeEventListener('timeupdate', handleTimeUpdate);
-        };
-    }, [duration, bbox_data]);
-
     const handlePlayToggle = () => {
-        if (!videoRef.current) return;
+        if (!videoRef.current || !fileUrl) return;
 
         safeVideoOperation(async () => {
             if (progress >= 100) {
@@ -116,29 +145,33 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
 
     // Enhanced error handler with retry logic
     const handleVideoError = useCallback((event) => {
-        const error = event.target.error;
-        console.error('Video error:', error);
+        // Empty/missing src fires MEDIA_ERR_SRC_NOT_SUPPORTED while signed URL is still loading
+        if (!fileUrl) {
+            setIsLoading(false);
+            return;
+        }
+
+        const { code, message } = getMediaErrorInfo(event.target?.error);
+        console.error('Video error:', { code, message, src: fileUrl });
 
         setIsLoading(false);
 
-        // Categorize errors and decide whether to retry
-        const shouldRetry = error && (
-            error.code === MediaError.MEDIA_ERR_NETWORK ||
-            error.code === MediaError.MEDIA_ERR_DECODE ||
-            error.code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED
-        );
+        const shouldRetry =
+            code === MediaError.MEDIA_ERR_NETWORK ||
+            code === MediaError.MEDIA_ERR_DECODE ||
+            code === MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED;
 
         if (shouldRetry && retryCount < MAX_RETRIES) {
             console.log(`Retrying video load (attempt ${retryCount + 1}/${MAX_RETRIES})`);
             retryVideoLoad();
         } else {
             setVideoError({
-                message: error?.message || 'Unknown video error',
-                code: error?.code,
-                canRetry: retryCount < MAX_RETRIES
+                message,
+                code,
+                canRetry: true,
             });
         }
-    }, [retryCount, retryVideoLoad]);
+    }, [retryCount, retryVideoLoad, fileUrl]);
 
     // Video event handlers
     const handleTimeUpdate = useCallback(() => {
@@ -155,7 +188,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
             const frameData = bbox_data[Math.floor(video.currentTime)];
             set_current_bboxes(frameData);
         }
-    }, [duration, bbox_data, model_results]);
+    }, [duration, bbox_data, model_results, videoRef]);
 
     const handleVideoLoadedMetadata = useCallback(() => {
         if (!videoRef.current) return;
@@ -163,13 +196,15 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         const { videoWidth, videoHeight } = videoRef.current;
         setVideoDimensions({ width: videoWidth, height: videoHeight });
         setIsLoading(false);
-        setRetryCount(0); // Reset retry count on successful load
-    }, []);
+        setVideoError(null);
+        setRetryCount(0);
+    }, [videoRef]);
 
     const handleLoadStart = useCallback(() => {
+        if (!fileUrl) return;
         setIsLoading(true);
         setVideoError(null);
-    }, []);
+    }, [fileUrl]);
 
     const handleCanPlay = useCallback(() => {
         setIsLoading(false);
@@ -187,15 +222,12 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         setIsLoading(false);
     }, []);
 
-    // Main effect for video event listeners
+    // Main effect for video event listeners (keep video mounted; use JSX handlers only for error/metadata to avoid doubles)
     useEffect(() => {
         const video = videoRef.current;
         if (!video) return;
 
-        // Add all event listeners
         video.addEventListener('timeupdate', handleTimeUpdate);
-        video.addEventListener('error', handleVideoError);
-        video.addEventListener('loadedmetadata', handleVideoLoadedMetadata);
         video.addEventListener('loadstart', handleLoadStart);
         video.addEventListener('canplay', handleCanPlay);
         video.addEventListener('stalled', handleStalled);
@@ -203,10 +235,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         video.addEventListener('loadeddata', handleLoadedData);
 
         return () => {
-            // Clean up ALL event listeners
             video.removeEventListener('timeupdate', handleTimeUpdate);
-            video.removeEventListener('error', handleVideoError);
-            video.removeEventListener('loadedmetadata', handleVideoLoadedMetadata);
             video.removeEventListener('loadstart', handleLoadStart);
             video.removeEventListener('canplay', handleCanPlay);
             video.removeEventListener('stalled', handleStalled);
@@ -215,23 +244,22 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
         };
     }, [
         handleTimeUpdate,
-        handleVideoError,
-        handleVideoLoadedMetadata,
         handleLoadStart,
         handleCanPlay,
         handleStalled,
         handleWaiting,
-        handleLoadedData
+        handleLoadedData,
+        videoRef,
+        fileUrl,
     ]);
 
     // Handle video end
     useEffect(() => {
         if (progress > 100 && videoRef.current) {
-            console.log("video ended");
             videoRef.current.pause();
             setIsPaused(true);
         }
-    }, [progress]);
+    }, [progress, videoRef]);
 
     const formatTime = (seconds) => {
         if (isNaN(seconds)) return "0:00";
@@ -249,11 +277,15 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
     };
 
     const handleManualRetry = () => {
-        if (videoRef.current) {
-            setRetryCount(0);
-            setVideoError(null);
-            videoRef.current.load();
+        if (!videoRef.current || !fileUrl) return;
+        if (retryTimeoutRef.current) {
+            clearTimeout(retryTimeoutRef.current);
+            retryTimeoutRef.current = null;
         }
+        setRetryCount(0);
+        setVideoError(null);
+        setIsLoading(true);
+        videoRef.current.load();
     };
 
     // console.log(model_results)
@@ -436,59 +468,62 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                                 )
                             })
                         )}
-                        {
-                            videoError ?
-                                (
-                                    <div className="text-red-500 h-1/2 w-1/2 p-5 mx-auto flex flex-col items-center gap-4">
-                                        <AlertCircle className="size-12" />
-                                        <div className="text-center">
-                                            <p className="font-semibold">Video Error:</p>
-                                            <p className="text-sm">{videoError.message}</p>
-                                            {videoError.code && (
-                                                <p className="text-xs opacity-75">Error Code: {videoError.code}</p>
-                                            )}
-                                        </div>
-                                        {videoError.canRetry && (
-                                            <button
-                                                onClick={handleManualRetry}
-                                                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                                            >
-                                                <RefreshCw className="size-4" />
-                                                Retry
-                                            </button>
-                                        )}
-                                    </div>
-                                )
-                                :
-                                (
-                                    <div className="relative">
-                                        <video
-                                            data-html2canvas-ignore
-                                            ref={videoRef}
-                                            src={fileUrl}
-                                            controls={false}
-                                            onError={handleVideoError}
-                                            onLoadedMetadata={handleVideoLoadedMetadata}
-                                            className="w-fit max-w-3xl h-[50vh]"
-                                        />
+                        <div className="relative min-h-[50vh] min-w-[20rem] flex items-center justify-center">
+                            <video
+                                data-html2canvas-ignore
+                                ref={videoRef}
+                                src={fileUrl || undefined}
+                                controls={false}
+                                preload={fileUrl ? "metadata" : "none"}
+                                onError={handleVideoError}
+                                onLoadedMetadata={handleVideoLoadedMetadata}
+                                className={`w-fit max-w-3xl h-[50vh] ${videoError || !fileUrl ? "invisible absolute" : ""}`}
+                            />
 
-                                        {/* Loading overlay */}
-                                        {(isLoading || isRetrying) && (
-                                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                                                <div className="text-white text-center">
-                                                    <RefreshCw className="size-8 animate-spin mx-auto mb-2" />
-                                                    <p>
-                                                        {isRetrying
-                                                            ? `Retrying... (${retryCount}/${MAX_RETRIES})`
-                                                            : 'Loading video'
-                                                        }
-                                                    </p>
-                                                </div>
-                                            </div>
+                            {!fileUrl && !videoError && (
+                                <div className="text-slate-500 text-center p-8">
+                                    <RefreshCw className="size-8 animate-spin mx-auto mb-2" />
+                                    <p>Waiting for media…</p>
+                                </div>
+                            )}
+
+                            {videoError && (
+                                <div className="text-red-500 p-5 flex flex-col items-center gap-4">
+                                    <AlertCircle className="size-12" />
+                                    <div className="text-center">
+                                        <p className="font-semibold">Video Error:</p>
+                                        <p className="text-sm">{videoError.message}</p>
+                                        {videoError.code != null && (
+                                            <p className="text-xs opacity-75">Error Code: {videoError.code}</p>
                                         )}
                                     </div>
-                                )
-                        }
+                                    {videoError.canRetry && fileUrl && (
+                                        <button
+                                            type="button"
+                                            onClick={handleManualRetry}
+                                            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                        >
+                                            <RefreshCw className="size-4" />
+                                            Retry
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+
+                            {fileUrl && !videoError && (isLoading || isRetrying) && (
+                                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                                    <div className="text-white text-center">
+                                        <RefreshCw className="size-8 animate-spin mx-auto mb-2" />
+                                        <p>
+                                            {isRetrying
+                                                ? `Retrying... (${retryCount}/${MAX_RETRIES})`
+                                                : 'Loading video'
+                                            }
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             }
@@ -496,9 +531,9 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
             <div className=" z-10 flex w-full gap-14 mb-1 py-5 px-5 bg-primary text-white rounded-3xl items-center">
                 {/* PLAY BUTTON */}
                 <button
-                    disabled={videoError}
+                    disabled={Boolean(videoError) || !fileUrl}
                     onClick={handlePlayToggle}
-                    className={` border-2 rounded-full p-2 ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    className={` border-2 rounded-full p-2 ${isLoading || !fileUrl ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                     {isPaused ? (
                         <Play className="size-8" strokeWidth={1.5} />
@@ -523,7 +558,7 @@ export const VideoPlayer = ({ videoRef, fileUrl, bbox_data, duration, model_resu
                     max="100"
                     value={progress}
                     onChange={handleSliderChange}
-                    disabled={isLoading || videoError}
+                    disabled={isLoading || Boolean(videoError) || !fileUrl}
                     className="win10-thumb w-full rounded-md outline-none transition-all duration-300 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 />
 

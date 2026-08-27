@@ -81,86 +81,117 @@ const Form = ({ user_data, update_user_data, set_res_data }) => {
     // -------------------->>SUBMIT RESULT FUNCTIONS
 
     const upload_file_s3 = async () => {
+        const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                input_request: {
+                    upload_type: uploadType,
+                    analysis_types: analysisTypes,
+                },
+                file_metadata: {
+                    name: file.name,
+                    size: humanFileSize(file.size),
+                    type: file.type,
+                },
+                method: "verification",
+            }),
+        });
+        if (!res.ok) throw new Error('Failed to get signed URL');
 
-        try {
-            const res = await fetch('/api/upload', {
+        const { id, signedUrl, media_key } = await res.json();
+
+        const res_s3 = await fetch(signedUrl, {
+            method: 'PUT',
+            body: file,
+            headers: { 'Content-Type': file.type },
+        });
+        if (!res_s3.ok) throw new Error('Failed to upload file to S3');
+
+        // Images → Contrails detect API; video/audio → SQS
+        const isImage = uploadType === "image" || file.type?.startsWith("image/");
+        if (isImage) {
+            const detectRes = await fetch('/api/detect', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(
-                    {
-                        input_request: {
-                            'upload_type': uploadType,
-                            'analysis_types': analysisTypes
-                        },
-                        file_metadata: {
-                            name: file.name,
-                            size: humanFileSize(file.size),
-                            type: file.type
-                        },
-                        method: "verification"
-                    }
-                ),
+                body: JSON.stringify({
+                    transaction_id: id,
+                    media_key,
+                    detailed_analysis: true,
+                }),
             });
-            if (!res.ok) throw new Error('Failed to get signed URL');
-
-            const { id, signedUrl } = await res.json();
-
-            const res_s3 = await fetch(signedUrl, {
-                method: 'PUT',
-                body: file,
-                headers: { 'Content-Type': file.type },
-            });
-            if (!res_s3.ok) throw new Error('Failed to upload file to S3');
-
-
-            const res_set_to_queue = await fetch('/api/send-message', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(
-                    {
-                        task_id: id,
-                        method: "verification"
-                    }
-                ),
-            });
-            if (!res_set_to_queue.ok) throw new Error('Failed to send message to queue');
-
-            alert('File Uploaded');
-
-        } catch (error) {
-            console.error('Error uploading file:', error);
-            alert('Failed to upload file');
+            if (!detectRes.ok) {
+                const errBody = await detectRes.json().catch(() => ({}));
+                throw new Error(errBody.error || 'Failed to run image detection');
+            }
+            const { envelope } = await detectRes.json();
+            return {
+                id,
+                media_key,
+                isImage: true,
+                envelope,
+                fileUrl: tempfileUrl,
+                file_metadata: {
+                    name: file.name,
+                    size: humanFileSize(file.size),
+                    type: file.type,
+                },
+                input_request: {
+                    upload_type: "image",
+                    analysis_types: analysisTypes,
+                },
+            };
         }
+
+        const res_set_to_queue = await fetch('/api/send-message', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                task_id: id,
+                method: "verification",
+            }),
+        });
+        if (!res_set_to_queue.ok) throw new Error('Failed to send message to queue');
+
+        return { id, isImage: false };
     }
 
     const get_server_response = async () => {
-        //Form Submittion
         try {
             const user_id = user_data.id;
             const new_token_amount = user_data.tokens - 1;
 
-            // 1. create a db element
-            // 2. upload file to s3
-            // 3. send message to queue
-            await upload_file_s3();
+            const uploadResult = await upload_file_s3();
 
-            let res_data = { "uploaded": true };
-
-            // update db with new token amount
             const db_update_res = await update_user_tokens(user_id, new_token_amount);
             if (db_update_res.success !== true) {
-                res_data = { message: db_update_res.error };
-                set_res_data(res_data);
+                set_res_data({ message: db_update_res.error });
                 setLoading(false);
                 return;
             }
 
-            // setup the data if no issue occured
             update_user_data({ tokens: new_token_amount });
-            set_res_data(res_data);
-        }
-        catch (error) {
+
+            if (uploadResult.isImage && uploadResult.envelope) {
+                set_res_data({
+                    uploaded: true,
+                    got_result: true,
+                    id: uploadResult.id,
+                    media_key: uploadResult.media_key,
+                    signedUrl: uploadResult.fileUrl,
+                    file_metadata: uploadResult.file_metadata,
+                    input_request: uploadResult.input_request,
+                    method: "verification",
+                    models_responses: uploadResult.envelope,
+                    prediction: uploadResult.envelope.prediction,
+                });
+            } else {
+                set_res_data({ uploaded: true, got_result: false, id: uploadResult.id });
+            }
+        } catch (error) {
             console.error("Error in sending data", error);
+            alert(error.message || "Failed to upload file");
+            set_res_data({});
         }
         setLoading(false);
     };

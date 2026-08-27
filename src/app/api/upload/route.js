@@ -48,6 +48,17 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
   }
 
+  if (method === "demo") {
+    const { data: tokenRow } = await supabase
+      .from("Tokens")
+      .select("verifier")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (!tokenRow?.verifier) {
+      return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+    }
+  }
+
   try {
     //CREATE THE TRANSACTION IN DB
     const { data, error } = await supabase
@@ -84,7 +95,11 @@ export async function POST(request) {
     if (updated_res.error)
       throw updated_res.error;
 
-    return NextResponse.json({ id: data.id, signedUrl });
+    return NextResponse.json({
+      id: data.id,
+      signedUrl,
+      media_key: `${data.user_id}/${data.id}`,
+    });
 
   } catch (error) {
     console.log(error);

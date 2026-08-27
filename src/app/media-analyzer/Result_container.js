@@ -4,12 +4,14 @@ import ResultsVideoUI from '@/components/ResultVideoUI_v1';
 import ResultsAudioUI from '@/components/ResultAudioUI';
 import ResultsImageUI from '@/components/ResultImageUI';
 import Result_UI from '@/components/result_ui_v2';
-// import Assets_Show from '@/components/Assets_show'
-// import { useState, useEffect } from 'react';
+import ResultV3 from '@/components/results-v3/ResultV3';
+import { getV3EnvelopeFromTransaction } from '@/lib/deepfake-api/envelope';
+
 
 const Result_container = ({ res_data, set_res_data }) => {
     const model_responses = typeof (res_data["models_responses"]) === "string" ? JSON.parse(res_data["models_responses"]) : res_data["models_responses"];
     const upload_type = res_data["input_request"]["upload_type"];
+    const v3Envelope = getV3EnvelopeFromTransaction(res_data);
 
     const handle_newCheck = () => {
         set_res_data({ got_result: false });
@@ -23,19 +25,16 @@ const Result_container = ({ res_data, set_res_data }) => {
             "aigcCheck": false
         }
     };
-    // const verifier_metadata = res_data["verifier_metadata"];
-    //IMAGE
-    if (upload_type === 'image') {
+
+    if (!v3Envelope && upload_type === 'image') {
         results_data["analysis_types"]["aigcCheck"] = true;
         results_data["results"]["aigcCheck"] = model_responses["results"]["image"]["models_results"][0];
     }
-    // AUDIO
-    else if (upload_type === "audio") {
+    else if (!v3Envelope && upload_type === "audio") {
         results_data["analysis_types"]["audioAnalysis"] = true;
         results_data["results"]["audioAnalysis"] = model_responses["results"]["audio"]["models_results"][0];
     }
-    // VIDEO
-    else if (upload_type === "video") {
+    else if (!v3Envelope && upload_type === "video") {
         if (res_data["input_request"]["analysis_types"]["audioAnalysis"]) {
             results_data["analysis_types"]["audioAnalysis"] = true;
             results_data["results"]["audioAnalysis"] = model_responses["results"]["audio"]["models_results"][0];
@@ -47,6 +46,17 @@ const Result_container = ({ res_data, set_res_data }) => {
         }
     }
 
+    if (v3Envelope) {
+        return (
+            <ResultV3
+                envelope={v3Envelope}
+                fileUrl={res_data["signedUrl"]}
+                file_metadata={res_data["file_metadata"]}
+                handle_newCheck={handle_newCheck}
+            />
+        );
+    }
+
     return (<>
         <div className=''>
 
@@ -55,7 +65,6 @@ const Result_container = ({ res_data, set_res_data }) => {
                 (
                     model_responses["version"] && Number(model_responses["version"].split(".")[0]) >= 2 ?
                         <>
-                            {/* //NEW RESULT HERE */}
                             <Result_UI
                                 results={results_data["results"]}
                                 analysisTypes={results_data["analysis_types"]}
@@ -100,5 +109,5 @@ const Result_container = ({ res_data, set_res_data }) => {
         </div>
     </>);
 }
-//
+
 export default Result_container;

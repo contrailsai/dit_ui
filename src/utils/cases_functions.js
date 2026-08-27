@@ -6,18 +6,28 @@ import { get_user_data } from "@/utils/user_functions";
 import { getSignedUrl } from '@aws-sdk/cloudfront-signer';
 import { publishSNSMessage } from "@/utils/sns";
 
-export const get_user_transactions = async (offset = 0, limit = 20) => {
+export const get_user_transactions = async (offset = 0, limit = 20, filters = {}) => {
 
     const supabase = await createServerSupabaseClient();
     const user = await get_user_data();
 
     if (user === null) return;
 
-    // 1. Start building the query — only direct & verification cases (exclude demo / other)
+    const {
+        search = "",
+        uploadType = "all",
+        status = "all",
+        sortAsc = false,
+    } = filters;
+
+    // Media-checker only: direct + verification, plus image/UI detect rows the API
+    // rewrote to platform_detect (auth=ui_update). Exclude demo and direct API inserts.
     let query = supabase
         .from('Transactions')
         .select('id,created_at,input_request,file_metadata,status,prediction,method', { count: 'exact' })
-        .in('method', ['direct', 'verification']);
+        .or(
+            'method.in.(direct,verification),and(method.eq.platform_detect,input_request->>auth.eq.ui_update)'
+        );
 
     // 2. Apply Role-Based Logic
     // If NOT a verifier, restrict to specific user_id. 
@@ -26,10 +36,38 @@ export const get_user_transactions = async (offset = 0, limit = 20) => {
         query = query.eq('user_id', user.id);
     }
 
-    // 3. Apply Sorting & Pagination (DB Side)
-    // We must sort BEFORE pagination to ensure we get the latest records first.
+    // 3. Apply filters
+    const trimmedSearch = typeof search === "string" ? search.trim() : "";
+    if (trimmedSearch) {
+        // Escape PostgREST/ilike special chars so user input is treated literally
+        const escaped = trimmedSearch
+            .replace(/\\/g, "\\\\")
+            .replace(/%/g, "\\%")
+            .replace(/_/g, "\\_");
+        query = query.ilike("file_metadata->>name", `%${escaped}%`);
+    }
+
+    if (uploadType && uploadType !== "all") {
+        // UI detect rows may only have MIME after API rewrite — also match file MIME
+        query = query.or(
+            `input_request->>upload_type.eq.${uploadType},file_metadata->>type.ilike.${uploadType}/%`
+        );
+    }
+
+    // Done/Pending: direct + UI-detect use prediction; verification uses status
+    if (status === "done") {
+        query = query.or(
+            "and(method.eq.direct,prediction.not.is.null),and(method.eq.platform_detect,prediction.not.is.null),and(method.eq.verification,status.eq.true)"
+        );
+    } else if (status === "pending") {
+        query = query.or(
+            "and(method.eq.direct,prediction.is.null),and(method.eq.platform_detect,prediction.is.null),and(method.eq.verification,status.is.null),and(method.eq.verification,status.eq.false)"
+        );
+    }
+
+    // 4. Apply Sorting & Pagination (DB Side)
     const { data, error, count } = await query
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: Boolean(sortAsc) })
         .range(offset, offset + limit - 1);
 
 
