@@ -4,6 +4,11 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { SendMessageCommand } from "@aws-sdk/client-sqs";
 import { publishSNSMessage } from '@/utils/sns';
 
+/** Models for media-checker / direct SQS video+audio ingestion */
+const FRAME_MODELS = ["sta", "dfa_v4"];
+const AUDIO_MODELS = ["mamba_w1", "ssl_w2"];
+const SQS_MODELS = [...FRAME_MODELS, ...AUDIO_MODELS];
+
 export async function POST(request) {
   const { task_id, method } = await request.json();
   // Check Supabase authentication
@@ -18,16 +23,10 @@ export async function POST(request) {
 
     let message_body = {}
 
-    if (method === "verification") {
+    if (method === "verification" || method === "direct") {
       message_body = {
         "task_id": task_id,
-        "models": []
-      };
-    }
-    else if (method === "direct") {
-      message_body = {
-        "task_id": task_id,
-        "models": ["sta_exp_1", "mmb_w1", "fatformer"]
+        "models": SQS_MODELS,
       };
     }
 
